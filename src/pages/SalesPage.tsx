@@ -15,15 +15,12 @@ import { QuickCustomerForm } from '@/components/sales/QuickCustomerForm';
 import { SaleConfirmation } from '@/components/sales/SaleConfirmation';
 import { Search, ShoppingCart, Barcode, User, Users, Plus, Percent, DollarSign } from 'lucide-react';
 
-type SaleStep = 'customer' | 'seller' | 'products' | 'payment';
-
 const SalesPage = () => {
   const { products, customers, sellers, sales, searchCustomers, searchProductByBarcode, addSale } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   
   const [isSaleDialogOpen, setIsSaleDialogOpen] = useState(false);
-  const [currentStep, setCurrentStep] = useState<SaleStep>('customer');
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   
@@ -151,8 +148,8 @@ const SalesPage = () => {
     return getSubtotal() - getDiscountAmount();
   };
 
-  const handleNextStep = () => {
-    if (currentStep === 'customer' && !selectedCustomer) {
+  const handleFinalizeSale = () => {
+    if (!selectedCustomer) {
       toast({
         title: "Erro",
         description: "Selecione um cliente ou marque que não quis se cadastrar",
@@ -161,7 +158,7 @@ const SalesPage = () => {
       return;
     }
     
-    if (currentStep === 'seller' && !selectedSeller) {
+    if (!selectedSeller) {
       toast({
         title: "Erro",
         description: "Selecione o vendedor responsável",
@@ -170,7 +167,7 @@ const SalesPage = () => {
       return;
     }
 
-    if (currentStep === 'products' && selectedProducts.length === 0) {
+    if (selectedProducts.length === 0) {
       toast({
         title: "Erro",
         description: "Adicione pelo menos um produto à venda",
@@ -179,22 +176,6 @@ const SalesPage = () => {
       return;
     }
 
-    const steps: SaleStep[] = ['customer', 'seller', 'products', 'payment'];
-    const currentIndex = steps.indexOf(currentStep);
-    if (currentIndex < steps.length - 1) {
-      setCurrentStep(steps[currentIndex + 1]);
-    }
-  };
-
-  const handlePreviousStep = () => {
-    const steps: SaleStep[] = ['customer', 'seller', 'products', 'payment'];
-    const currentIndex = steps.indexOf(currentStep);
-    if (currentIndex > 0) {
-      setCurrentStep(steps[currentIndex - 1]);
-    }
-  };
-
-  const handleFinalizeSale = () => {
     const selectedSellerData = sellers.find(s => s.id === selectedSeller);
     const subtotal = getSubtotal();
     const discountAmount = getDiscountAmount();
@@ -218,7 +199,6 @@ const SalesPage = () => {
   };
 
   const resetSale = () => {
-    setCurrentStep('customer');
     setSelectedCustomer(null);
     setSelectedSeller('');
     setSelectedProducts([]);
@@ -233,13 +213,6 @@ const SalesPage = () => {
 
   const canMakeSale = user?.role === 'admin' || user?.role === 'caixa';
 
-  const stepTitles = {
-    customer: '1. Seleção do Cliente',
-    seller: '2. Vendedor Responsável',
-    products: '3. Adição de Produtos',
-    payment: '4. Finalização'
-  };
-
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -250,24 +223,26 @@ const SalesPage = () => {
         {canMakeSale && (
           <Dialog open={isSaleDialogOpen} onOpenChange={setIsSaleDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-store-green-600 hover:bg-store-green-700" onClick={() => setCurrentStep('customer')}>
+              <Button className="bg-store-green-600 hover:bg-store-green-700">
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 Nova Venda
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{stepTitles[currentStep]}</DialogTitle>
+                <DialogTitle>Nova Venda</DialogTitle>
               </DialogHeader>
               
-              {/* Etapa 1: Seleção do Cliente */}
-              {currentStep === 'customer' && (
+              <div className="space-y-6">
+                {/* 1. Seleção do Cliente */}
                 <div className="space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Cliente
+                  </h3>
+                  
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      Buscar Cliente
-                    </Label>
+                    <Label>Buscar Cliente</Label>
                     <div className="relative">
                       <Input
                         placeholder="Digite o nome ou WhatsApp do cliente..."
@@ -323,16 +298,16 @@ const SalesPage = () => {
                     </Button>
                   </div>
                 </div>
-              )}
 
-              {/* Etapa 2: Seleção do Vendedor */}
-              {currentStep === 'seller' && (
-                <div className="space-y-4">
+                {/* 2. Seleção do Vendedor */}
+                <div className="space-y-4 border-t pt-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Vendedor
+                  </h3>
+                  
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      Vendedor Responsável
-                    </Label>
+                    <Label>Vendedor Responsável</Label>
                     <Select onValueChange={setSelectedSeller} value={selectedSeller}>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o vendedor" />
@@ -347,16 +322,16 @@ const SalesPage = () => {
                     </Select>
                   </div>
                 </div>
-              )}
 
-              {/* Etapa 3: Adição de Produtos */}
-              {currentStep === 'products' && (
-                <div className="space-y-4">
+                {/* 3. Adição de Produtos */}
+                <div className="space-y-4 border-t pt-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <Barcode className="h-5 w-5" />
+                    Produtos
+                  </h3>
+                  
                   <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Barcode className="h-4 w-4" />
-                      Código de Barras
-                    </Label>
+                    <Label>Código de Barras</Label>
                     <Input
                       placeholder="Digite ou escaneie o código de barras..."
                       value={barcode}
@@ -448,13 +423,13 @@ const SalesPage = () => {
                     </div>
                   )}
                 </div>
-              )}
 
-              {/* Etapa 4: Finalização */}
-              {currentStep === 'payment' && (
-                <div className="space-y-4">
+                {/* 4. Forma de Pagamento */}
+                <div className="space-y-4 border-t pt-4">
+                  <h3 className="text-lg font-semibold">Forma de Pagamento</h3>
+                  
                   <div className="space-y-2">
-                    <Label>Forma de Pagamento</Label>
+                    <Label>Pagamento</Label>
                     <Select value={paymentMethod} onValueChange={(value: 'pix' | 'debito' | 'credito') => setPaymentMethod(value)}>
                       <SelectTrigger>
                         <SelectValue />
@@ -466,66 +441,17 @@ const SalesPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div className="p-4 bg-muted rounded border">
-                    <h4 className="font-medium mb-2">Resumo da Venda</h4>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span>Cliente:</span>
-                        <span>{selectedCustomer?.name}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Vendedor:</span>
-                        <span>{sellers.find(s => s.id === selectedSeller)?.name}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Itens:</span>
-                        <span>{selectedProducts.length} produto(s)</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Subtotal:</span>
-                        <span>R$ {getSubtotal().toFixed(2)}</span>
-                      </div>
-                      {getDiscountAmount() > 0 && (
-                        <div className="flex justify-between text-red-600">
-                          <span>Desconto:</span>
-                          <span>-R$ {getDiscountAmount().toFixed(2)}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between font-bold text-lg border-t pt-1">
-                        <span>Total:</span>
-                        <span className="text-store-green-600">R$ {getTotalSale().toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              )}
 
-              {/* Botões de navegação */}
-              <div className="flex justify-between pt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={handlePreviousStep}
-                  disabled={currentStep === 'customer'}
-                >
-                  Voltar
-                </Button>
-                
-                {currentStep === 'payment' ? (
+                {/* Botão de Finalizar */}
+                <div className="border-t pt-4">
                   <Button 
                     onClick={handleFinalizeSale}
-                    className="bg-store-green-600 hover:bg-store-green-700"
+                    className="w-full bg-store-green-600 hover:bg-store-green-700 h-12 text-lg"
                   >
                     Finalizar Venda
                   </Button>
-                ) : (
-                  <Button 
-                    onClick={handleNextStep}
-                    className="bg-store-blue-600 hover:bg-store-blue-700"
-                  >
-                    Próximo
-                  </Button>
-                )}
+                </div>
               </div>
             </DialogContent>
           </Dialog>
@@ -539,7 +465,6 @@ const SalesPage = () => {
         onNewSale={resetSale}
         onBackToDashboard={() => {
           resetSale();
-          // Navegar para dashboard se necessário
         }}
         saleTotal={getTotalSale()}
         customerWhatsApp={selectedCustomer?.whatsapp}
