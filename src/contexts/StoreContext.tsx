@@ -36,6 +36,16 @@ export interface Seller {
   active: boolean;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'admin' | 'vendedor' | 'caixa' | 'consultivo';
+  active: boolean;
+  createdAt: Date;
+}
+
 export interface SaleItem {
   product: Product;
   quantity: number;
@@ -82,6 +92,7 @@ interface StoreContextType {
   products: Product[];
   customers: Customer[];
   sellers: Seller[];
+  users: User[];
   sales: Sale[];
   categories: string[];
   collections: string[];
@@ -97,6 +108,10 @@ interface StoreContextType {
   bulkUpdateProducts: (productIds: string[], updates: Partial<Product>) => void;
   addCustomer: (customer: Omit<Customer, 'id'>) => void;
   addSeller: (seller: Omit<Seller, 'id'>) => void;
+  addUser: (user: Omit<User, 'id' | 'createdAt'>) => void;
+  updateUser: (id: string, updates: Partial<User>) => void;
+  deleteUser: (id: string) => void;
+  resetUserPassword: (id: string) => string;
   addSale: (sale: Omit<Sale, 'id' | 'date'>) => void;
   searchCustomers: (query: string) => Customer[];
   searchProductByBarcode: (barcode: string) => Product | null;
@@ -168,6 +183,36 @@ const initialSellers: Seller[] = [
   { id: '3', name: 'Ana Costa', email: 'ana@loja.com', phone: '(11) 99999-9012', active: true }
 ];
 
+const initialUsers: User[] = [
+  { 
+    id: '1', 
+    name: 'Admin Master', 
+    email: 'admin@loja.com', 
+    phone: '(11) 99999-0000',
+    role: 'admin', 
+    active: true,
+    createdAt: new Date('2024-01-01')
+  },
+  { 
+    id: '2', 
+    name: 'João Vendedor', 
+    email: 'joao@loja.com', 
+    phone: '(11) 99999-1111',
+    role: 'vendedor', 
+    active: true,
+    createdAt: new Date('2024-01-15')
+  },
+  { 
+    id: '3', 
+    name: 'Maria Caixa', 
+    email: 'maria@loja.com', 
+    phone: '(11) 99999-2222',
+    role: 'caixa', 
+    active: false,
+    createdAt: new Date('2024-02-01')
+  },
+];
+
 const initialStoreSettings: StoreSettings = {
   name: 'Minha Loja',
   address: '',
@@ -182,6 +227,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
   const [sellers, setSellers] = useState<Seller[]>(initialSellers);
+  const [users, setUsers] = useState<User[]>(initialUsers);
   const [sales, setSales] = useState<Sale[]>([]);
   const [categories, setCategories] = useState<string[]>(['Camisetas', 'Calças', 'Vestidos', 'Sapatos']);
   const [collections, setCollections] = useState<string[]>(['Verão 2024', 'Inverno 2024', 'Primavera 2024']);
@@ -244,6 +290,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return products.some(product => 
       product.barcode === barcode && product.id !== excludeId
     );
+  };
+
+  // User management functions
+  const addUser = (user: Omit<User, 'id' | 'createdAt'>) => {
+    const newUser = { 
+      ...user, 
+      id: generateUniqueId(),
+      createdAt: new Date()
+    };
+    setUsers(prev => [...prev, newUser]);
+    console.log('Usuário criado:', newUser);
+  };
+
+  const updateUser = (id: string, updates: Partial<User>) => {
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
+    console.log('Usuário atualizado:', id, updates);
+  };
+
+  const deleteUser = (id: string) => {
+    setUsers(prev => prev.filter(u => u.id !== id));
+    console.log('Usuário removido:', id);
+  };
+
+  const resetUserPassword = (id: string): string => {
+    const tempPassword = Math.random().toString(36).slice(-8);
+    console.log(`Senha temporária gerada para usuário ${id}:`, tempPassword);
+    return tempPassword;
   };
 
   const addCustomer = (customer: Omit<Customer, 'id'>) => {
@@ -400,6 +473,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       products,
       customers,
       sellers,
+      users,
       sales,
       categories,
       collections,
@@ -415,6 +489,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       bulkUpdateProducts,
       addCustomer,
       addSeller,
+      addUser,
+      updateUser,
+      deleteUser,
+      resetUserPassword,
       addSale,
       searchCustomers,
       searchProductByBarcode,
