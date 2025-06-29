@@ -9,14 +9,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Search, ShoppingCart } from 'lucide-react';
+import { Search, ShoppingCart, Plus } from 'lucide-react';
 
 const ProductsPage = () => {
-  const { products, addProduct } = useStore();
+  const { products, addProduct, categories, collections, suppliers, brands, addCategory, addCollection, addSupplier, addBrand } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  // Estados para modais de adição rápida
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [isAddCollectionOpen, setIsAddCollectionOpen] = useState(false);
+  const [isAddBrandOpen, setIsAddBrandOpen] = useState(false);
+  const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
+
+  // Estados para novos itens
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCollectionName, setNewCollectionName] = useState('');
+  const [newBrandName, setNewBrandName] = useState('');
+  const [newSupplierName, setNewSupplierName] = useState('');
 
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -31,8 +43,6 @@ const ProductsPage = () => {
     barcode: ''
   });
 
-  const categories = ['Camisetas', 'Calças', 'Vestidos', 'Sapatos', 'Acessórios'];
-  const collections = ['Verão 2024', 'Inverno 2024', 'Primavera 2024'];
   const sizes = ['PP', 'P', 'M', 'G', 'GG', '34', '36', '38', '40', '42', '44'];
 
   const filteredProducts = products.filter(product => 
@@ -78,7 +88,65 @@ const ProductsPage = () => {
     setIsAddDialogOpen(false);
   };
 
+  // Funções para adicionar novos itens
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) return;
+    
+    addCategory(newCategoryName.trim());
+    setNewProduct({ ...newProduct, category: newCategoryName.trim() });
+    setNewCategoryName('');
+    setIsAddCategoryOpen(false);
+    
+    toast({
+      title: "Sucesso",
+      description: "Nova categoria adicionada!",
+    });
+  };
+
+  const handleAddCollection = () => {
+    if (!newCollectionName.trim()) return;
+    
+    addCollection(newCollectionName.trim());
+    setNewProduct({ ...newProduct, collection: newCollectionName.trim() });
+    setNewCollectionName('');
+    setIsAddCollectionOpen(false);
+    
+    toast({
+      title: "Sucesso",
+      description: "Nova coleção adicionada!",
+    });
+  };
+
+  const handleAddBrand = () => {
+    if (!newBrandName.trim()) return;
+    
+    addBrand(newBrandName.trim());
+    setNewProduct({ ...newProduct, brand: newBrandName.trim() });
+    setNewBrandName('');
+    setIsAddBrandOpen(false);
+    
+    toast({
+      title: "Sucesso",
+      description: "Nova marca adicionada!",
+    });
+  };
+
+  const handleAddSupplier = () => {
+    if (!newSupplierName.trim()) return;
+    
+    addSupplier(newSupplierName.trim());
+    setNewProduct({ ...newProduct, supplier: newSupplierName.trim() });
+    setNewSupplierName('');
+    setIsAddSupplierOpen(false);
+    
+    toast({
+      title: "Sucesso",
+      description: "Novo fornecedor adicionado!",
+    });
+  };
+
   const canEdit = user?.role === 'admin';
+  const canAddStructuralData = user?.role === 'admin'; // Só admin pode adicionar categorias, marcas, etc.
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -120,8 +188,24 @@ const ProductsPage = () => {
                     placeholder="0.00"
                   />
                 </div>
+                
+                {/* Categoria com opção de adicionar */}
                 <div className="space-y-2">
-                  <Label htmlFor="category">Categoria *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="category">Categoria *</Label>
+                    {canAddStructuralData && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsAddCategoryOpen(true)}
+                        className="text-xs text-blue-600 hover:text-blue-700"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Nova
+                      </Button>
+                    )}
+                  </div>
                   <Select onValueChange={(value) => setNewProduct({ ...newProduct, category: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione uma categoria" />
@@ -133,8 +217,24 @@ const ProductsPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Coleção com opção de adicionar */}
                 <div className="space-y-2">
-                  <Label htmlFor="collection">Coleção</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="collection">Coleção</Label>
+                    {canAddStructuralData && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsAddCollectionOpen(true)}
+                        className="text-xs text-blue-600 hover:text-blue-700"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Nova
+                      </Button>
+                    )}
+                  </div>
                   <Select onValueChange={(value) => setNewProduct({ ...newProduct, collection: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione uma coleção" />
@@ -146,6 +246,7 @@ const ProductsPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="size">Tamanho</Label>
                   <Select onValueChange={(value) => setNewProduct({ ...newProduct, size: value })}>
@@ -159,6 +260,7 @@ const ProductsPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="quantity">Quantidade</Label>
                   <Input
@@ -169,24 +271,65 @@ const ProductsPage = () => {
                     placeholder="0"
                   />
                 </div>
+
+                {/* Marca com opção de adicionar */}
                 <div className="space-y-2">
-                  <Label htmlFor="brand">Marca</Label>
-                  <Input
-                    id="brand"
-                    value={newProduct.brand}
-                    onChange={(e) => setNewProduct({ ...newProduct, brand: e.target.value })}
-                    placeholder="Marca do produto"
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="brand">Marca</Label>
+                    {canAddStructuralData && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsAddBrandOpen(true)}
+                        className="text-xs text-blue-600 hover:text-blue-700"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Nova
+                      </Button>
+                    )}
+                  </div>
+                  <Select onValueChange={(value) => setNewProduct({ ...newProduct, brand: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma marca" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      {brands.map((brand) => (
+                        <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                {/* Fornecedor com opção de adicionar */}
                 <div className="space-y-2">
-                  <Label htmlFor="supplier">Fornecedor</Label>
-                  <Input
-                    id="supplier"
-                    value={newProduct.supplier}
-                    onChange={(e) => setNewProduct({ ...newProduct, supplier: e.target.value })}
-                    placeholder="Nome do fornecedor"
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="supplier">Fornecedor</Label>
+                    {canAddStructuralData && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsAddSupplierOpen(true)}
+                        className="text-xs text-blue-600 hover:text-blue-700"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Novo
+                      </Button>
+                    )}
+                  </div>
+                  <Select onValueChange={(value) => setNewProduct({ ...newProduct, supplier: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um fornecedor" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      {suppliers.map((supplier) => (
+                        <SelectItem key={supplier} value={supplier}>{supplier}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+
                 <div className="col-span-2 space-y-2">
                   <Label htmlFor="description">Descrição</Label>
                   <Input
@@ -218,6 +361,122 @@ const ProductsPage = () => {
           </Dialog>
         )}
       </div>
+
+      {/* Modal para Nova Categoria */}
+      <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nova Categoria</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newCategory">Nome da Categoria</Label>
+              <Input
+                id="newCategory"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Ex: Acessórios"
+                onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsAddCategoryOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddCategory} disabled={!newCategoryName.trim()}>
+                Adicionar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para Nova Coleção */}
+      <Dialog open={isAddCollectionOpen} onOpenChange={setIsAddCollectionOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nova Coleção</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newCollection">Nome da Coleção</Label>
+              <Input
+                id="newCollection"
+                value={newCollectionName}
+                onChange={(e) => setNewCollectionName(e.target.value)}
+                placeholder="Ex: Outono 2024"
+                onKeyDown={(e) => e.key === 'Enter' && handleAddCollection()}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsAddCollectionOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddCollection} disabled={!newCollectionName.trim()}>
+                Adicionar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para Nova Marca */}
+      <Dialog open={isAddBrandOpen} onOpenChange={setIsAddBrandOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nova Marca</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newBrand">Nome da Marca</Label>
+              <Input
+                id="newBrand"
+                value={newBrandName}
+                onChange={(e) => setNewBrandName(e.target.value)}
+                placeholder="Ex: Nike"
+                onKeyDown={(e) => e.key === 'Enter' && handleAddBrand()}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsAddBrandOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddBrand} disabled={!newBrandName.trim()}>
+                Adicionar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para Novo Fornecedor */}
+      <Dialog open={isAddSupplierOpen} onOpenChange={setIsAddSupplierOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Novo Fornecedor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newSupplier">Nome do Fornecedor</Label>
+              <Input
+                id="newSupplier"
+                value={newSupplierName}
+                onChange={(e) => setNewSupplierName(e.target.value)}
+                placeholder="Ex: Distribuidora ABC"
+                onKeyDown={(e) => e.key === 'Enter' && handleAddSupplier()}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsAddSupplierOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddSupplier} disabled={!newSupplierName.trim()}>
+                Adicionar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Busca */}
       <div className="relative">
