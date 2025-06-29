@@ -71,6 +71,10 @@ const AppContent = () => {
               <Route path="/sales" element={<SalesPage />} />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/settings/store" element={<StoreSettingsPage />} />
+              <Route path="/settings/users" element={<UsersSettingsPage />} />
+              <Route path="/settings/notifications" element={<NotificationsSettingsPage />} />
+              <Route path="/settings/security" element={<SecuritySettingsPage />} />
               <Route path="/my-sales" element={<MySalesPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
