@@ -16,6 +16,10 @@ import ProductsPage from "./pages/ProductsPage";
 import SalesPage from "./pages/SalesPage";
 import CustomersPage from "./pages/CustomersPage";
 import SettingsPage from "./pages/SettingsPage";
+import StoreSettingsPage from "./pages/settings/StoreSettingsPage";
+import UsersSettingsPage from "./pages/settings/UsersSettingsPage";
+import NotificationsSettingsPage from "./pages/settings/NotificationsSettingsPage";
+import SecuritySettingsPage from "./pages/settings/SecuritySettingsPage";
 import MySalesPage from "./pages/MySalesPage";
 import NotFound from "./pages/NotFound";
 
