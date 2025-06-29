@@ -271,7 +271,7 @@ const SalesPage = () => {
                 Nova Venda
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Nova Venda</DialogTitle>
               </DialogHeader>
@@ -462,18 +462,20 @@ const SalesPage = () => {
                 </div>
 
                 {/* Área de Finalização */}
-                <SaleFinalizationSection
-                  hasProducts={hasProducts}
-                  discount={discount}
-                  paymentMethod={paymentMethod}
-                  subtotal={getSubtotal()}
-                  discountAmount={getDiscountAmount()}
-                  total={getTotalSale()}
-                  onDiscountChange={setDiscount}
-                  onPaymentMethodChange={setPaymentMethod}
-                  onFinalizeSale={handleFinalizeSale}
-                  disabled={!selectedCustomer || !selectedSeller}
-                />
+                <div className="border-t pt-4">
+                  <SaleFinalizationSection
+                    hasProducts={hasProducts}
+                    discount={discount}
+                    paymentMethod={paymentMethod}
+                    subtotal={getSubtotal()}
+                    discountAmount={getDiscountAmount()}
+                    total={getTotalSale()}
+                    onDiscountChange={setDiscount}
+                    onPaymentMethodChange={setPaymentMethod}
+                    onFinalizeSale={handleFinalizeSale}
+                    disabled={!selectedCustomer || !selectedSeller}
+                  />
+                </div>
               </div>
             </DialogContent>
           </Dialog>
