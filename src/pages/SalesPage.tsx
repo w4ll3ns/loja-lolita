@@ -20,6 +20,7 @@ const SalesPage = () => {
   
   const [isSaleDialogOpen, setIsSaleDialogOpen] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [completedSale, setCompletedSale] = useState<any>(null);
   
   // Estados da venda
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
@@ -234,6 +235,14 @@ const SalesPage = () => {
 
     addSale(sale);
     
+    // Buscar a venda recém-criada para passar completa para o componente
+    const newSale = {
+      ...sale,
+      id: Date.now().toString(),
+      date: new Date()
+    };
+    
+    setCompletedSale(newSale);
     setShowConfirmation(true);
   };
 
@@ -246,6 +255,7 @@ const SalesPage = () => {
     setCustomerSearch('');
     setProductSearch('');
     setCustomerSuggestions([]);
+    setCompletedSale(null);
     setIsSaleDialogOpen(false);
     setShowConfirmation(false);
   };
@@ -336,8 +346,7 @@ const SalesPage = () => {
         onBackToDashboard={() => {
           resetSale();
         }}
-        saleTotal={getTotalSale()}
-        customerWhatsApp={selectedCustomer?.whatsapp}
+        sale={completedSale}
       />
 
       {/* Lista de vendas recentes */}

@@ -2,14 +2,14 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CheckCircle, Printer, MessageCircle, ShoppingCart, ArrowLeft } from 'lucide-react';
+import { Sale } from '@/contexts/StoreContext';
 
 interface SaleConfirmationProps {
   open: boolean;
   onClose: () => void;
   onNewSale: () => void;
   onBackToDashboard: () => void;
-  saleTotal: number;
-  customerWhatsApp?: string;
+  sale: Sale | null;
 }
 
 export const SaleConfirmation = ({ 
@@ -17,8 +17,7 @@ export const SaleConfirmation = ({
   onClose, 
   onNewSale, 
   onBackToDashboard, 
-  saleTotal,
-  customerWhatsApp 
+  sale
 }: SaleConfirmationProps) => {
   
   const handlePrintReceipt = () => {
@@ -27,13 +26,37 @@ export const SaleConfirmation = ({
   };
 
   const handleSendWhatsApp = () => {
-    if (customerWhatsApp) {
-      const message = `Obrigado pela sua compra! Valor total: R$ ${saleTotal.toFixed(2)}. Esperamos você novamente em breve! 😊`;
-      const phoneNumber = customerWhatsApp.replace(/\D/g, '');
-      const whatsappUrl = `https://wa.me/55${phoneNumber}?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, '_blank');
+    if (!sale || !sale.customer.whatsapp) return;
+
+    // Construir resumo dos itens
+    const itemsText = sale.items.map(item => 
+      `• ${item.product.name} - Qtd: ${item.quantity} - R$ ${item.price.toFixed(2)} = R$ ${(item.quantity * item.price).toFixed(2)}`
+    ).join('\n');
+
+    // Construir mensagem completa
+    let message = `🛍️ *RESUMO DA COMPRA* 🛍️\n\n`;
+    message += `📋 *ITENS:*\n${itemsText}\n\n`;
+    message += `💰 *VALORES:*\n`;
+    message += `Subtotal: R$ ${sale.subtotal.toFixed(2)}\n`;
+    
+    if (sale.discount > 0) {
+      const discountType = sale.discountType === 'percentage' ? '%' : 'R$';
+      message += `Desconto: -R$ ${sale.discount.toFixed(2)}\n`;
     }
+    
+    message += `*TOTAL: R$ ${sale.total.toFixed(2)}*\n\n`;
+    message += `💳 Pagamento: ${sale.paymentMethod.toUpperCase()}\n`;
+    message += `👤 Vendedor: ${sale.seller}\n\n`;
+    message += `🙏 Obrigado pela sua compra!\n`;
+    message += `Esperamos você novamente em breve! 😊\n\n`;
+    message += `📅 ${sale.date.toLocaleDateString('pt-BR')} às ${sale.date.toLocaleTimeString('pt-BR')}`;
+
+    const phoneNumber = sale.customer.whatsapp.replace(/\D/g, '');
+    const whatsappUrl = `https://wa.me/55${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
+
+  if (!sale) return null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -47,7 +70,7 @@ export const SaleConfirmation = ({
         
         <div className="text-center py-4">
           <p className="text-2xl font-bold text-store-green-600 mb-2">
-            R$ {saleTotal.toFixed(2)}
+            R$ {sale.total.toFixed(2)}
           </p>
           <p className="text-muted-foreground">
             Valor total da venda
@@ -64,7 +87,7 @@ export const SaleConfirmation = ({
             Imprimir Cupom
           </Button>
           
-          {customerWhatsApp && (
+          {sale.customer.whatsapp && !sale.customer.isGeneric && (
             <Button 
               variant="outline" 
               onClick={handleSendWhatsApp}
