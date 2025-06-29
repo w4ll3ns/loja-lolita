@@ -72,8 +72,8 @@ const SalesPage = () => {
     const temporaryProduct = createTemporaryProduct(barcode, price);
     handleAddProduct(temporaryProduct.id);
     toast({
-      title: "Produto temporário criado",
-      description: `Produto com código ${barcode} foi criado temporariamente`,
+      title: "Produto temporário adicionado",
+      description: `Produto com código ${barcode} foi criado e adicionado à venda`,
       variant: "default",
     });
   };

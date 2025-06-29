@@ -143,7 +143,7 @@ export const ProductAutocomplete: React.FC<ProductAutocompleteProps> = ({
                     Adicionar produto não cadastrado
                   </p>
                   <p className="text-xs text-yellow-600">
-                    Código: {value} - Informe o preço para continuar
+                    Código: {value} - Informe o preço para adicionar à venda
                   </p>
                 </div>
               </div>
@@ -170,13 +170,14 @@ export const ProductAutocomplete: React.FC<ProductAutocompleteProps> = ({
                       value={tempPrice}
                       onChange={(e) => setTempPrice(e.target.value)}
                       className="flex-1"
+                      autoFocus
                     />
                     <Button
                       onClick={handleCreateTemporary}
                       disabled={!tempPrice || parseFloat(tempPrice) <= 0}
                       className="bg-orange-600 hover:bg-orange-700"
                     >
-                      Adicionar
+                      Adicionar à Venda
                     </Button>
                   </div>
                 </div>
