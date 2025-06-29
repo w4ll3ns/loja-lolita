@@ -1,7 +1,7 @@
 
 import { Label } from '@/components/ui/label';
 import { ProductAutocomplete } from '@/components/ui/product-autocomplete';
-import { Product } from '@/contexts/StoreContext';
+import { Product } from '@/types/store';
 import { Barcode } from 'lucide-react';
 
 interface ProductAdditionSectionProps {

@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ProfitMarginDisplay } from '@/components/ProfitMarginDisplay';
 import { Pencil, Copy, Trash2 } from 'lucide-react';
-import type { Product } from '@/contexts/StoreContext';
+import { Product } from '@/types/store';
 
 interface ProductTableProps {
   products: Product[];

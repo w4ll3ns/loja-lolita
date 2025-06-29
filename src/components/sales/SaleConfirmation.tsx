@@ -1,8 +1,7 @@
-
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CheckCircle, Printer, MessageCircle, ShoppingCart, ArrowLeft } from 'lucide-react';
-import { Sale } from '@/contexts/StoreContext';
+import { Sale } from '@/types/store';
 
 interface SaleConfirmationProps {
   open: boolean;

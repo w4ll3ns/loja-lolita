@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ProfitMarginDisplay } from '@/components/ProfitMarginDisplay';
 import { Pencil, Copy, Trash2 } from 'lucide-react';
-import type { Product } from '@/contexts/StoreContext';
+import { Product } from '@/types/store';
 
 interface ProductCardProps {
   product: Product;

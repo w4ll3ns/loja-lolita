@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -9,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { MaskedInput } from '@/components/ui/masked-input';
 import { ProfitMarginDisplay } from '@/components/ProfitMarginDisplay';
 import { Plus } from 'lucide-react';
-import type { Product } from '@/contexts/StoreContext';
+import { Product } from '@/types/store';
 
 interface ProductFormProps {
   isOpen: boolean;

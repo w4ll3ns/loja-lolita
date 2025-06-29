@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trophy, Medal, Award } from 'lucide-react';
-import { Sale } from '@/contexts/StoreContext';
+import { Sale } from '@/types/store';
 
 interface SellerRankingData {
   sellerId: string;

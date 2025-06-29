@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState } from 'react';
 import { 
   Product, 
@@ -28,6 +27,20 @@ import {
   initialColors
 } from '@/data/initialData';
 import { useStoreOperations } from '@/hooks/useStoreOperations';
+
+// Re-export types for backward compatibility
+export type {
+  Product,
+  Customer,
+  Seller,
+  User,
+  Sale,
+  SaleItem,
+  DeleteLog,
+  StoreSettings,
+  NotificationSettings,
+  SecuritySettings
+} from '@/types/store';
 
 interface StoreContextType {
   products: Product[];

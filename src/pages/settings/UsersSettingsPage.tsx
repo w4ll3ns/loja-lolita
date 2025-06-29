@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Users, UserPlus, Edit, Shield, RotateCcw, AlertTriangle } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
-import { useStore, User } from '@/contexts/StoreContext';
+import { useStore } from '@/contexts/StoreContext';
+import { User } from '@/types/store';
 import { useToast } from '@/hooks/use-toast';
 
 const UsersSettingsPage = () => {

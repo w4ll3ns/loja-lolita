@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { SaleItem } from '@/contexts/StoreContext';
+import { SaleItem } from '@/types/store';
 import { cn } from '@/lib/utils';
 
 interface ProductListSectionProps {
