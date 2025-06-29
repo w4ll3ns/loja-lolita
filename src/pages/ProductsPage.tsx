@@ -8,12 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { MaskedInput } from '@/components/ui/masked-input';
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Search, ShoppingCart, Plus, Copy, LayoutGrid, LayoutList, Pencil, Upload } from 'lucide-react';
 import type { Product } from '@/contexts/StoreContext';
 import { ImportXmlModal } from '@/components/ImportXmlModal';
+import { ProfitMarginDisplay } from '@/components/ProfitMarginDisplay';
 
 const ProductsPage = () => {
   const { products, addProduct, updateProduct, categories, collections, suppliers, brands, colors, addCategory, addCollection, addSupplier, addBrand, addColor, duplicateProduct, isBarcodeTaken } = useStore();
@@ -44,6 +46,7 @@ const ProductsPage = () => {
     name: '',
     description: '',
     price: '',
+    costPrice: '', // New field for cost price
     category: '',
     collection: '',
     size: '',
@@ -70,6 +73,7 @@ const ProductsPage = () => {
       name: product.name,
       description: product.description,
       price: product.price.toString(),
+      costPrice: product.costPrice.toString(), // Include cost price
       category: product.category,
       collection: product.collection,
       size: product.size,
@@ -86,10 +90,10 @@ const ProductsPage = () => {
   const handleSaveEdit = () => {
     if (!editingProduct) return;
     
-    if (!newProduct.name || !newProduct.price || !newProduct.category || !newProduct.gender) {
+    if (!newProduct.name || !newProduct.price || !newProduct.costPrice || !newProduct.category || !newProduct.gender) {
       toast({
         title: "Erro",
-        description: "Preencha todos os campos obrigatórios (Nome, Preço, Categoria e Gênero)",
+        description: "Preencha todos os campos obrigatórios (Nome, Preço, Preço de Custo, Categoria e Gênero)",
         variant: "destructive",
       });
       return;
@@ -108,6 +112,7 @@ const ProductsPage = () => {
     updateProduct(editingProduct.id, {
       ...newProduct,
       price: parseFloat(newProduct.price),
+      costPrice: parseFloat(newProduct.costPrice), // Include cost price
       quantity: parseInt(newProduct.quantity) || 0,
       barcode: newProduct.barcode || editingProduct.barcode,
       gender: newProduct.gender as 'Masculino' | 'Feminino' | 'Unissex'
@@ -123,10 +128,10 @@ const ProductsPage = () => {
   };
 
   const handleAddProduct = () => {
-    if (!newProduct.name || !newProduct.price || !newProduct.category || !newProduct.gender) {
+    if (!newProduct.name || !newProduct.price || !newProduct.costPrice || !newProduct.category || !newProduct.gender) {
       toast({
         title: "Erro",
-        description: "Preencha todos os campos obrigatórios (Nome, Preço, Categoria e Gênero)",
+        description: "Preencha todos os campos obrigatórios (Nome, Preço, Preço de Custo, Categoria e Gênero)",
         variant: "destructive",
       });
       return;
@@ -145,6 +150,7 @@ const ProductsPage = () => {
     addProduct({
       ...newProduct,
       price: parseFloat(newProduct.price),
+      costPrice: parseFloat(newProduct.costPrice), // Include cost price
       quantity: parseInt(newProduct.quantity) || 0,
       barcode: newProduct.barcode || Date.now().toString(),
       gender: newProduct.gender as 'Masculino' | 'Feminino' | 'Unissex'
@@ -159,6 +165,7 @@ const ProductsPage = () => {
       name: '',
       description: '',
       price: '',
+      costPrice: '', // Reset cost price
       category: '',
       collection: '',
       size: '',
@@ -178,6 +185,7 @@ const ProductsPage = () => {
       name: duplicatedProduct.name,
       description: duplicatedProduct.description,
       price: duplicatedProduct.price.toString(),
+      costPrice: duplicatedProduct.costPrice.toString(), // Include cost price
       category: duplicatedProduct.category,
       collection: duplicatedProduct.collection,
       size: duplicatedProduct.size,
@@ -275,6 +283,7 @@ const ProductsPage = () => {
       name: '',
       description: '',
       price: '',
+      costPrice: '', // Reset cost price
       category: '',
       collection: '',
       size: '',
@@ -335,11 +344,12 @@ const ProductsPage = () => {
                     Adicionar Produto
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-3xl">
+                <DialogContent className="max-w-4xl">
                   <DialogHeader>
                     <DialogTitle>Adicionar Novo Produto</DialogTitle>
                   </DialogHeader>
-                  <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                  <div className="grid grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                    {/* Name */}
                     <div className="space-y-2">
                       <Label htmlFor="name">Nome *</Label>
                       <Input
@@ -349,20 +359,49 @@ const ProductsPage = () => {
                         placeholder="Nome do produto"
                       />
                     </div>
+                    
+                    {/* Sale Price */}
                     <div className="space-y-2">
-                      <Label htmlFor="price">Preço *</Label>
-                      <Input
+                      <Label htmlFor="price">Preço de Venda *</Label>
+                      <MaskedInput
                         id="price"
-                        type="number"
-                        step="0.01"
+                        mask="currency"
                         value={newProduct.price}
-                        onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                        placeholder="0.00"
+                        onChange={(value) => {
+                          const numericValue = value.replace(/[^\d,]/g, '').replace(',', '.');
+                          setNewProduct({ ...newProduct, price: numericValue });
+                        }}
+                        placeholder="R$ 0,00"
+                      />
+                    </div>
+                    
+                    {/* Cost Price */}
+                    <div className="space-y-2">
+                      <Label htmlFor="costPrice">Preço de Custo *</Label>
+                      <MaskedInput
+                        id="costPrice"
+                        mask="currency"
+                        value={newProduct.costPrice}
+                        onChange={(value) => {
+                          const numericValue = value.replace(/[^\d,]/g, '').replace(',', '.');
+                          setNewProduct({ ...newProduct, costPrice: numericValue });
+                        }}
+                        placeholder="R$ 0,00"
                       />
                     </div>
 
+                    {/* Profit Margin Display */}
+                    {newProduct.price && newProduct.costPrice && (
+                      <div className="col-span-3 p-3 bg-gray-50 rounded-lg">
+                        <ProfitMarginDisplay 
+                          salePrice={parseFloat(newProduct.price) || 0} 
+                          costPrice={parseFloat(newProduct.costPrice) || 0}
+                        />
+                      </div>
+                    )}
+
                     {/* Gênero */}
-                    <div className="col-span-2 space-y-2">
+                    <div className="col-span-3 space-y-2">
                       <Label>Gênero *</Label>
                       <RadioGroup
                         value={newProduct.gender}
@@ -548,7 +587,7 @@ const ProductsPage = () => {
                       </Select>
                     </div>
 
-                    <div className="col-span-2 space-y-2">
+                    <div className="col-span-3 space-y-2">
                       <Label htmlFor="description">Descrição</Label>
                       <Input
                         id="description"
@@ -557,7 +596,7 @@ const ProductsPage = () => {
                         placeholder="Descrição do produto"
                       />
                     </div>
-                    <div className="col-span-2 space-y-2">
+                    <div className="col-span-3 space-y-2">
                       <Label htmlFor="barcode">Código de Barras</Label>
                       <Input
                         id="barcode"
@@ -601,11 +640,12 @@ const ProductsPage = () => {
           resetForm();
         }
       }}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>Editar Produto</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+          <div className="grid grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+            {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="edit-name">Nome *</Label>
               <Input
@@ -615,20 +655,49 @@ const ProductsPage = () => {
                 placeholder="Nome do produto"
               />
             </div>
+            
+            {/* Sale Price */}
             <div className="space-y-2">
-              <Label htmlFor="edit-price">Preço *</Label>
-              <Input
+              <Label htmlFor="edit-price">Preço de Venda *</Label>
+              <MaskedInput
                 id="edit-price"
-                type="number"
-                step="0.01"
+                mask="currency"
                 value={newProduct.price}
-                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                placeholder="0.00"
+                onChange={(value) => {
+                  const numericValue = value.replace(/[^\d,]/g, '').replace(',', '.');
+                  setNewProduct({ ...newProduct, price: numericValue });
+                }}
+                placeholder="R$ 0,00"
+              />
+            </div>
+            
+            {/* Cost Price */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-costPrice">Preço de Custo *</Label>
+              <MaskedInput
+                id="edit-costPrice"
+                mask="currency"
+                value={newProduct.costPrice}
+                onChange={(value) => {
+                  const numericValue = value.replace(/[^\d,]/g, '').replace(',', '.');
+                  setNewProduct({ ...newProduct, costPrice: numericValue });
+                }}
+                placeholder="R$ 0,00"
               />
             </div>
 
+            {/* Profit Margin Display */}
+            {newProduct.price && newProduct.costPrice && (
+              <div className="col-span-3 p-3 bg-gray-50 rounded-lg">
+                <ProfitMarginDisplay 
+                  salePrice={parseFloat(newProduct.price) || 0} 
+                  costPrice={parseFloat(newProduct.costPrice) || 0}
+                />
+              </div>
+            )}
+
             {/* Gênero */}
-            <div className="col-span-2 space-y-2">
+            <div className="col-span-3 space-y-2">
               <Label>Gênero *</Label>
               <RadioGroup
                 value={newProduct.gender}
@@ -742,7 +811,7 @@ const ProductsPage = () => {
               </Select>
             </div>
 
-            <div className="col-span-2 space-y-2">
+            <div className="col-span-3 space-y-2">
               <Label htmlFor="edit-description">Descrição</Label>
               <Input
                 id="edit-description"
@@ -751,7 +820,7 @@ const ProductsPage = () => {
                 placeholder="Descrição do produto"
               />
             </div>
-            <div className="col-span-2 space-y-2">
+            <div className="col-span-3 space-y-2">
               <Label htmlFor="edit-barcode">Código de Barras</Label>
               <Input
                 id="edit-barcode"
@@ -970,11 +1039,22 @@ const ProductsPage = () => {
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Preço:</span>
+                    <span className="text-sm text-muted-foreground">Preço Venda:</span>
                     <span className="font-semibold text-store-green-600">
                       R$ {product.price.toFixed(2)}
                     </span>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Preço Custo:</span>
+                    <span className="font-semibold text-gray-600">
+                      R$ {product.costPrice.toFixed(2)}
+                    </span>
+                  </div>
+                  <ProfitMarginDisplay 
+                    salePrice={product.price} 
+                    costPrice={product.costPrice}
+                    className="border-t pt-2"
+                  />
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Estoque:</span>
                     <span className={`font-semibold ${
@@ -1008,7 +1088,9 @@ const ProductsPage = () => {
                 <TableHead>Cor</TableHead>
                 <TableHead>Tamanho</TableHead>
                 <TableHead>Gênero</TableHead>
-                <TableHead>Preço</TableHead>
+                <TableHead>Preço Venda</TableHead>
+                <TableHead>Preço Custo</TableHead>
+                <TableHead>Margem</TableHead>
                 <TableHead>Estoque</TableHead>
                 <TableHead>Código</TableHead>
                 {canEdit && <TableHead>Ações</TableHead>}
@@ -1029,6 +1111,16 @@ const ProductsPage = () => {
                   </TableCell>
                   <TableCell className="font-semibold text-store-green-600">
                     R$ {product.price.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="font-semibold text-gray-600">
+                    R$ {product.costPrice.toFixed(2)}
+                  </TableCell>
+                  <TableCell>
+                    <ProfitMarginDisplay 
+                      salePrice={product.price} 
+                      costPrice={product.costPrice}
+                      className="text-xs"
+                    />
                   </TableCell>
                   <TableCell>
                     <span className={`font-semibold ${

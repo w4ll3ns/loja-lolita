@@ -9,6 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, CheckCircle, XCircle, Edit2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { MaskedInput } from '@/components/ui/masked-input';
+import { ProfitMarginDisplay } from '@/components/ProfitMarginDisplay';
 
 interface XmlProduct {
   cProd: string;
@@ -25,6 +27,7 @@ interface XmlProduct {
   // Campos inferidos
   size?: string;
   gender?: 'Masculino' | 'Feminino' | 'Unissex';
+  costPrice?: number; // New field for cost price
 }
 
 interface ImportXmlModalProps {
@@ -83,12 +86,10 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
 
-      // Verificar se é um XML válido
       if (xmlDoc.documentElement.nodeName === 'parsererror') {
         throw new Error('XML inválido');
       }
 
-      // Extrair produtos da NF-e
       const detElements = xmlDoc.getElementsByTagName('det');
       const products: XmlProduct[] = [];
 
@@ -109,7 +110,9 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
           const CFOP = prod.getElementsByTagName('CFOP')[0]?.textContent || '';
           const xPed = prod.getElementsByTagName('xPed')[0]?.textContent || '';
 
-          // Inferir tamanho e gênero
+          // Extract cost price from vUnCom (unit value)
+          const costPrice = parseFloat(vUnCom.replace(',', '.')) || 0;
+
           const size = inferSizeFromProduct(xProd, cProd);
           const gender = inferGenderFromProduct(xProd);
 
@@ -126,6 +129,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
             xPed,
             size,
             gender,
+            costPrice, // Add cost price from XML
             selected: true
           });
         }
@@ -171,11 +175,11 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
       return;
     }
 
-    // Converter para formato do sistema
     const productsToImport = selectedProducts.map(p => ({
       name: p.xProd,
       description: `Importado via NF-e - Código: ${p.cProd}`,
       price: parseFloat(p.vUnCom.replace(',', '.')),
+      costPrice: p.costPrice || 0, // Include cost price
       category: 'Importado',
       collection: 'NF-e',
       size: p.size || '',
@@ -307,33 +311,48 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
                     <TableHead>Código</TableHead>
                     <TableHead>Código de Barras</TableHead>
                     <TableHead>Qtd</TableHead>
-                    <TableHead>Valor Unit.</TableHead>
+                    <TableHead>Preço Custo</TableHead>
+                    <TableHead>Preço Venda</TableHead>
+                    <TableHead>Margem</TableHead>
                     <TableHead>Tamanho</TableHead>
                     <TableHead>Gênero</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {extractedProducts.map((product, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Checkbox 
-                          checked={product.selected}
-                          onCheckedChange={() => toggleProductSelection(index)}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">{product.xProd}</TableCell>
-                      <TableCell className="font-mono text-xs">{product.cProd}</TableCell>
-                      <TableCell className="font-mono text-xs">{product.cEAN || '-'}</TableCell>
-                      <TableCell>{product.qCom}</TableCell>
-                      <TableCell>R$ {parseFloat(product.vUnCom.replace(',', '.')).toFixed(2)}</TableCell>
-                      <TableCell>{product.size || '-'}</TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {product.gender}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {extractedProducts.map((product, index) => {
+                    const salePrice = parseFloat(product.vUnCom.replace(',', '.'));
+                    const costPrice = product.costPrice || 0;
+                    
+                    return (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Checkbox 
+                            checked={product.selected}
+                            onCheckedChange={() => toggleProductSelection(index)}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">{product.xProd}</TableCell>
+                        <TableCell className="font-mono text-xs">{product.cProd}</TableCell>
+                        <TableCell className="font-mono text-xs">{product.cEAN || '-'}</TableCell>
+                        <TableCell>{product.qCom}</TableCell>
+                        <TableCell>R$ {costPrice.toFixed(2)}</TableCell>
+                        <TableCell>R$ {salePrice.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <ProfitMarginDisplay 
+                            salePrice={salePrice} 
+                            costPrice={costPrice}
+                            className="text-xs"
+                          />
+                        </TableCell>
+                        <TableCell>{product.size || '-'}</TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {product.gender}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

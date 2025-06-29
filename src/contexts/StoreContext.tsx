@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState } from 'react';
 
 export interface Product {
@@ -5,6 +6,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  costPrice: number; // New field for cost price
   category: string;
   collection: string;
   size: string;
@@ -88,13 +90,14 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
-// Dados iniciais mock
+// Updated initial products with cost price
 const initialProducts: Product[] = [
   {
     id: '1',
     name: 'Camiseta Básica',
     description: 'Camiseta 100% algodão',
     price: 49.90,
+    costPrice: 25.00, // New field
     category: 'Camisetas',
     collection: 'Verão 2024',
     size: 'M',
@@ -110,6 +113,7 @@ const initialProducts: Product[] = [
     name: 'Calça Jeans',
     description: 'Calça jeans slim fit',
     price: 129.90,
+    costPrice: 70.00, // New field
     category: 'Calças',
     collection: 'Inverno 2024',
     size: '42',
@@ -240,12 +244,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       name: `🔧 Produto não cadastrado`,
       description: 'Produto temporário criado durante a venda. Necessita edição completa dos dados.',
       price: price,
+      costPrice: 0, // New field for temporary products
       category: 'Temporário',
       collection: 'Temporário',
       size: 'N/A',
       supplier: 'A definir',
       brand: 'A definir',
-      quantity: 1, // Produto temporário sempre tem quantidade 1 inicialmente
+      quantity: 1,
       barcode: barcode,
       color: 'A definir',
       gender: 'Unissex'
@@ -253,7 +258,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     setProducts(prev => [...prev, temporaryProduct]);
     
-    // Adicionar categoria temporária se não existir
     if (!categories.includes('Temporário')) {
       setCategories(prev => [...prev, 'Temporário']);
     }
@@ -270,13 +274,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       name: `${product.name} (Cópia)`,
       description: product.description,
       price: product.price,
+      costPrice: product.costPrice, // Include cost price in duplication
       category: product.category,
       collection: product.collection,
       size: product.size,
       supplier: product.supplier,
       brand: product.brand,
       quantity: product.quantity,
-      barcode: '', // Limpar código de barras para evitar duplicação
+      barcode: '',
       color: product.color,
       gender: product.gender,
       image: product.image
