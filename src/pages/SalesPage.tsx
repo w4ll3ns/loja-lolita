@@ -257,7 +257,7 @@ const SalesPage = () => {
   const canMakeSale = user?.role === 'admin' || user?.role === 'caixa';
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in pb-32">
+    <div className="p-6 space-y-6 animate-fade-in pb-24">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Vendas</h1>
@@ -276,7 +276,7 @@ const SalesPage = () => {
                 <DialogTitle>Nova Venda</DialogTitle>
               </DialogHeader>
               
-              <div className="space-y-6 pb-6">
+              <div className="space-y-6 pb-32">
                 {/* Linha 1: Cliente e Vendedor lado a lado */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Seleção do Cliente */}

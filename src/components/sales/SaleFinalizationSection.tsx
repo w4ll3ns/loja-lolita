@@ -31,12 +31,12 @@ export const SaleFinalizationSection = ({
   disabled = false
 }: SaleFinalizationSectionProps) => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-40">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-lg z-40">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
           {/* Campo de Desconto */}
-          <div className="space-y-2">
-            <Label className={hasProducts ? 'text-gray-900' : 'text-gray-400'}>
+          <div className="space-y-1">
+            <Label className={`text-sm ${hasProducts ? 'text-gray-900' : 'text-gray-400'}`}>
               Desconto
             </Label>
             <div className="flex gap-2">
@@ -45,7 +45,7 @@ export const SaleFinalizationSection = ({
                 placeholder="0"
                 value={discount.value || ''}
                 onChange={(e) => onDiscountChange({ ...discount, value: Number(e.target.value) || 0 })}
-                className="flex-1"
+                className="flex-1 h-9"
                 disabled={!hasProducts || disabled}
               />
               <Select 
@@ -53,15 +53,15 @@ export const SaleFinalizationSection = ({
                 onValueChange={(value: 'percentage' | 'value') => onDiscountChange({ ...discount, type: value })}
                 disabled={!hasProducts || disabled}
               >
-                <SelectTrigger className="w-16">
+                <SelectTrigger className="w-14 h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-white z-50">
                   <SelectItem value="percentage">
-                    <Percent className="h-4 w-4" />
+                    <Percent className="h-3 w-3" />
                   </SelectItem>
                   <SelectItem value="value">
-                    <DollarSign className="h-4 w-4" />
+                    <DollarSign className="h-3 w-3" />
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -69,8 +69,8 @@ export const SaleFinalizationSection = ({
           </div>
 
           {/* Forma de Pagamento */}
-          <div className="space-y-2">
-            <Label className={hasProducts ? 'text-gray-900' : 'text-gray-400'}>
+          <div className="space-y-1">
+            <Label className={`text-sm ${hasProducts ? 'text-gray-900' : 'text-gray-400'}`}>
               Pagamento
             </Label>
             <Select 
@@ -78,7 +78,7 @@ export const SaleFinalizationSection = ({
               onValueChange={(value: 'pix' | 'debito' | 'credito') => onPaymentMethodChange(value)}
               disabled={!hasProducts || disabled}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-9">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-white z-50">
@@ -90,17 +90,17 @@ export const SaleFinalizationSection = ({
           </div>
 
           {/* Totais */}
-          <div className="space-y-1">
+          <div className="space-y-0">
             <div className="text-right">
-              <p className="text-sm text-gray-600">
+              <p className="text-xs text-gray-600">
                 Subtotal: R$ {subtotal.toFixed(2)}
               </p>
               {discountAmount > 0 && (
-                <p className="text-sm text-red-600">
+                <p className="text-xs text-red-600">
                   Desconto: -R$ {discountAmount.toFixed(2)}
                 </p>
               )}
-              <p className="text-lg font-bold text-store-green-600">
+              <p className="text-sm font-bold text-store-green-600">
                 Total: R$ {total.toFixed(2)}
               </p>
             </div>
@@ -110,11 +110,11 @@ export const SaleFinalizationSection = ({
           <div>
             <Button 
               onClick={onFinalizeSale}
-              className="w-full bg-store-green-600 hover:bg-store-green-700 h-12 text-base font-semibold"
+              className="w-full bg-store-green-600 hover:bg-store-green-700 h-9 text-sm font-semibold"
               disabled={!hasProducts || disabled}
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Finalizar Venda
+              <ShoppingCart className="h-3 w-3 mr-2" />
+              Finalizar
               {hasProducts && (
                 <span className="ml-2">
                   R$ {total.toFixed(2)}
@@ -125,7 +125,7 @@ export const SaleFinalizationSection = ({
         </div>
         
         {!hasProducts && (
-          <p className="text-center text-gray-500 text-sm mt-2">
+          <p className="text-center text-gray-500 text-xs mt-1">
             Adicione pelo menos um produto para habilitar a finalização
           </p>
         )}
