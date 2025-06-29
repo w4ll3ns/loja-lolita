@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState } from 'react';
 
 export interface Product {
@@ -168,8 +169,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [colors, setColors] = useState<string[]>(['Branco', 'Preto', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Roxo']);
   const [deleteLogs, setDeleteLogs] = useState<DeleteLog[]>([]);
 
+  // Function to generate truly unique IDs
+  const generateUniqueId = (): string => {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  };
+
   const addProduct = (product: Omit<Product, 'id'>) => {
-    const newProduct = { ...product, id: Date.now().toString() };
+    const newProduct = { ...product, id: generateUniqueId() };
     setProducts(prev => [...prev, newProduct]);
   };
 
@@ -197,7 +203,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     // Log the deletion
     const deleteLog: DeleteLog = {
-      id: Date.now().toString(),
+      id: generateUniqueId(),
       productId: id,
       productName: product.name,
       userId,
@@ -218,7 +224,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const addCustomer = (customer: Omit<Customer, 'id'>) => {
-    const newCustomer = { ...customer, id: Date.now().toString() };
+    const newCustomer = { ...customer, id: generateUniqueId() };
     setCustomers(prev => [...prev, newCustomer]);
     
     // Adicionar cidade se não existir
@@ -228,12 +234,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const addSeller = (seller: Omit<Seller, 'id'>) => {
-    const newSeller = { ...seller, id: Date.now().toString() };
+    const newSeller = { ...seller, id: generateUniqueId() };
     setSellers(prev => [...prev, newSeller]);
   };
 
   const addSale = (sale: Omit<Sale, 'id' | 'date'>) => {
-    const newSale = { ...sale, id: Date.now().toString(), date: new Date() };
+    const newSale = { ...sale, id: generateUniqueId(), date: new Date() };
     setSales(prev => [newSale, ...prev]);
     
     // Reduzir estoque e criar produtos temporários se necessário
@@ -284,7 +290,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const createTemporaryProduct = (barcode: string, price: number = 0): Product => {
     const temporaryProduct: Product = {
-      id: Date.now().toString(),
+      id: generateUniqueId(),
       name: `🔧 Produto não cadastrado`,
       description: 'Produto temporário criado durante a venda. Necessita edição completa dos dados.',
       price: price,
