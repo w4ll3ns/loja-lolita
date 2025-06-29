@@ -77,9 +77,9 @@ export const BulkEditModal: React.FC<BulkEditModalProps> = ({
         const value = updates[field as keyof typeof updates];
         if (value) {
           if (field === 'price' || field === 'costPrice') {
-            finalUpdates[field as keyof Product] = parseFloat(value) as any;
+            (finalUpdates as any)[field] = parseFloat(value);
           } else {
-            finalUpdates[field as keyof Product] = value as any;
+            (finalUpdates as any)[field] = value;
           }
         }
       }

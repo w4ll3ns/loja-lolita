@@ -40,9 +40,13 @@ export const ProductTable: React.FC<ProductTableProps> = ({
               <TableHead className="w-12">
                 <Checkbox
                   checked={allSelected}
-                  indeterminate={someSelected}
                   onCheckedChange={(checked) => onSelectAll(!!checked)}
                 />
+                {someSelected && !allSelected && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-2 h-2 bg-primary rounded-sm"></div>
+                  </div>
+                )}
               </TableHead>
             )}
             <TableHead>Nome</TableHead>
