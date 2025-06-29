@@ -83,7 +83,10 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={isCollapsed ? "w-14" : "w-60"}
+      className={cn(
+        isCollapsed ? "w-14" : "w-60",
+        "hidden md:flex" // Hide completely on mobile
+      )}
       collapsible="icon"
     >
       <SidebarTrigger className="m-2 self-end" />
