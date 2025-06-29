@@ -1,21 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useStore, SaleItem, Product } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { QuickCustomerForm } from '@/components/sales/QuickCustomerForm';
 import { SaleConfirmation } from '@/components/sales/SaleConfirmation';
 import { SaleFinalizationSection } from '@/components/sales/SaleFinalizationSection';
-import { Search, ShoppingCart, Barcode, User, Users, Plus } from 'lucide-react';
-import { ProductAutocomplete } from '@/components/ui/product-autocomplete';
-import { cn } from '@/lib/utils';
+import { CustomerSelectionSection } from '@/components/sales/CustomerSelectionSection';
+import { SellerSelectionSection } from '@/components/sales/SellerSelectionSection';
+import { ProductAdditionSection } from '@/components/sales/ProductAdditionSection';
+import { ProductListSection } from '@/components/sales/ProductListSection';
+import { SalesList } from '@/components/sales/SalesList';
+import { ShoppingCart } from 'lucide-react';
 
 const SalesPage = () => {
   const { products, customers, sellers, sales, searchCustomers, searchProducts, createTemporaryProduct, addSale } = useStore();
@@ -23,7 +20,6 @@ const SalesPage = () => {
   const { toast } = useToast();
   
   const [isSaleDialogOpen, setIsSaleDialogOpen] = useState(false);
-  const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   
   // Estados da venda
@@ -38,7 +34,6 @@ const SalesPage = () => {
   const [customerSuggestions, setCustomerSuggestions] = useState<any[]>([]);
   const [productSearch, setProductSearch] = useState('');
 
-  const activeSellers = sellers.filter(s => s.active);
   const hasProducts = selectedProducts.length > 0;
 
   const handleCustomerSearch = (query: string) => {
@@ -277,189 +272,39 @@ const SalesPage = () => {
               </DialogHeader>
               
               <div className="space-y-6">
-                {/* Linha 1: Cliente e Vendedor lado a lado */}
+                {/* Cliente e Vendedor lado a lado */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Seleção do Cliente */}
-                  <div className="space-y-3">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      Cliente
-                    </h3>
-                    
-                    <div className="space-y-2">
-                      <Label>Buscar Cliente</Label>
-                      <div className="relative">
-                        <Input
-                          placeholder="Nome ou WhatsApp..."
-                          value={customerSearch}
-                          onChange={(e) => handleCustomerSearch(e.target.value)}
-                        />
-                        {customerSuggestions.length > 0 && (
-                          <div className="absolute top-full left-0 right-0 bg-white border rounded-md shadow-lg z-50 max-h-40 overflow-y-auto">
-                            {customerSuggestions.map((customer) => (
-                              <div
-                                key={customer.id}
-                                className="p-2 hover:bg-gray-100 cursor-pointer"
-                                onClick={() => handleSelectCustomer(customer)}
-                              >
-                                <p className="font-medium text-sm">{customer.name}</p>
-                                <p className="text-xs text-muted-foreground">{customer.whatsapp}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                  <CustomerSelectionSection
+                    selectedCustomer={selectedCustomer}
+                    customerSearch={customerSearch}
+                    customerSuggestions={customerSuggestions}
+                    onCustomerSearch={handleCustomerSearch}
+                    onSelectCustomer={handleSelectCustomer}
+                    onCustomerNotWantRegister={handleCustomerNotWantRegister}
+                  />
 
-                    {selectedCustomer && (
-                      <div className="p-3 bg-green-50 border border-green-200 rounded">
-                        <p className="font-medium text-green-800 text-sm">Cliente Selecionado:</p>
-                        <p className="text-green-700 text-sm">{selectedCustomer.name} - {selectedCustomer.whatsapp}</p>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2">
-                      <Popover open={showCustomerForm} onOpenChange={setShowCustomerForm}>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" size="sm" className="flex-1">
-                            <Plus className="h-4 w-4 mr-1" />
-                            Novo Cliente
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="center">
-                          <QuickCustomerForm
-                            onClose={() => setShowCustomerForm(false)}
-                            onCustomerCreated={handleSelectCustomer}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleCustomerNotWantRegister}
-                        className="flex-1"
-                      >
-                        Não Quis Cadastrar
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Seleção do Vendedor */}
-                  <div className="space-y-3">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <User className="h-5 w-5" />
-                      Vendedor
-                    </h3>
-                    
-                    <div className="space-y-2">
-                      <Label>Vendedor Responsável</Label>
-                      <Select onValueChange={setSelectedSeller} value={selectedSeller}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o vendedor" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white z-50">
-                          {activeSellers.map((seller) => (
-                            <SelectItem key={seller.id} value={seller.id}>
-                              {seller.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  <SellerSelectionSection
+                    selectedSeller={selectedSeller}
+                    sellers={sellers}
+                    onSellerChange={setSelectedSeller}
+                  />
                 </div>
 
-                {/* Linha 2: Campo de Código de Barras */}
-                <div className="space-y-3 border-t pt-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <Barcode className="h-5 w-5" />
-                    Adicionar Produtos
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    <Label>Código de Barras ou Nome do Produto</Label>
-                    <ProductAutocomplete
-                      value={productSearch}
-                      onChange={setProductSearch}
-                      products={products}
-                      placeholder="Digite o código de barras ou nome do produto..."
-                      onProductSelect={handleProductSelect}
-                      onCreateTemporary={handleCreateTemporaryProduct}
-                      className="text-center"
-                    />
-                  </div>
+                {/* Seção de Produtos */}
+                <ProductAdditionSection
+                  productSearch={productSearch}
+                  products={products}
+                  onProductSearchChange={setProductSearch}
+                  onProductSelect={handleProductSelect}
+                  onCreateTemporary={handleCreateTemporaryProduct}
+                />
 
-                  {/* Lista de Produtos Adicionados */}
-                  {selectedProducts.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="font-medium">Produtos Adicionados</h4>
-                      <div className="max-h-60 overflow-y-auto space-y-2">
-                        {selectedProducts.map((item) => (
-                          <div 
-                            key={item.product.id} 
-                            className={cn(
-                              "flex items-center justify-between p-3 rounded border",
-                              item.product.category === 'Temporário' 
-                                ? "bg-orange-50 border-orange-200" 
-                                : "bg-muted"
-                            )}
-                          >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium text-sm">{item.product.name}</p>
-                                {item.product.category === 'Temporário' && (
-                                  <Badge variant="destructive" className="text-xs">
-                                    Não cadastrado
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-xs text-muted-foreground font-mono">
-                                {item.product.barcode}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {item.product.category === 'Temporário' && (
-                                <div className="flex flex-col gap-1">
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    min="0.01"
-                                    placeholder="Preço"
-                                    value={item.price || ''}
-                                    onChange={(e) => handleUpdatePrice(item.product.id, parseFloat(e.target.value) || 0)}
-                                    className="w-20 text-xs"
-                                  />
-                                </div>
-                              )}
-                              {item.product.category !== 'Temporário' && (
-                                <p className="text-xs text-muted-foreground">
-                                  R$ {item.price.toFixed(2)} cada
-                                </p>
-                              )}
-                              <Input
-                                type="number"
-                                min="1"
-                                max={item.product.category === 'Temporário' ? 999 : item.product.quantity}
-                                value={item.quantity}
-                                onChange={(e) => handleUpdateQuantity(item.product.id, parseInt(e.target.value))}
-                                className="w-14 text-xs"
-                              />
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleRemoveProduct(item.product.id)}
-                                className="h-8 w-8 p-0"
-                              >
-                                ×
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <ProductListSection
+                  selectedProducts={selectedProducts}
+                  onUpdateQuantity={handleUpdateQuantity}
+                  onUpdatePrice={handleUpdatePrice}
+                  onRemoveProduct={handleRemoveProduct}
+                />
 
                 {/* Área de Finalização */}
                 <div className="border-t pt-4">
@@ -497,72 +342,7 @@ const SalesPage = () => {
       {/* Lista de vendas recentes */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Vendas Recentes</h2>
-        {sales.length === 0 ? (
-          <div className="text-center py-12">
-            <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">Nenhuma venda realizada</p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {sales.map((sale) => (
-              <Card key={sale.id} className="card-hover">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        {sale.customer.name}
-                        {sale.customer.isGeneric && (
-                          <Badge variant="secondary" className="text-xs">Cliente Padrão</Badge>
-                        )}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        {sale.date.toLocaleDateString()} - {sale.date.toLocaleTimeString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xl font-bold text-store-green-600">
-                        R$ {sale.total.toFixed(2)}
-                      </p>
-                      <Badge variant="outline" className="capitalize">
-                        {sale.paymentMethod === 'pix' ? 'PIX' : 
-                         sale.paymentMethod === 'debito' ? 'Débito' : 'Crédito'}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Vendedor:</span> {sale.seller}
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Caixa:</span> {sale.cashier}
-                      </div>
-                    </div>
-                    {sale.discount > 0 && (
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Subtotal:</span> R$ {sale.subtotal.toFixed(2)} | 
-                        <span className="text-red-600 ml-1">Desconto: R$ {sale.discount.toFixed(2)}</span>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Itens:</p>
-                      <div className="space-y-1">
-                        {sale.items.map((item, index) => (
-                          <div key={index} className="flex justify-between text-sm">
-                            <span>{item.quantity}x {item.product.name}</span>
-                            <span>R$ {(item.price * item.quantity).toFixed(2)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+        <SalesList sales={sales} />
       </div>
     </div>
   );
