@@ -2,8 +2,9 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ProfitMarginDisplay } from '@/components/ProfitMarginDisplay';
-import { Pencil, Copy } from 'lucide-react';
+import { Pencil, Copy, Trash2 } from 'lucide-react';
 import type { Product } from '@/contexts/StoreContext';
 
 interface ProductTableProps {
@@ -11,19 +12,39 @@ interface ProductTableProps {
   canEdit: boolean;
   onEdit: (product: Product) => void;
   onDuplicate: (product: Product) => void;
+  onDelete: (product: Product) => void;
+  selectedProducts: string[];
+  onSelectProduct: (productId: string, selected: boolean) => void;
+  onSelectAll: (selected: boolean) => void;
 }
 
 export const ProductTable: React.FC<ProductTableProps> = ({
   products,
   canEdit,
   onEdit,
-  onDuplicate
+  onDuplicate,
+  onDelete,
+  selectedProducts,
+  onSelectProduct,
+  onSelectAll
 }) => {
+  const allSelected = products.length > 0 && selectedProducts.length === products.length;
+  const someSelected = selectedProducts.length > 0 && selectedProducts.length < products.length;
+
   return (
     <div className="border rounded-lg overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
+            {canEdit && (
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={allSelected}
+                  indeterminate={someSelected}
+                  onCheckedChange={(checked) => onSelectAll(!!checked)}
+                />
+              </TableHead>
+            )}
             <TableHead>Nome</TableHead>
             <TableHead>Categoria</TableHead>
             <TableHead>Marca</TableHead>
@@ -41,6 +62,14 @@ export const ProductTable: React.FC<ProductTableProps> = ({
         <TableBody>
           {products.map((product) => (
             <TableRow key={product.id}>
+              {canEdit && (
+                <TableCell>
+                  <Checkbox
+                    checked={selectedProducts.includes(product.id)}
+                    onCheckedChange={(checked) => onSelectProduct(product.id, !!checked)}
+                  />
+                </TableCell>
+              )}
               <TableCell className="font-medium">{product.name}</TableCell>
               <TableCell>{product.category}</TableCell>
               <TableCell>{product.brand}</TableCell>
@@ -92,6 +121,15 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                       title="Duplicar produto"
                     >
                       <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(product)}
+                      className="text-gray-500 hover:text-red-600"
+                      title="Excluir produto"
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>

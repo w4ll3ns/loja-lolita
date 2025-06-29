@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,24 +7,54 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Search, ShoppingCart, LayoutGrid, LayoutList, Upload } from 'lucide-react';
+import { Search, ShoppingCart, LayoutGrid, LayoutList, Upload, Edit, Trash2 } from 'lucide-react';
 import type { Product } from '@/contexts/StoreContext';
 import { ImportXmlModal } from '@/components/ImportXmlModal';
 import { ProductForm } from '@/components/products/ProductForm';
 import { ProductCard } from '@/components/products/ProductCard';
 import { ProductTable } from '@/components/products/ProductTable';
 import { QuickAddModals } from '@/components/products/QuickAddModals';
+import { DeleteConfirmModal } from '@/components/products/DeleteConfirmModal';
+import { BulkEditModal } from '@/components/products/BulkEditModal';
 
 const ProductsPage = () => {
-  const { products, addProduct, updateProduct, categories, collections, suppliers, brands, colors, addCategory, addCollection, addSupplier, addBrand, addColor, duplicateProduct, isBarcodeTaken } = useStore();
+  const { 
+    products, 
+    addProduct, 
+    updateProduct, 
+    deleteProduct,
+    bulkUpdateProducts,
+    categories, 
+    collections, 
+    suppliers, 
+    brands, 
+    colors, 
+    addCategory, 
+    addCollection, 
+    addSupplier, 
+    addBrand, 
+    addColor, 
+    duplicateProduct, 
+    isBarcodeTaken,
+    hasProductBeenSold
+  } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [isImportXmlOpen, setIsImportXmlOpen] = useState(false);
+  
+  // Selection and bulk edit states
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+  
+  // Delete confirmation states
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   // Estados para modais de adição rápida
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
@@ -65,6 +94,63 @@ const ProductsPage = () => {
     product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.barcode.includes(searchTerm)
   );
+
+  // Selection handlers
+  const handleSelectProduct = (productId: string, selected: boolean) => {
+    setSelectedProducts(prev => 
+      selected 
+        ? [...prev, productId]
+        : prev.filter(id => id !== productId)
+    );
+  };
+
+  const handleSelectAll = (selected: boolean) => {
+    setSelectedProducts(selected ? filteredProducts.map(p => p.id) : []);
+  };
+
+  // Delete handlers
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = (reason?: string) => {
+    if (!productToDelete || !user) return;
+    
+    deleteProduct(productToDelete.id, user.id, user.name, reason);
+    
+    toast({
+      title: "Produto excluído",
+      description: `O produto "${productToDelete.name}" foi excluído com sucesso.`,
+    });
+    
+    // Remove from selected products if it was selected
+    setSelectedProducts(prev => prev.filter(id => id !== productToDelete.id));
+    setProductToDelete(null);
+  };
+
+  const validatePassword = (password: string): boolean => {
+    // Simple password validation - in a real app, this would verify against the user's actual password
+    return password === '123456';
+  };
+
+  // Bulk edit handlers
+  const handleBulkEdit = () => {
+    if (selectedProducts.length === 0) {
+      toast({
+        title: "Erro",
+        description: "Selecione pelo menos um produto para editar",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsBulkEditOpen(true);
+  };
+
+  const handleBulkUpdate = (updates: Partial<Product>) => {
+    bulkUpdateProducts(selectedProducts, updates);
+    setSelectedProducts([]);
+  };
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
@@ -310,6 +396,17 @@ const ProductsPage = () => {
           
           {canEdit && (
             <div className="flex gap-2">
+              {selectedProducts.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={handleBulkEdit}
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar em Lote ({selectedProducts.length})
+                </Button>
+              )}
+              
               <Button
                 variant="outline"
                 onClick={() => setIsImportXmlOpen(true)}
@@ -332,11 +429,34 @@ const ProductsPage = () => {
         </div>
       </div>
 
-      {/* Import XML Modal */}
+      {/* Modals */}
       <ImportXmlModal
         isOpen={isImportXmlOpen}
         onClose={() => setIsImportXmlOpen(false)}
         onImport={handleImportFromXml}
+      />
+
+      <BulkEditModal
+        isOpen={isBulkEditOpen}
+        onClose={() => setIsBulkEditOpen(false)}
+        selectedProducts={filteredProducts.filter(p => selectedProducts.includes(p.id))}
+        onBulkUpdate={handleBulkUpdate}
+        categories={categories}
+        suppliers={suppliers}
+        sizes={sizes}
+        genders={genders}
+      />
+
+      <DeleteConfirmModal
+        isOpen={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setProductToDelete(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        productName={productToDelete?.name || ''}
+        requiresPassword={productToDelete ? hasProductBeenSold(productToDelete.id) : false}
+        onPasswordValidate={validatePassword}
       />
 
       {/* Product Forms */}
@@ -448,6 +568,9 @@ const ProductsPage = () => {
               canEdit={canEdit}
               onEdit={handleEditProduct}
               onDuplicate={handleDuplicateProduct}
+              onDelete={handleDeleteClick}
+              isSelected={selectedProducts.includes(product.id)}
+              onSelect={handleSelectProduct}
             />
           ))}
         </div>
@@ -457,6 +580,10 @@ const ProductsPage = () => {
           canEdit={canEdit}
           onEdit={handleEditProduct}
           onDuplicate={handleDuplicateProduct}
+          onDelete={handleDeleteClick}
+          selectedProducts={selectedProducts}
+          onSelectProduct={handleSelectProduct}
+          onSelectAll={handleSelectAll}
         />
       )}
 

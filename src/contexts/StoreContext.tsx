@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState } from 'react';
 
 export interface Product {
@@ -57,6 +56,17 @@ export interface Sale {
   date: Date;
 }
 
+export interface DeleteLog {
+  id: string;
+  productId: string;
+  productName: string;
+  userId: string;
+  userName: string;
+  date: Date;
+  reason?: string;
+  requiredPassword: boolean;
+}
+
 interface StoreContextType {
   products: Product[];
   customers: Customer[];
@@ -68,9 +78,11 @@ interface StoreContextType {
   brands: string[];
   cities: string[];
   colors: string[];
+  deleteLogs: DeleteLog[];
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
+  deleteProduct: (id: string, userId: string, userName: string, reason?: string) => void;
+  bulkUpdateProducts: (productIds: string[], updates: Partial<Product>) => void;
   addCustomer: (customer: Omit<Customer, 'id'>) => void;
   addSeller: (seller: Omit<Seller, 'id'>) => void;
   addSale: (sale: Omit<Sale, 'id' | 'date'>) => void;
@@ -86,6 +98,7 @@ interface StoreContextType {
   getIncompleteProducts: () => Product[];
   duplicateProduct: (product: Product) => Omit<Product, 'id'>;
   isBarcodeTaken: (barcode: string, excludeId?: string) => boolean;
+  hasProductBeenSold: (productId: string) => boolean;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -153,6 +166,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [brands, setBrands] = useState<string[]>(['Marca X', 'Marca Y', 'Marca Z']);
   const [cities, setCities] = useState<string[]>(['São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Salvador', 'Fortaleza']);
   const [colors, setColors] = useState<string[]>(['Branco', 'Preto', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Roxo']);
+  const [deleteLogs, setDeleteLogs] = useState<DeleteLog[]>([]);
 
   const addProduct = (product: Omit<Product, 'id'>) => {
     const newProduct = { ...product, id: Date.now().toString() };
@@ -163,14 +177,44 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updatedProduct } : p));
   };
 
+  const bulkUpdateProducts = (productIds: string[], updates: Partial<Product>) => {
+    setProducts(prev => prev.map(p => 
+      productIds.includes(p.id) ? { ...p, ...updates } : p
+    ));
+  };
+
+  const hasProductBeenSold = (productId: string): boolean => {
+    return sales.some(sale => 
+      sale.items.some(item => item.product.id === productId)
+    );
+  };
+
+  const deleteProduct = (id: string, userId: string, userName: string, reason?: string) => {
+    const product = products.find(p => p.id === id);
+    if (!product) return;
+
+    const requiresPassword = hasProductBeenSold(id);
+    
+    // Log the deletion
+    const deleteLog: DeleteLog = {
+      id: Date.now().toString(),
+      productId: id,
+      productName: product.name,
+      userId,
+      userName,
+      date: new Date(),
+      reason,
+      requiredPassword: requiresPassword
+    };
+
+    setDeleteLogs(prev => [...prev, deleteLog]);
+    setProducts(prev => prev.filter(p => p.id !== id));
+  };
+
   const isBarcodeTaken = (barcode: string, excludeId?: string): boolean => {
     return products.some(product => 
       product.barcode === barcode && product.id !== excludeId
     );
-  };
-
-  const deleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
   };
 
   const addCustomer = (customer: Omit<Customer, 'id'>) => {
@@ -330,9 +374,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       brands,
       cities,
       colors,
+      deleteLogs,
       addProduct,
       updateProduct,
       deleteProduct,
+      bulkUpdateProducts,
       addCustomer,
       addSeller,
       addSale,
@@ -347,7 +393,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addColor,
       getIncompleteProducts,
       duplicateProduct,
-      isBarcodeTaken
+      isBarcodeTaken,
+      hasProductBeenSold
     }}>
       {children}
     </StoreContext.Provider>
