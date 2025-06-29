@@ -1,8 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MaskedInput } from '@/components/ui/masked-input';
+import { Autocomplete } from '@/components/ui/autocomplete';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,15 +12,16 @@ import { Badge } from '@/components/ui/badge';
 import { useStore, SaleItem } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Search, ShoppingCart, User, Users } from 'lucide-react';
+import { Search, ShoppingCart, Barcode, User, Users } from 'lucide-react';
 
 const SalesPage = () => {
-  const { products, customers, sales, addSale, addCustomer, searchCustomers } = useStore();
+  const { products, customers, sellers, sales, cities, addSale, addCustomer, searchCustomers, searchProductByBarcode } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   
   const [isSaleDialogOpen, setIsSaleDialogOpen] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<SaleItem[]>([]);
+  const [barcode, setBarcode] = useState('');
   const [customerSearch, setCustomerSearch] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [customerSuggestions, setCustomerSuggestions] = useState<any[]>([]);
@@ -34,10 +37,32 @@ const SalesPage = () => {
 
   const [saleData, setSaleData] = useState({
     paymentMethod: 'pix' as 'pix' | 'debito' | 'credito',
-    seller: ''
+    sellerId: ''
   });
 
-  const availableProducts = products.filter(p => p.quantity > 0);
+  const activeSellers = sellers.filter(s => s.active);
+
+  const handleBarcodeInput = (barcodeValue: string) => {
+    setBarcode(barcodeValue);
+    
+    if (barcodeValue.length >= 8) { // Mínimo para código de barras
+      const product = searchProductByBarcode(barcodeValue);
+      if (product) {
+        handleAddProduct(product.id);
+        setBarcode(''); // Limpar após adicionar
+        toast({
+          title: "Produto adicionado",
+          description: `${product.name} foi adicionado à venda`,
+        });
+      } else {
+        toast({
+          title: "Produto não encontrado",
+          description: "Código de barras não encontrado no sistema",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   const handleCustomerSearch = (query: string) => {
     setCustomerSearch(query);
@@ -62,6 +87,15 @@ const SalesPage = () => {
   const handleAddProduct = (productId: string) => {
     const product = products.find(p => p.id === productId);
     if (!product) return;
+
+    if (product.quantity <= 0) {
+      toast({
+        title: "Produto sem estoque",
+        description: "Este produto não possui estoque disponível",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const existingItem = selectedProducts.find(item => item.product.id === productId);
     if (existingItem) {
@@ -115,7 +149,7 @@ const SalesPage = () => {
       return;
     }
 
-    if (!saleData.seller) {
+    if (!saleData.sellerId) {
       toast({
         title: "Erro",
         description: "Selecione um vendedor",
@@ -125,6 +159,7 @@ const SalesPage = () => {
     }
 
     let finalCustomer = selectedCustomer;
+    const selectedSeller = sellers.find(s => s.id === saleData.sellerId);
 
     if (!selectedCustomer) {
       if (wantToRegister && showNewCustomerForm) {
@@ -137,8 +172,8 @@ const SalesPage = () => {
           return;
         }
         
-        addCustomer(newCustomer);
-        finalCustomer = { ...newCustomer, id: Date.now().toString() };
+        addCustomer({ ...newCustomer, wantedToRegister: true });
+        finalCustomer = { ...newCustomer, id: Date.now().toString(), wantedToRegister: true };
       } else {
         // Cliente genérico
         finalCustomer = customers.find(c => c.isGeneric);
@@ -150,7 +185,7 @@ const SalesPage = () => {
       items: selectedProducts,
       total: getTotalSale(),
       paymentMethod: saleData.paymentMethod,
-      seller: saleData.seller,
+      seller: selectedSeller?.name || '',
       cashier: user?.name || 'Sistema'
     };
 
@@ -163,10 +198,11 @@ const SalesPage = () => {
 
     // Reset form
     setSelectedProducts([]);
+    setBarcode('');
     setCustomerSearch('');
     setSelectedCustomer(null);
     setNewCustomer({ name: '', whatsapp: '', gender: 'M', city: '' });
-    setSaleData({ paymentMethod: 'pix', seller: '' });
+    setSaleData({ paymentMethod: 'pix', sellerId: '' });
     setIsSaleDialogOpen(false);
   };
 
@@ -193,39 +229,32 @@ const SalesPage = () => {
               </DialogHeader>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Seleção de produtos */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Produtos</h3>
-                  <div className="max-h-60 overflow-y-auto space-y-2">
-                    {availableProducts.map((product) => (
-                      <div key={product.id} className="flex items-center justify-between p-2 border rounded">
-                        <div className="flex-1">
-                          <p className="font-medium">{product.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            R$ {product.price.toFixed(2)} - {product.quantity} disponível
-                          </p>
-                        </div>
-                        <Button
-                          size="sm"
-                          onClick={() => handleAddProduct(product.id)}
-                          className="bg-store-blue-600 hover:bg-store-blue-700"
-                        >
-                          Adicionar
-                        </Button>
-                      </div>
-                    ))}
+                {/* Código de barras */}
+                <div className="lg:col-span-2 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Barcode className="h-5 w-5 text-store-blue-600" />
+                    <h3 className="font-semibold">Código de Barras</h3>
                   </div>
+                  <Input
+                    placeholder="Digite ou escaneie o código de barras..."
+                    value={barcode}
+                    onChange={(e) => handleBarcodeInput(e.target.value)}
+                    className="text-center font-mono"
+                    autoFocus
+                  />
+                </div>
 
-                  {/* Produtos selecionados */}
-                  {selectedProducts.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="font-medium">Produtos Selecionados</h4>
+                {/* Produtos selecionados */}
+                {selectedProducts.length > 0 && (
+                  <div className="lg:col-span-2 space-y-2">
+                    <h4 className="font-medium">Produtos Selecionados</h4>
+                    <div className="max-h-40 overflow-y-auto space-y-2">
                       {selectedProducts.map((item) => (
-                        <div key={item.product.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                        <div key={item.product.id} className="flex items-center justify-between p-3 bg-muted rounded border">
                           <div className="flex-1">
                             <p className="font-medium">{item.product.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              R$ {item.price.toFixed(2)} cada
+                              R$ {item.price.toFixed(2)} cada | Código: {item.product.barcode}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -247,119 +276,131 @@ const SalesPage = () => {
                           </div>
                         </div>
                       ))}
-                      <div className="text-right font-semibold text-lg">
-                        Total: R$ {getTotalSale().toFixed(2)}
-                      </div>
                     </div>
-                  )}
+                    <div className="text-right font-semibold text-xl text-store-green-600 border-t pt-2">
+                      Total: R$ {getTotalSale().toFixed(2)}
+                    </div>
+                  </div>
+                )}
+
+                {/* Busca de cliente */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Cliente
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      placeholder="Digite o nome ou WhatsApp do cliente..."
+                      value={customerSearch}
+                      onChange={(e) => handleCustomerSearch(e.target.value)}
+                    />
+                    {customerSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 bg-white border rounded-md shadow-lg z-50 max-h-40 overflow-y-auto">
+                        {customerSuggestions.map((customer) => (
+                          <div
+                            key={customer.id}
+                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => handleSelectCustomer(customer)}
+                          >
+                            <p className="font-medium">{customer.name}</p>
+                            <p className="text-sm text-muted-foreground">{customer.whatsapp}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Dados da venda */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Dados da Venda</h3>
+                {/* Vendedor */}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Vendedor *
+                  </Label>
+                  <Select onValueChange={(value) => setSaleData({ ...saleData, sellerId: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o vendedor" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      {activeSellers.map((seller) => (
+                        <SelectItem key={seller.id} value={seller.id}>
+                          {seller.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  {/* Busca de cliente */}
-                  <div className="space-y-2">
-                    <Label>Cliente</Label>
-                    <div className="relative">
-                      <Input
-                        placeholder="Digite o nome ou WhatsApp do cliente..."
-                        value={customerSearch}
-                        onChange={(e) => handleCustomerSearch(e.target.value)}
+                {/* Novo cliente */}
+                {showNewCustomerForm && (
+                  <div className="lg:col-span-2 space-y-4 p-4 border rounded">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={wantToRegister}
+                        onChange={(e) => setWantToRegister(e.target.checked)}
                       />
-                      {customerSuggestions.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 bg-white border rounded-md shadow-lg z-50 max-h-40 overflow-y-auto">
-                          {customerSuggestions.map((customer) => (
-                            <div
-                              key={customer.id}
-                              className="p-2 hover:bg-gray-100 cursor-pointer"
-                              onClick={() => handleSelectCustomer(customer)}
-                            >
-                              <p className="font-medium">{customer.name}</p>
-                              <p className="text-sm text-muted-foreground">{customer.whatsapp}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      <Label>Cliente quer se cadastrar</Label>
                     </div>
-                  </div>
 
-                  {/* Novo cliente ou cliente genérico */}
-                  {showNewCustomerForm && (
-                    <div className="space-y-4 p-4 border rounded">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={wantToRegister}
-                          onChange={(e) => setWantToRegister(e.target.checked)}
+                    {wantToRegister ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Input
+                          placeholder="Nome do cliente *"
+                          value={newCustomer.name}
+                          onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
                         />
-                        <Label>Cliente quer se cadastrar</Label>
+                        <MaskedInput
+                          mask="whatsapp"
+                          placeholder="WhatsApp *"
+                          value={newCustomer.whatsapp}
+                          onChange={(value) => setNewCustomer({ ...newCustomer, whatsapp: value })}
+                        />
+                        <Select onValueChange={(value: 'M' | 'F' | 'Outro') => setNewCustomer({ ...newCustomer, gender: value })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sexo" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white z-50">
+                            <SelectItem value="M">Masculino</SelectItem>
+                            <SelectItem value="F">Feminino</SelectItem>
+                            <SelectItem value="Outro">Outro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Autocomplete
+                          placeholder="Cidade (opcional)"
+                          value={newCustomer.city}
+                          onChange={(value) => setNewCustomer({ ...newCustomer, city: value })}
+                          suggestions={cities}
+                        />
                       </div>
-
-                      {wantToRegister ? (
-                        <div className="space-y-2">
-                          <Input
-                            placeholder="Nome do cliente"
-                            value={newCustomer.name}
-                            onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                          />
-                          <Input
-                            placeholder="WhatsApp"
-                            value={newCustomer.whatsapp}
-                            onChange={(e) => setNewCustomer({ ...newCustomer, whatsapp: e.target.value })}
-                          />
-                          <Select onValueChange={(value: 'M' | 'F' | 'Outro') => setNewCustomer({ ...newCustomer, gender: value })}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sexo" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-white z-50">
-                              <SelectItem value="M">Masculino</SelectItem>
-                              <SelectItem value="F">Feminino</SelectItem>
-                              <SelectItem value="Outro">Outro</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Input
-                            placeholder="Cidade (opcional)"
-                            value={newCustomer.city}
-                            onChange={(e) => setNewCustomer({ ...newCustomer, city: e.target.value })}
-                          />
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground">
-                          Venda será associada ao cliente padrão
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Vendedor */}
-                  <div className="space-y-2">
-                    <Label>Vendedor *</Label>
-                    <Input
-                      placeholder="Nome do vendedor"
-                      value={saleData.seller}
-                      onChange={(e) => setSaleData({ ...saleData, seller: e.target.value })}
-                    />
+                    ) : (
+                      <p className="text-muted-foreground">
+                        Venda será associada ao cliente padrão
+                      </p>
+                    )}
                   </div>
+                )}
 
-                  {/* Forma de pagamento */}
-                  <div className="space-y-2">
-                    <Label>Forma de Pagamento</Label>
-                    <Select onValueChange={(value: 'pix' | 'debito' | 'credito') => setSaleData({ ...saleData, paymentMethod: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a forma de pagamento" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        <SelectItem value="pix">PIX</SelectItem>
-                        <SelectItem value="debito">Débito</SelectItem>
-                        <SelectItem value="credito">Crédito</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* Forma de pagamento */}
+                <div className="lg:col-span-2 space-y-2">
+                  <Label>Forma de Pagamento</Label>
+                  <Select onValueChange={(value: 'pix' | 'debito' | 'credito') => setSaleData({ ...saleData, paymentMethod: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a forma de pagamento" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      <SelectItem value="pix">PIX</SelectItem>
+                      <SelectItem value="debito">Cartão de Débito</SelectItem>
+                      <SelectItem value="credito">Cartão de Crédito</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
+                <div className="lg:col-span-2">
                   <Button
                     onClick={handleFinalizeSale}
-                    className="w-full bg-store-green-600 hover:bg-store-green-700"
+                    className="w-full bg-store-green-600 hover:bg-store-green-700 text-lg py-3"
                     disabled={selectedProducts.length === 0}
                   >
                     Finalizar Venda - R$ {getTotalSale().toFixed(2)}
@@ -386,7 +427,12 @@ const SalesPage = () => {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-lg">{sale.customer.name}</CardTitle>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        {sale.customer.name}
+                        {sale.customer.isGeneric && (
+                          <Badge variant="secondary" className="text-xs">Cliente Padrão</Badge>
+                        )}
+                      </CardTitle>
                       <p className="text-sm text-muted-foreground">
                         {sale.date.toLocaleDateString()} - {sale.date.toLocaleTimeString()}
                       </p>
@@ -396,7 +442,8 @@ const SalesPage = () => {
                         R$ {sale.total.toFixed(2)}
                       </p>
                       <Badge variant="outline" className="capitalize">
-                        {sale.paymentMethod}
+                        {sale.paymentMethod === 'pix' ? 'PIX' : 
+                         sale.paymentMethod === 'debito' ? 'Débito' : 'Crédito'}
                       </Badge>
                     </div>
                   </div>
