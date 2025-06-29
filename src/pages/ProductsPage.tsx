@@ -11,8 +11,9 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Search, ShoppingCart, Plus, Copy, LayoutGrid, LayoutList, Pencil } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Copy, LayoutGrid, LayoutList, Pencil, Upload } from 'lucide-react';
 import type { Product } from '@/contexts/StoreContext';
+import { ImportXmlModal } from '@/components/ImportXmlModal';
 
 const ProductsPage = () => {
   const { products, addProduct, updateProduct, categories, collections, suppliers, brands, colors, addCategory, addCollection, addSupplier, addBrand, addColor, duplicateProduct, isBarcodeTaken } = useStore();
@@ -23,6 +24,7 @@ const ProductsPage = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
+  const [isImportXmlOpen, setIsImportXmlOpen] = useState(false);
 
   // Estados para modais de adição rápida
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
@@ -285,6 +287,18 @@ const ProductsPage = () => {
     });
   };
 
+  const handleImportFromXml = (importedProducts: any[]) => {
+    // Adicionar produtos importados
+    importedProducts.forEach(product => {
+      addProduct(product);
+    });
+
+    toast({
+      title: "Importação concluída",
+      description: `${importedProducts.length} produtos importados com sucesso!`,
+    });
+  };
+
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -304,262 +318,280 @@ const ProductsPage = () => {
           </ToggleGroup>
           
           {canEdit && (
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-store-blue-600 hover:bg-store-blue-700">
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Adicionar Produto
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl">
-                <DialogHeader>
-                  <DialogTitle>Adicionar Novo Produto</DialogTitle>
-                </DialogHeader>
-                <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome *</Label>
-                    <Input
-                      id="name"
-                      value={newProduct.name}
-                      onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                      placeholder="Nome do produto"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="price">Preço *</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      value={newProduct.price}
-                      onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                      placeholder="0.00"
-                    />
-                  </div>
-
-                  {/* Gênero */}
-                  <div className="col-span-2 space-y-2">
-                    <Label>Gênero *</Label>
-                    <RadioGroup
-                      value={newProduct.gender}
-                      onValueChange={(value) => setNewProduct({ ...newProduct, gender: value as 'Masculino' | 'Feminino' | 'Unissex' })}
-                      className="flex flex-row gap-6"
-                    >
-                      {genders.map((gender) => (
-                        <div key={gender} className="flex items-center space-x-2">
-                          <RadioGroupItem value={gender} id={gender} />
-                          <Label htmlFor={gender}>{gender}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  
-                  {/* Categoria com opção de adicionar */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="category">Categoria *</Label>
-                      {canAddStructuralData && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setIsAddCategoryOpen(true)}
-                          className="text-xs text-blue-600 hover:text-blue-700"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Nova
-                        </Button>
-                      )}
-                    </div>
-                    <Select onValueChange={(value) => setNewProduct({ ...newProduct, category: value })} value={newProduct.category}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma categoria" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        {categories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Cor com opção de adicionar */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="color">Cor *</Label>
-                      {canAddStructuralData && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setIsAddColorOpen(true)}
-                          className="text-xs text-blue-600 hover:text-blue-700"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Nova
-                        </Button>
-                      )}
-                    </div>
-                    <Select onValueChange={(value) => setNewProduct({ ...newProduct, color: value })} value={newProduct.color}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma cor" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        {colors.map((color) => (
-                          <SelectItem key={color} value={color}>{color}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Coleção com opção de adicionar */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="collection">Coleção</Label>
-                      {canAddStructuralData && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setIsAddCollectionOpen(true)}
-                          className="text-xs text-blue-600 hover:text-blue-700"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Nova
-                        </Button>
-                      )}
-                    </div>
-                    <Select onValueChange={(value) => setNewProduct({ ...newProduct, collection: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma coleção" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        {collections.map((col) => (
-                          <SelectItem key={col} value={col}>{col}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="size">Tamanho</Label>
-                    <Select onValueChange={(value) => setNewProduct({ ...newProduct, size: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um tamanho" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        {sizes.map((size) => (
-                          <SelectItem key={size} value={size}>{size}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantidade</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      value={newProduct.quantity}
-                      onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
-                      placeholder="0"
-                    />
-                  </div>
-
-                  {/* Marca com opção de adicionar */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="brand">Marca</Label>
-                      {canAddStructuralData && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setIsAddBrandOpen(true)}
-                          className="text-xs text-blue-600 hover:text-blue-700"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Nova
-                        </Button>
-                      )}
-                    </div>
-                    <Select onValueChange={(value) => setNewProduct({ ...newProduct, brand: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma marca" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        {brands.map((brand) => (
-                          <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Fornecedor com opção de adicionar */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="supplier">Fornecedor</Label>
-                      {canAddStructuralData && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setIsAddSupplierOpen(true)}
-                          className="text-xs text-blue-600 hover:text-blue-700"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Novo
-                        </Button>
-                      )}
-                    </div>
-                    <Select onValueChange={(value) => setNewProduct({ ...newProduct, supplier: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um fornecedor" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        {suppliers.map((supplier) => (
-                          <SelectItem key={supplier} value={supplier}>{supplier}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="description">Descrição</Label>
-                    <Input
-                      id="description"
-                      value={newProduct.description}
-                      onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                      placeholder="Descrição do produto"
-                    />
-                  </div>
-                  <div className="col-span-2 space-y-2">
-                    <Label htmlFor="barcode">Código de Barras</Label>
-                    <Input
-                      id="barcode"
-                      value={newProduct.barcode}
-                      onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })}
-                      placeholder="Deixe vazio para gerar automaticamente"
-                      className={!newProduct.barcode ? 'border-orange-300 bg-orange-50' : ''}
-                    />
-                    {!newProduct.barcode && (
-                      <p className="text-xs text-orange-600">⚠️ Código de barras deve ser único para cada produto</p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleAddProduct} className="bg-store-blue-600 hover:bg-store-blue-700">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsImportXmlOpen(true)}
+                className="border-store-blue-600 text-store-blue-600 hover:bg-store-blue-50"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Importar via NF-e
+              </Button>
+              
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-store-blue-600 hover:bg-store-blue-700">
+                    <ShoppingCart className="h-4 w-4 mr-2" />
                     Adicionar Produto
                   </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Adicionar Novo Produto</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nome *</Label>
+                      <Input
+                        id="name"
+                        value={newProduct.name}
+                        onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                        placeholder="Nome do produto"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="price">Preço *</Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        step="0.01"
+                        value={newProduct.price}
+                        onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    {/* Gênero */}
+                    <div className="col-span-2 space-y-2">
+                      <Label>Gênero *</Label>
+                      <RadioGroup
+                        value={newProduct.gender}
+                        onValueChange={(value) => setNewProduct({ ...newProduct, gender: value as 'Masculino' | 'Feminino' | 'Unissex' })}
+                        className="flex flex-row gap-6"
+                      >
+                        {genders.map((gender) => (
+                          <div key={gender} className="flex items-center space-x-2">
+                            <RadioGroupItem value={gender} id={gender} />
+                            <Label htmlFor={gender}>{gender}</Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                    
+                    {/* Categoria com opção de adicionar */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="category">Categoria *</Label>
+                        {canAddStructuralData && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsAddCategoryOpen(true)}
+                            className="text-xs text-blue-600 hover:text-blue-700"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Nova
+                          </Button>
+                        )}
+                      </div>
+                      <Select onValueChange={(value) => setNewProduct({ ...newProduct, category: value })} value={newProduct.category}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma categoria" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {categories.map((cat) => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Cor com opção de adicionar */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="color">Cor *</Label>
+                        {canAddStructuralData && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsAddColorOpen(true)}
+                            className="text-xs text-blue-600 hover:text-blue-700"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Nova
+                          </Button>
+                        )}
+                      </div>
+                      <Select onValueChange={(value) => setNewProduct({ ...newProduct, color: value })} value={newProduct.color}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma cor" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {colors.map((color) => (
+                            <SelectItem key={color} value={color}>{color}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Coleção com opção de adicionar */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="collection">Coleção</Label>
+                        {canAddStructuralData && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsAddCollectionOpen(true)}
+                            className="text-xs text-blue-600 hover:text-blue-700"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Nova
+                          </Button>
+                        )}
+                      </div>
+                      <Select onValueChange={(value) => setNewProduct({ ...newProduct, collection: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma coleção" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {collections.map((col) => (
+                            <SelectItem key={col} value={col}>{col}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="size">Tamanho</Label>
+                      <Select onValueChange={(value) => setNewProduct({ ...newProduct, size: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um tamanho" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {sizes.map((size) => (
+                            <SelectItem key={size} value={size}>{size}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="quantity">Quantidade</Label>
+                      <Input
+                        id="quantity"
+                        type="number"
+                        value={newProduct.quantity}
+                        onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
+                        placeholder="0"
+                      />
+                    </div>
+
+                    {/* Marca com opção de adicionar */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="brand">Marca</Label>
+                        {canAddStructuralData && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsAddBrandOpen(true)}
+                            className="text-xs text-blue-600 hover:text-blue-700"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Nova
+                          </Button>
+                        )}
+                      </div>
+                      <Select onValueChange={(value) => setNewProduct({ ...newProduct, brand: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma marca" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {brands.map((brand) => (
+                            <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Fornecedor com opção de adicionar */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="supplier">Fornecedor</Label>
+                        {canAddStructuralData && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setIsAddSupplierOpen(true)}
+                            className="text-xs text-blue-600 hover:text-blue-700"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Novo
+                          </Button>
+                        )}
+                      </div>
+                      <Select onValueChange={(value) => setNewProduct({ ...newProduct, supplier: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um fornecedor" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {suppliers.map((supplier) => (
+                            <SelectItem key={supplier} value={supplier}>{supplier}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="col-span-2 space-y-2">
+                      <Label htmlFor="description">Descrição</Label>
+                      <Input
+                        id="description"
+                        value={newProduct.description}
+                        onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                        placeholder="Descrição do produto"
+                      />
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label htmlFor="barcode">Código de Barras</Label>
+                      <Input
+                        id="barcode"
+                        value={newProduct.barcode}
+                        onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })}
+                        placeholder="Deixe vazio para gerar automaticamente"
+                        className={!newProduct.barcode ? 'border-orange-300 bg-orange-50' : ''}
+                      />
+                      {!newProduct.barcode && (
+                        <p className="text-xs text-orange-600">⚠️ Código de barras deve ser único para cada produto</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={handleAddProduct} className="bg-store-blue-600 hover:bg-store-blue-700">
+                      Adicionar Produto
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           )}
         </div>
       </div>
+
+      {/* Import XML Modal */}
+      <ImportXmlModal
+        isOpen={isImportXmlOpen}
+        onClose={() => setIsImportXmlOpen(false)}
+        onImport={handleImportFromXml}
+      />
 
       {/* Dialog de Edição */}
       <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
