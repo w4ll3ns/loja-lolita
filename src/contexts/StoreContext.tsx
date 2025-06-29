@@ -83,6 +83,7 @@ interface StoreContextType {
   addColor: (color: string) => void;
   getIncompleteProducts: () => Product[];
   duplicateProduct: (product: Product) => Omit<Product, 'id'>;
+  isBarcodeTaken: (barcode: string, excludeId?: string) => boolean;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -154,8 +155,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setProducts(prev => [...prev, newProduct]);
   };
 
-  const updateProduct = (id: string, product: Partial<Product>) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...product } : p));
+  const updateProduct = (id: string, updatedProduct: Partial<Product>) => {
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updatedProduct } : p));
+  };
+
+  const isBarcodeTaken = (barcode: string, excludeId?: string): boolean => {
+    return products.some(product => 
+      product.barcode === barcode && product.id !== excludeId
+    );
   };
 
   const deleteProduct = (id: string) => {
@@ -334,7 +341,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addBrand,
       addColor,
       getIncompleteProducts,
-      duplicateProduct
+      duplicateProduct,
+      isBarcodeTaken
     }}>
       {children}
     </StoreContext.Provider>

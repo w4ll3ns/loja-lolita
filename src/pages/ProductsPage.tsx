@@ -11,15 +11,17 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Search, ShoppingCart, Plus, Copy, LayoutGrid, LayoutList } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Copy, LayoutGrid, LayoutList, Pencil } from 'lucide-react';
 import type { Product } from '@/contexts/StoreContext';
 
 const ProductsPage = () => {
-  const { products, addProduct, categories, collections, suppliers, brands, colors, addCategory, addCollection, addSupplier, addBrand, addColor, duplicateProduct } = useStore();
+  const { products, addProduct, updateProduct, categories, collections, suppliers, brands, colors, addCategory, addCollection, addSupplier, addBrand, addColor, duplicateProduct, isBarcodeTaken } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
 
   // Estados para modais de adição rápida
@@ -60,11 +62,79 @@ const ProductsPage = () => {
     product.barcode.includes(searchTerm)
   );
 
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setNewProduct({
+      name: product.name,
+      description: product.description,
+      price: product.price.toString(),
+      category: product.category,
+      collection: product.collection,
+      size: product.size,
+      supplier: product.supplier,
+      brand: product.brand,
+      quantity: product.quantity.toString(),
+      barcode: product.barcode,
+      color: product.color,
+      gender: product.gender
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingProduct) return;
+    
+    if (!newProduct.name || !newProduct.price || !newProduct.category || !newProduct.gender) {
+      toast({
+        title: "Erro",
+        description: "Preencha todos os campos obrigatórios (Nome, Preço, Categoria e Gênero)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar se o código de barras já existe para outro produto
+    if (newProduct.barcode && isBarcodeTaken(newProduct.barcode, editingProduct.id)) {
+      toast({
+        title: "Erro",
+        description: "Este código de barras já está sendo usado por outro produto",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateProduct(editingProduct.id, {
+      ...newProduct,
+      price: parseFloat(newProduct.price),
+      quantity: parseInt(newProduct.quantity) || 0,
+      barcode: newProduct.barcode || editingProduct.barcode,
+      gender: newProduct.gender as 'Masculino' | 'Feminino' | 'Unissex'
+    });
+
+    toast({
+      title: "Sucesso",
+      description: "Produto atualizado com sucesso!",
+    });
+
+    setIsEditDialogOpen(false);
+    setEditingProduct(null);
+  };
+
   const handleAddProduct = () => {
     if (!newProduct.name || !newProduct.price || !newProduct.category || !newProduct.gender) {
       toast({
         title: "Erro",
         description: "Preencha todos os campos obrigatórios (Nome, Preço, Categoria e Gênero)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar se o código de barras já existe
+    if (newProduct.barcode && isBarcodeTaken(newProduct.barcode)) {
+      toast({
+        title: "Erro",
+        description: "Este código de barras já está sendo usado por outro produto",
         variant: "destructive",
       });
       return;
@@ -197,6 +267,23 @@ const ProductsPage = () => {
 
   const canEdit = user?.role === 'admin';
   const canAddStructuralData = user?.role === 'admin'; // Só admin pode adicionar categorias, marcas, etc.
+
+  const resetForm = () => {
+    setNewProduct({
+      name: '',
+      description: '',
+      price: '',
+      category: '',
+      collection: '',
+      size: '',
+      supplier: '',
+      brand: '',
+      quantity: '',
+      barcode: '',
+      color: '',
+      gender: ''
+    });
+  };
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -474,6 +561,185 @@ const ProductsPage = () => {
         </div>
       </div>
 
+      {/* Dialog de Edição */}
+      <Dialog open={isEditDialogOpen} onOpenChange={(open) => {
+        setIsEditDialogOpen(open);
+        if (!open) {
+          setEditingProduct(null);
+          resetForm();
+        }
+      }}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Editar Produto</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nome *</Label>
+              <Input
+                id="edit-name"
+                value={newProduct.name}
+                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                placeholder="Nome do produto"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-price">Preço *</Label>
+              <Input
+                id="edit-price"
+                type="number"
+                step="0.01"
+                value={newProduct.price}
+                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                placeholder="0.00"
+              />
+            </div>
+
+            {/* Gênero */}
+            <div className="col-span-2 space-y-2">
+              <Label>Gênero *</Label>
+              <RadioGroup
+                value={newProduct.gender}
+                onValueChange={(value) => setNewProduct({ ...newProduct, gender: value as 'Masculino' | 'Feminino' | 'Unissex' })}
+                className="flex flex-row gap-6"
+              >
+                {genders.map((gender) => (
+                  <div key={gender} className="flex items-center space-x-2">
+                    <RadioGroupItem value={gender} id={`edit-${gender}`} />
+                    <Label htmlFor={`edit-${gender}`}>{gender}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+            
+            {/* Categoria */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">Categoria *</Label>
+              <Select onValueChange={(value) => setNewProduct({ ...newProduct, category: value })} value={newProduct.category}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent className="bg-white z-50">
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Cor */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-color">Cor</Label>
+              <Select onValueChange={(value) => setNewProduct({ ...newProduct, color: value })} value={newProduct.color}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma cor" />
+                </SelectTrigger>
+                <SelectContent className="bg-white z-50">
+                  {colors.map((color) => (
+                    <SelectItem key={color} value={color}>{color}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Outros campos seguem o mesmo padrão... */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-collection">Coleção</Label>
+              <Select onValueChange={(value) => setNewProduct({ ...newProduct, collection: value })} value={newProduct.collection}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma coleção" />
+                </SelectTrigger>
+                <SelectContent className="bg-white z-50">
+                  {collections.map((col) => (
+                    <SelectItem key={col} value={col}>{col}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-size">Tamanho</Label>
+              <Select onValueChange={(value) => setNewProduct({ ...newProduct, size: value })} value={newProduct.size}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um tamanho" />
+                </SelectTrigger>
+                <SelectContent className="bg-white z-50">
+                  {sizes.map((size) => (
+                    <SelectItem key={size} value={size}>{size}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-quantity">Quantidade</Label>
+              <Input
+                id="edit-quantity"
+                type="number"
+                value={newProduct.quantity}
+                onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
+                placeholder="0"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-brand">Marca</Label>
+              <Select onValueChange={(value) => setNewProduct({ ...newProduct, brand: value })} value={newProduct.brand}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma marca" />
+                </SelectTrigger>
+                <SelectContent className="bg-white z-50">
+                  {brands.map((brand) => (
+                    <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-supplier">Fornecedor</Label>
+              <Select onValueChange={(value) => setNewProduct({ ...newProduct, supplier: value })} value={newProduct.supplier}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um fornecedor" />
+                </SelectTrigger>
+                <SelectContent className="bg-white z-50">
+                  {suppliers.map((supplier) => (
+                    <SelectItem key={supplier} value={supplier}>{supplier}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="edit-description">Descrição</Label>
+              <Input
+                id="edit-description"
+                value={newProduct.description}
+                onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                placeholder="Descrição do produto"
+              />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="edit-barcode">Código de Barras</Label>
+              <Input
+                id="edit-barcode"
+                value={newProduct.barcode}
+                onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })}
+                placeholder="Código de barras do produto"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} className="bg-store-blue-600 hover:bg-store-blue-700">
+              Salvar Alterações
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Modal para Nova Cor */}
       <Dialog open={isAddColorOpen} onOpenChange={setIsAddColorOpen}>
         <DialogContent className="max-w-md">
@@ -638,17 +904,30 @@ const ProductsPage = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-lg">{product.name}</CardTitle>
-                  {canEdit && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDuplicateProduct(product)}
-                      className="text-gray-500 hover:text-blue-600 p-1"
-                      title="Duplicar produto"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <div className="flex gap-1">
+                    {canEdit && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditProduct(product)}
+                        className="text-gray-500 hover:text-blue-600 p-1"
+                        title="Editar produto"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {canEdit && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDuplicateProduct(product)}
+                        className="text-gray-500 hover:text-green-600 p-1"
+                        title="Duplicar produto"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="text-sm text-muted-foreground space-y-1">
                   <p>{product.category} - {product.size}</p>
@@ -729,15 +1008,26 @@ const ProductsPage = () => {
                   <TableCell className="font-mono text-xs">{product.barcode}</TableCell>
                   {canEdit && (
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDuplicateProduct(product)}
-                        className="text-gray-500 hover:text-blue-600"
-                        title="Duplicar produto"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditProduct(product)}
+                          className="text-gray-500 hover:text-blue-600"
+                          title="Editar produto"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDuplicateProduct(product)}
+                          className="text-gray-500 hover:text-green-600"
+                          title="Duplicar produto"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   )}
                 </TableRow>
