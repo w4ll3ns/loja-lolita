@@ -6,27 +6,93 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Shield, Lock, Users, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Shield, Lock, Users, AlertCircle, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useStore } from '@/contexts/StoreContext';
+import { useToast } from '@/hooks/use-toast';
 
 const SecuritySettingsPage = () => {
   const navigate = useNavigate();
-  const [settings, setSettings] = useState({
-    minPasswordLength: '8',
-    passwordExpiration: '90',
-    requireSpecialChars: true,
-    requireNumbers: true,
-    twoFactorAuth: false,
-    sessionTimeout: '480',
-    multipleLogins: false,
-    maxSessions: '1'
-  });
+  const { securitySettings, updateSecuritySettings } = useStore();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [settings, setSettings] = useState(securitySettings);
 
-  const handleSave = () => {
-    console.log('Salvando configurações de segurança:', settings);
+  const handleSave = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Validations
+      if (settings.minPasswordLength < 6 || settings.minPasswordLength > 20) {
+        toast({
+          title: "Erro de validação",
+          description: "O comprimento mínimo da senha deve estar entre 6 e 20 caracteres",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (settings.passwordExpiration < 30 || settings.passwordExpiration > 365) {
+        toast({
+          title: "Erro de validação",
+          description: "A expiração da senha deve estar entre 30 e 365 dias",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (settings.sessionTimeout < 15 || settings.sessionTimeout > 1440) {
+        toast({
+          title: "Erro de validação",
+          description: "O timeout da sessão deve estar entre 15 e 1440 minutos",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (settings.multipleLogins && settings.maxSessions < 1) {
+        toast({
+          title: "Erro de validação",
+          description: "O número máximo de sessões deve ser pelo menos 1",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      updateSecuritySettings(settings);
+      
+      toast({
+        title: "✅ Configurações salvas",
+        description: "As configurações de segurança foram atualizadas com sucesso",
+      });
+
+      // Show warning if security settings are too permissive
+      if (!settings.requireNumbers && !settings.requireSpecialChars && settings.minPasswordLength < 8) {
+        toast({
+          title: "⚠️ Atenção: Segurança baixa",
+          description: "As configurações atuais podem comprometer a segurança do sistema",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar as configurações. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const updateSetting = (key: string, value: any) => {
+  const updateSetting = (key: keyof typeof settings, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
@@ -63,7 +129,7 @@ const SecuritySettingsPage = () => {
                   id="minPasswordLength"
                   type="number"
                   value={settings.minPasswordLength}
-                  onChange={(e) => updateSetting('minPasswordLength', e.target.value)}
+                  onChange={(e) => updateSetting('minPasswordLength', parseInt(e.target.value) || 6)}
                   min="6"
                   max="20"
                 />
@@ -75,7 +141,9 @@ const SecuritySettingsPage = () => {
                   id="passwordExpiration"
                   type="number"
                   value={settings.passwordExpiration}
-                  onChange={(e) => updateSetting('passwordExpiration', e.target.value)}
+                  onChange={(e) => updateSetting('passwordExpiration', parseInt(e.target.value) || 90)}
+                  min="30"
+                  max="365"
                   placeholder="90"
                 />
               </div>
@@ -144,7 +212,9 @@ const SecuritySettingsPage = () => {
                 id="sessionTimeout"
                 type="number"
                 value={settings.sessionTimeout}
-                onChange={(e) => updateSetting('sessionTimeout', e.target.value)}
+                onChange={(e) => updateSetting('sessionTimeout', parseInt(e.target.value) || 480)}
+                min="15"
+                max="1440"
                 placeholder="480"
               />
               <p className="text-xs text-muted-foreground">
@@ -182,7 +252,10 @@ const SecuritySettingsPage = () => {
             {settings.multipleLogins && (
               <div className="space-y-2">
                 <Label htmlFor="maxSessions">Máximo de sessões simultâneas</Label>
-                <Select value={settings.maxSessions} onValueChange={(value) => updateSetting('maxSessions', value)}>
+                <Select 
+                  value={settings.maxSessions.toString()} 
+                  onValueChange={(value) => updateSetting('maxSessions', value === 'unlimited' ? 999 : parseInt(value))}
+                >
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
@@ -217,8 +290,18 @@ const SecuritySettingsPage = () => {
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={handleSave} className="w-full md:w-auto">
-            Salvar Configurações
+          <Button onClick={handleSave} disabled={isLoading} className="w-full md:w-auto">
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Salvar Configurações
+              </>
+            )}
           </Button>
         </div>
       </div>

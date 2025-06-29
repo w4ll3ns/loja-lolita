@@ -6,27 +6,76 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Bell, MessageSquare, Gift, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Bell, MessageSquare, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useStore } from '@/contexts/StoreContext';
+import { useToast } from '@/hooks/use-toast';
 
 const NotificationsSettingsPage = () => {
   const navigate = useNavigate();
-  const [settings, setSettings] = useState({
-    lowStockAlert: true,
-    lowStockQuantity: '5',
-    thankYouMessage: false,
-    birthdayMessage: false,
-    whatsappNotifications: true,
-    emailNotifications: false,
-    alertFrequency: 'daily',
-    alertTime: '09:00'
-  });
+  const { notificationSettings, updateNotificationSettings, getLowStockProducts } = useStore();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [settings, setSettings] = useState(notificationSettings);
 
-  const handleSave = () => {
-    console.log('Salvando configurações de notificações:', settings);
+  const handleSave = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Validations
+      if (settings.lowStockQuantity < 0) {
+        toast({
+          title: "Erro de validação",
+          description: "A quantidade mínima para alerta deve ser maior ou igual a 0",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!settings.alertTime || !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(settings.alertTime)) {
+        toast({
+          title: "Erro de validação",
+          description: "Por favor, insira um horário válido (HH:MM)",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      updateNotificationSettings(settings);
+      
+      toast({
+        title: "✅ Configurações salvas",
+        description: "As configurações de notificações foram atualizadas com sucesso",
+      });
+
+      // Show low stock alert if enabled
+      if (settings.lowStockAlert) {
+        const lowStockProducts = getLowStockProducts();
+        if (lowStockProducts.length > 0) {
+          toast({
+            title: "⚠️ Produtos com estoque baixo",
+            description: `${lowStockProducts.length} produto(s) com estoque abaixo de ${settings.lowStockQuantity}`,
+            variant: "destructive"
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar as configurações. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const updateSetting = (key: string, value: any) => {
+  const updateSetting = (key: keyof typeof settings, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
@@ -76,8 +125,9 @@ const NotificationsSettingsPage = () => {
                 <Input
                   id="lowStockQuantity"
                   type="number"
+                  min="0"
                   value={settings.lowStockQuantity}
-                  onChange={(e) => updateSetting('lowStockQuantity', e.target.value)}
+                  onChange={(e) => updateSetting('lowStockQuantity', parseInt(e.target.value) || 0)}
                   placeholder="5"
                   className="w-24"
                 />
@@ -181,7 +231,7 @@ const NotificationsSettingsPage = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="alertFrequency">Frequência dos alertas</Label>
-              <Select value={settings.alertFrequency} onValueChange={(value) => updateSetting('alertFrequency', value)}>
+              <Select value={settings.alertFrequency} onValueChange={(value: 'realtime' | 'daily' | 'weekly') => updateSetting('alertFrequency', value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -209,8 +259,18 @@ const NotificationsSettingsPage = () => {
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={handleSave} className="w-full md:w-auto">
-            Salvar Configurações
+          <Button onClick={handleSave} disabled={isLoading} className="w-full md:w-auto">
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Salvar Configurações
+              </>
+            )}
           </Button>
         </div>
       </div>

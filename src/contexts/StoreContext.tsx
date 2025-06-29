@@ -88,6 +88,28 @@ interface StoreSettings {
   logo?: string;
 }
 
+interface NotificationSettings {
+  lowStockAlert: boolean;
+  lowStockQuantity: number;
+  thankYouMessage: boolean;
+  birthdayMessage: boolean;
+  whatsappNotifications: boolean;
+  emailNotifications: boolean;
+  alertFrequency: 'realtime' | 'daily' | 'weekly';
+  alertTime: string;
+}
+
+interface SecuritySettings {
+  minPasswordLength: number;
+  passwordExpiration: number;
+  requireSpecialChars: boolean;
+  requireNumbers: boolean;
+  twoFactorAuth: boolean;
+  sessionTimeout: number;
+  multipleLogins: boolean;
+  maxSessions: number;
+}
+
 interface StoreContextType {
   products: Product[];
   customers: Customer[];
@@ -102,6 +124,8 @@ interface StoreContextType {
   colors: string[];
   deleteLogs: DeleteLog[];
   storeSettings: StoreSettings;
+  notificationSettings: NotificationSettings;
+  securitySettings: SecuritySettings;
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
   deleteProduct: (id: string, userId: string, userName: string, reason?: string) => void;
@@ -127,6 +151,9 @@ interface StoreContextType {
   isBarcodeTaken: (barcode: string, excludeId?: string) => boolean;
   hasProductBeenSold: (productId: string) => boolean;
   updateStoreSettings: (settings: Partial<StoreSettings>) => void;
+  updateNotificationSettings: (settings: Partial<NotificationSettings>) => void;
+  updateSecuritySettings: (settings: Partial<SecuritySettings>) => void;
+  getLowStockProducts: () => Product[];
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -223,6 +250,28 @@ const initialStoreSettings: StoreSettings = {
   hours: ''
 };
 
+const initialNotificationSettings: NotificationSettings = {
+  lowStockAlert: true,
+  lowStockQuantity: 5,
+  thankYouMessage: false,
+  birthdayMessage: false,
+  whatsappNotifications: true,
+  emailNotifications: false,
+  alertFrequency: 'daily',
+  alertTime: '09:00'
+};
+
+const initialSecuritySettings: SecuritySettings = {
+  minPasswordLength: 8,
+  passwordExpiration: 90,
+  requireSpecialChars: true,
+  requireNumbers: true,
+  twoFactorAuth: false,
+  sessionTimeout: 480,
+  multipleLogins: false,
+  maxSessions: 1
+};
+
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
@@ -237,6 +286,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [colors, setColors] = useState<string[]>(['Branco', 'Preto', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Roxo']);
   const [deleteLogs, setDeleteLogs] = useState<DeleteLog[]>([]);
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(initialStoreSettings);
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(initialNotificationSettings);
+  const [securitySettings, setSecuritySettings] = useState<SecuritySettings>(initialSecuritySettings);
 
   // Function to generate truly unique IDs
   const generateUniqueId = (): string => {
@@ -468,6 +519,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setStoreSettings(prev => ({ ...prev, ...settings }));
   };
 
+  const updateNotificationSettings = (settings: Partial<NotificationSettings>) => {
+    setNotificationSettings(prev => ({ ...prev, ...settings }));
+    console.log('Configurações de notificações atualizadas:', settings);
+  };
+
+  const updateSecuritySettings = (settings: Partial<SecuritySettings>) => {
+    setSecuritySettings(prev => ({ ...prev, ...settings }));
+    console.log('Configurações de segurança atualizadas:', settings);
+  };
+
+  const getLowStockProducts = (): Product[] => {
+    return products.filter(product => 
+      product.quantity <= notificationSettings.lowStockQuantity && 
+      product.category !== 'Temporário'
+    );
+  };
+
   return (
     <StoreContext.Provider value={{
       products,
@@ -483,6 +551,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       colors,
       deleteLogs,
       storeSettings,
+      notificationSettings,
+      securitySettings,
       addProduct,
       updateProduct,
       deleteProduct,
@@ -507,7 +577,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       duplicateProduct,
       isBarcodeTaken,
       hasProductBeenSold,
-      updateStoreSettings
+      updateStoreSettings,
+      updateNotificationSettings,
+      updateSecuritySettings,
+      getLowStockProducts
     }}>
       {children}
     </StoreContext.Provider>
