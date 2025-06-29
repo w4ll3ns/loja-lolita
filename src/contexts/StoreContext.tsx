@@ -230,7 +230,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       supplier: 'A definir',
       brand: 'A definir',
       quantity: 1, // Produto temporário sempre tem quantidade 1 inicialmente
-      barcode: barcode
+      barcode: barcode,
+      color: 'A definir',
+      gender: 'Unissex'
     };
     
     setProducts(prev => [...prev, temporaryProduct]);

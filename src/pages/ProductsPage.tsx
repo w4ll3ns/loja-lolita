@@ -58,10 +58,10 @@ const ProductsPage = () => {
   );
 
   const handleAddProduct = () => {
-    if (!newProduct.name || !newProduct.price || !newProduct.category) {
+    if (!newProduct.name || !newProduct.price || !newProduct.category || !newProduct.gender) {
       toast({
         title: "Erro",
-        description: "Preencha todos os campos obrigatórios",
+        description: "Preencha todos os campos obrigatórios (Nome, Preço, Categoria e Gênero)",
         variant: "destructive",
       });
       return;
@@ -71,7 +71,8 @@ const ProductsPage = () => {
       ...newProduct,
       price: parseFloat(newProduct.price),
       quantity: parseInt(newProduct.quantity) || 0,
-      barcode: newProduct.barcode || Date.now().toString()
+      barcode: newProduct.barcode || Date.now().toString(),
+      gender: newProduct.gender as 'Masculino' | 'Feminino' | 'Unissex'
     });
 
     toast({
@@ -89,7 +90,9 @@ const ProductsPage = () => {
       supplier: '',
       brand: '',
       quantity: '',
-      barcode: ''
+      barcode: '',
+      color: '',
+      gender: ''
     });
     setIsAddDialogOpen(false);
   };
