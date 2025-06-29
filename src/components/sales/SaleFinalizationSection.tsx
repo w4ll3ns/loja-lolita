@@ -31,7 +31,7 @@ export const SaleFinalizationSection = ({
   disabled = false
 }: SaleFinalizationSectionProps) => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-lg z-40">
+    <div className={`${hasProducts ? 'relative mt-6' : 'fixed bottom-0 left-0 right-0'} bg-white border-t border-gray-200 p-3 shadow-lg z-40`}>
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
           {/* Campo de Desconto */}

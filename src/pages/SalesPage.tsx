@@ -257,7 +257,7 @@ const SalesPage = () => {
   const canMakeSale = user?.role === 'admin' || user?.role === 'caixa';
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in pb-24">
+    <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Vendas</h1>
@@ -276,7 +276,7 @@ const SalesPage = () => {
                 <DialogTitle>Nova Venda</DialogTitle>
               </DialogHeader>
               
-              <div className="space-y-6 pb-32">
+              <div className="space-y-6">
                 {/* Linha 1: Cliente e Vendedor lado a lado */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Seleção do Cliente */}
@@ -460,21 +460,21 @@ const SalesPage = () => {
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Área de Finalização Fixa */}
-              <SaleFinalizationSection
-                hasProducts={hasProducts}
-                discount={discount}
-                paymentMethod={paymentMethod}
-                subtotal={getSubtotal()}
-                discountAmount={getDiscountAmount()}
-                total={getTotalSale()}
-                onDiscountChange={setDiscount}
-                onPaymentMethodChange={setPaymentMethod}
-                onFinalizeSale={handleFinalizeSale}
-                disabled={!selectedCustomer || !selectedSeller}
-              />
+                {/* Área de Finalização */}
+                <SaleFinalizationSection
+                  hasProducts={hasProducts}
+                  discount={discount}
+                  paymentMethod={paymentMethod}
+                  subtotal={getSubtotal()}
+                  discountAmount={getDiscountAmount()}
+                  total={getTotalSale()}
+                  onDiscountChange={setDiscount}
+                  onPaymentMethodChange={setPaymentMethod}
+                  onFinalizeSale={handleFinalizeSale}
+                  disabled={!selectedCustomer || !selectedSeller}
+                />
+              </div>
             </DialogContent>
           </Dialog>
         )}
