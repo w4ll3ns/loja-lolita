@@ -199,12 +199,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const searchCustomers = (query: string): Customer[] => {
-    return customers.filter(customer => 
-      !customer.isGeneric && (
-        customer.name.toLowerCase().includes(query.toLowerCase()) ||
-        customer.whatsapp.includes(query.replace(/\D/g, ''))
-      )
-    );
+    if (!query || query.trim().length === 0) {
+      return [];
+    }
+    
+    const searchTerm = query.toLowerCase().trim();
+    const cleanSearchTerm = query.replace(/\D/g, ''); // Remove caracteres não numéricos para buscar WhatsApp
+    
+    return customers.filter(customer => {
+      if (customer.isGeneric) return false;
+      
+      const nameMatch = customer.name.toLowerCase().includes(searchTerm);
+      const whatsappMatch = customer.whatsapp.replace(/\D/g, '').includes(cleanSearchTerm);
+      
+      return nameMatch || (cleanSearchTerm.length > 0 && whatsappMatch);
+    });
   };
 
   const searchProductByBarcode = (barcode: string): Product | null => {
