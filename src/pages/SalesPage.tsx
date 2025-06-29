@@ -269,106 +269,110 @@ const SalesPage = () => {
                 Nova Venda
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Nova Venda</DialogTitle>
               </DialogHeader>
               
               <div className="space-y-6">
-                {/* 1. Seleção do Cliente */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Cliente
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    <Label>Buscar Cliente</Label>
-                    <div className="relative">
-                      <Input
-                        placeholder="Digite o nome ou WhatsApp do cliente..."
-                        value={customerSearch}
-                        onChange={(e) => handleCustomerSearch(e.target.value)}
-                      />
-                      {customerSuggestions.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 bg-white border rounded-md shadow-lg z-50 max-h-40 overflow-y-auto">
-                          {customerSuggestions.map((customer) => (
-                            <div
-                              key={customer.id}
-                              className="p-2 hover:bg-gray-100 cursor-pointer"
-                              onClick={() => handleSelectCustomer(customer)}
-                            >
-                              <p className="font-medium">{customer.name}</p>
-                              <p className="text-sm text-muted-foreground">{customer.whatsapp}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {selectedCustomer && (
-                    <div className="p-3 bg-green-50 border border-green-200 rounded">
-                      <p className="font-medium text-green-800">Cliente Selecionado:</p>
-                      <p className="text-green-700">{selectedCustomer.name} - {selectedCustomer.whatsapp}</p>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2">
-                    <Popover open={showCustomerForm} onOpenChange={setShowCustomerForm}>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" className="flex-1">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Cadastrar Novo Cliente
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="center">
-                        <QuickCustomerForm
-                          onClose={() => setShowCustomerForm(false)}
-                          onCustomerCreated={handleSelectCustomer}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                {/* Linha 1: Cliente e Vendedor lado a lado */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Seleção do Cliente */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Cliente
+                    </h3>
                     
-                    <Button 
-                      variant="outline" 
-                      onClick={handleCustomerNotWantRegister}
-                      className="flex-1"
-                    >
-                      Cliente Não Quis se Cadastrar
-                    </Button>
+                    <div className="space-y-2">
+                      <Label>Buscar Cliente</Label>
+                      <div className="relative">
+                        <Input
+                          placeholder="Nome ou WhatsApp..."
+                          value={customerSearch}
+                          onChange={(e) => handleCustomerSearch(e.target.value)}
+                        />
+                        {customerSuggestions.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 bg-white border rounded-md shadow-lg z-50 max-h-40 overflow-y-auto">
+                            {customerSuggestions.map((customer) => (
+                              <div
+                                key={customer.id}
+                                className="p-2 hover:bg-gray-100 cursor-pointer"
+                                onClick={() => handleSelectCustomer(customer)}
+                              >
+                                <p className="font-medium text-sm">{customer.name}</p>
+                                <p className="text-xs text-muted-foreground">{customer.whatsapp}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {selectedCustomer && (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded">
+                        <p className="font-medium text-green-800 text-sm">Cliente Selecionado:</p>
+                        <p className="text-green-700 text-sm">{selectedCustomer.name} - {selectedCustomer.whatsapp}</p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Popover open={showCustomerForm} onOpenChange={setShowCustomerForm}>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className="flex-1">
+                            <Plus className="h-4 w-4 mr-1" />
+                            Novo Cliente
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="center">
+                          <QuickCustomerForm
+                            onClose={() => setShowCustomerForm(false)}
+                            onCustomerCreated={handleSelectCustomer}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleCustomerNotWantRegister}
+                        className="flex-1"
+                      >
+                        Não Quis Cadastrar
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Seleção do Vendedor */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      Vendedor
+                    </h3>
+                    
+                    <div className="space-y-2">
+                      <Label>Vendedor Responsável</Label>
+                      <Select onValueChange={setSelectedSeller} value={selectedSeller}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o vendedor" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white z-50">
+                          {activeSellers.map((seller) => (
+                            <SelectItem key={seller.id} value={seller.id}>
+                              {seller.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 
-                {/* 2. Seleção do Vendedor */}
-                <div className="space-y-4 border-t pt-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    Vendedor
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    <Label>Vendedor Responsável</Label>
-                    <Select onValueChange={setSelectedSeller} value={selectedSeller}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o vendedor" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        {activeSellers.map((seller) => (
-                          <SelectItem key={seller.id} value={seller.id}>
-                            {seller.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* 3. Adição de Produtos */}
-                <div className="space-y-4 border-t pt-4">
+                {/* Linha 2: Campo de Código de Barras */}
+                <div className="space-y-3 border-t pt-4">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
                     <Barcode className="h-5 w-5" />
-                    Produtos
+                    Adicionar Produtos
                   </h3>
                   
                   <div className="space-y-2">
@@ -384,8 +388,9 @@ const SalesPage = () => {
                     />
                   </div>
 
+                  {/* Lista de Produtos Adicionados */}
                   {selectedProducts.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <h4 className="font-medium">Produtos Adicionados</h4>
                       <div className="max-h-60 overflow-y-auto space-y-2">
                         {selectedProducts.map((item) => (
@@ -400,14 +405,14 @@ const SalesPage = () => {
                           >
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <p className="font-medium">{item.product.name}</p>
+                                <p className="font-medium text-sm">{item.product.name}</p>
                                 {item.product.category === 'Temporário' && (
                                   <Badge variant="destructive" className="text-xs">
                                     Não cadastrado
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-sm text-muted-foreground font-mono">
+                              <p className="text-xs text-muted-foreground font-mono">
                                 {item.product.barcode}
                               </p>
                             </div>
@@ -426,7 +431,7 @@ const SalesPage = () => {
                                 </div>
                               )}
                               {item.product.category !== 'Temporário' && (
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-xs text-muted-foreground">
                                   R$ {item.price.toFixed(2)} cada
                                 </p>
                               )}
@@ -436,12 +441,13 @@ const SalesPage = () => {
                                 max={item.product.category === 'Temporário' ? 999 : item.product.quantity}
                                 value={item.quantity}
                                 onChange={(e) => handleUpdateQuantity(item.product.id, parseInt(e.target.value))}
-                                className="w-16"
+                                className="w-14 text-xs"
                               />
                               <Button
                                 size="sm"
                                 variant="destructive"
                                 onClick={() => handleRemoveProduct(item.product.id)}
+                                className="h-8 w-8 p-0"
                               >
                                 ×
                               </Button>
@@ -449,39 +455,61 @@ const SalesPage = () => {
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+                </div>
 
-                      <div className="border-t pt-4 space-y-2">
+                {/* Linha 3: Totais e Finalização */}
+                {selectedProducts.length > 0 && (
+                  <div className="border-t pt-4 space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      {/* Desconto */}
+                      <div className="space-y-2">
+                        <Label>Desconto</Label>
                         <div className="flex gap-2">
-                          <div className="flex-1">
-                            <Label>Desconto</Label>
-                            <div className="flex gap-2">
-                              <Input
-                                type="number"
-                                placeholder="0"
-                                value={discount.value}
-                                onChange={(e) => setDiscount({ ...discount, value: Number(e.target.value) })}
-                                className="flex-1"
-                              />
-                              <Select 
-                                value={discount.type} 
-                                onValueChange={(value: 'percentage' | 'value') => setDiscount({ ...discount, type: value })}
-                              >
-                                <SelectTrigger className="w-24">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-white z-50">
-                                  <SelectItem value="percentage">
-                                    <Percent className="h-4 w-4" />
-                                  </SelectItem>
-                                  <SelectItem value="value">
-                                    <DollarSign className="h-4 w-4" />
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            value={discount.value}
+                            onChange={(e) => setDiscount({ ...discount, value: Number(e.target.value) })}
+                            className="flex-1"
+                          />
+                          <Select 
+                            value={discount.type} 
+                            onValueChange={(value: 'percentage' | 'value') => setDiscount({ ...discount, type: value })}
+                          >
+                            <SelectTrigger className="w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white z-50">
+                              <SelectItem value="percentage">
+                                <Percent className="h-4 w-4" />
+                              </SelectItem>
+                              <SelectItem value="value">
+                                <DollarSign className="h-4 w-4" />
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
+                      </div>
 
+                      {/* Forma de Pagamento */}
+                      <div className="space-y-2">
+                        <Label>Forma de Pagamento</Label>
+                        <Select value={paymentMethod} onValueChange={(value: 'pix' | 'debito' | 'credito') => setPaymentMethod(value)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white z-50">
+                            <SelectItem value="pix">PIX</SelectItem>
+                            <SelectItem value="debito">Cartão de Débito</SelectItem>
+                            <SelectItem value="credito">Cartão de Crédito</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Totais */}
+                      <div className="space-y-2">
                         <div className="text-right space-y-1">
                           <p className="text-sm text-muted-foreground">
                             Subtotal: R$ {getSubtotal().toFixed(2)}
@@ -497,37 +525,17 @@ const SalesPage = () => {
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
 
-                {/* 4. Forma de Pagamento */}
-                <div className="space-y-4 border-t pt-4">
-                  <h3 className="text-lg font-semibold">Forma de Pagamento</h3>
-                  
-                  <div className="space-y-2">
-                    <Label>Pagamento</Label>
-                    <Select value={paymentMethod} onValueChange={(value: 'pix' | 'debito' | 'credito') => setPaymentMethod(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-50">
-                        <SelectItem value="pix">PIX</SelectItem>
-                        <SelectItem value="debito">Cartão de Débito</SelectItem>
-                        <SelectItem value="credito">Cartão de Crédito</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {/* Botão de Finalizar */}
+                    <Button 
+                      onClick={handleFinalizeSale}
+                      className="w-full bg-store-green-600 hover:bg-store-green-700 h-12 text-lg"
+                      disabled={!selectedCustomer || !selectedSeller || selectedProducts.length === 0}
+                    >
+                      Finalizar Venda - R$ {getTotalSale().toFixed(2)}
+                    </Button>
                   </div>
-                </div>
-
-                {/* Botão de Finalizar */}
-                <div className="border-t pt-4">
-                  <Button 
-                    onClick={handleFinalizeSale}
-                    className="w-full bg-store-green-600 hover:bg-store-green-700 h-12 text-lg"
-                  >
-                    Finalizar Venda
-                  </Button>
-                </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>
