@@ -3,7 +3,7 @@ import React from 'react';
 import { Input } from './input';
 import { cn } from '@/lib/utils';
 
-interface MaskedInputProps extends React.ComponentProps<"input"> {
+interface MaskedInputProps extends Omit<React.ComponentProps<"input">, 'onChange'> {
   mask: 'whatsapp' | 'cpf' | 'cnpj' | 'currency' | 'date';
   value: string;
   onChange: (value: string) => void;
