@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -38,7 +37,9 @@ const SalesPage = () => {
 
   const handleCustomerSearch = (query: string) => {
     setCustomerSearch(query);
-    if (query.length > 2) {
+    
+    // Busca em tempo real se tiver mais de 1 caractere
+    if (query.length > 1) {
       const suggestions = searchCustomers(query);
       setCustomerSuggestions(suggestions);
     } else {

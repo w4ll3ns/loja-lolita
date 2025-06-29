@@ -14,14 +14,15 @@ import { User, X } from 'lucide-react';
 interface QuickCustomerFormProps {
   onClose: () => void;
   onCustomerCreated: (customer: any) => void;
+  initialName?: string;
 }
 
-export const QuickCustomerForm = ({ onClose, onCustomerCreated }: QuickCustomerFormProps) => {
+export const QuickCustomerForm = ({ onClose, onCustomerCreated, initialName = '' }: QuickCustomerFormProps) => {
   const { cities, addCustomer } = useStore();
   const { toast } = useToast();
   
   const [customerData, setCustomerData] = useState({
-    name: '',
+    name: initialName,
     whatsapp: '',
     gender: 'M' as 'M' | 'F' | 'Outro',
     city: ''
@@ -49,8 +50,6 @@ export const QuickCustomerForm = ({ onClose, onCustomerCreated }: QuickCustomerF
       title: "Sucesso",
       description: "Cliente cadastrado com sucesso!",
     });
-    
-    onClose();
   };
 
   return (
