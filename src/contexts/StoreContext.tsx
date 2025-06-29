@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState } from 'react';
 
 export interface Product {
@@ -68,6 +67,17 @@ export interface DeleteLog {
   requiredPassword: boolean;
 }
 
+interface StoreSettings {
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  instagram: string;
+  facebook: string;
+  hours: string;
+  logo?: string;
+}
+
 interface StoreContextType {
   products: Product[];
   customers: Customer[];
@@ -80,6 +90,7 @@ interface StoreContextType {
   cities: string[];
   colors: string[];
   deleteLogs: DeleteLog[];
+  storeSettings: StoreSettings;
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
   deleteProduct: (id: string, userId: string, userName: string, reason?: string) => void;
@@ -100,6 +111,7 @@ interface StoreContextType {
   duplicateProduct: (product: Product) => Omit<Product, 'id'>;
   isBarcodeTaken: (barcode: string, excludeId?: string) => boolean;
   hasProductBeenSold: (productId: string) => boolean;
+  updateStoreSettings: (settings: Partial<StoreSettings>) => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -156,6 +168,16 @@ const initialSellers: Seller[] = [
   { id: '3', name: 'Ana Costa', email: 'ana@loja.com', phone: '(11) 99999-9012', active: true }
 ];
 
+const initialStoreSettings: StoreSettings = {
+  name: 'Minha Loja',
+  address: '',
+  phone: '',
+  email: '',
+  instagram: '',
+  facebook: '',
+  hours: ''
+};
+
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
@@ -168,6 +190,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [cities, setCities] = useState<string[]>(['São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Salvador', 'Fortaleza']);
   const [colors, setColors] = useState<string[]>(['Branco', 'Preto', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Roxo']);
   const [deleteLogs, setDeleteLogs] = useState<DeleteLog[]>([]);
+  const [storeSettings, setStoreSettings] = useState<StoreSettings>(initialStoreSettings);
 
   // Function to generate truly unique IDs
   const generateUniqueId = (): string => {
@@ -368,6 +391,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const updateStoreSettings = (settings: Partial<StoreSettings>) => {
+    setStoreSettings(prev => ({ ...prev, ...settings }));
+  };
+
   return (
     <StoreContext.Provider value={{
       products,
@@ -381,6 +408,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       cities,
       colors,
       deleteLogs,
+      storeSettings,
       addProduct,
       updateProduct,
       deleteProduct,
@@ -400,7 +428,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       getIncompleteProducts,
       duplicateProduct,
       isBarcodeTaken,
-      hasProductBeenSold
+      hasProductBeenSold,
+      updateStoreSettings
     }}>
       {children}
     </StoreContext.Provider>

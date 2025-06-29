@@ -1,28 +1,90 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Upload, Store } from 'lucide-react';
+import { ArrowLeft, Upload, Store, CheckCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useStore } from '@/contexts/StoreContext';
+import { useToast } from '@/hooks/use-toast';
 
 const StoreSettingsPage = () => {
   const navigate = useNavigate();
-  const [storeData, setStoreData] = useState({
-    name: 'Minha Loja',
-    address: '',
-    phone: '',
-    email: '',
-    instagram: '',
-    facebook: '',
-    hours: ''
-  });
+  const { storeSettings, updateStoreSettings } = useStore();
+  const { toast } = useToast();
+  const [storeData, setStoreData] = useState(storeSettings);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSave = () => {
-    // Implementar salvamento
-    console.log('Salvando configurações da loja:', storeData);
+  // Sincronizar com o contexto quando as configurações mudarem
+  useEffect(() => {
+    setStoreData(storeSettings);
+  }, [storeSettings]);
+
+  const validateFields = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!storeData.name.trim()) {
+      newErrors.name = 'Nome da loja é obrigatório';
+    }
+
+    if (storeData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(storeData.email)) {
+      newErrors.email = 'E-mail inválido';
+    }
+
+    if (storeData.phone && !/^[\d\s\(\)\-\+]+$/.test(storeData.phone)) {
+      newErrors.phone = 'Telefone inválido';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validateFields()) {
+      toast({
+        title: "Erro de validação",
+        description: "Por favor, corrija os campos destacados em vermelho.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Simular salvamento (em um cenário real, seria uma chamada à API)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Salvar no contexto
+      updateStoreSettings(storeData);
+      
+      toast({
+        title: "✅ Configurações salvas com sucesso",
+        description: "As informações da loja foram atualizadas.",
+      });
+
+      console.log('Configurações da loja salvas:', storeData);
+    } catch (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: "Verifique sua conexão ou tente novamente.",
+        variant: "destructive",
+      });
+      console.error('Erro ao salvar configurações:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setStoreData(prev => ({ ...prev, [field]: value }));
+    // Limpar erro do campo quando o usuário começar a digitar
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
   return (
@@ -53,9 +115,13 @@ const StoreSettingsPage = () => {
               <Input
                 id="storeName"
                 value={storeData.name}
-                onChange={(e) => setStoreData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="Digite o nome da loja"
+                className={errors.name ? 'border-red-500' : ''}
               />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.name}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -63,7 +129,7 @@ const StoreSettingsPage = () => {
               <Textarea
                 id="address"
                 value={storeData.address}
-                onChange={(e) => setStoreData(prev => ({ ...prev, address: e.target.value }))}
+                onChange={(e) => handleInputChange('address', e.target.value)}
                 placeholder="Endereço completo da loja"
               />
             </div>
@@ -74,9 +140,13 @@ const StoreSettingsPage = () => {
                 <Input
                   id="phone"
                   value={storeData.phone}
-                  onChange={(e) => setStoreData(prev => ({ ...prev, phone: e.target.value }))}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
                   placeholder="(11) 99999-9999"
+                  className={errors.phone ? 'border-red-500' : ''}
                 />
+                {errors.phone && (
+                  <p className="text-sm text-red-500">{errors.phone}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -85,9 +155,13 @@ const StoreSettingsPage = () => {
                   id="email"
                   type="email"
                   value={storeData.email}
-                  onChange={(e) => setStoreData(prev => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="contato@minhaloja.com"
+                  className={errors.email ? 'border-red-500' : ''}
                 />
+                {errors.email && (
+                  <p className="text-sm text-red-500">{errors.email}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -103,7 +177,7 @@ const StoreSettingsPage = () => {
               <Input
                 id="instagram"
                 value={storeData.instagram}
-                onChange={(e) => setStoreData(prev => ({ ...prev, instagram: e.target.value }))}
+                onChange={(e) => handleInputChange('instagram', e.target.value)}
                 placeholder="@minhaloja"
               />
             </div>
@@ -113,7 +187,7 @@ const StoreSettingsPage = () => {
               <Input
                 id="facebook"
                 value={storeData.facebook}
-                onChange={(e) => setStoreData(prev => ({ ...prev, facebook: e.target.value }))}
+                onChange={(e) => handleInputChange('facebook', e.target.value)}
                 placeholder="facebook.com/minhaloja"
               />
             </div>
@@ -147,7 +221,7 @@ const StoreSettingsPage = () => {
               <Textarea
                 id="hours"
                 value={storeData.hours}
-                onChange={(e) => setStoreData(prev => ({ ...prev, hours: e.target.value }))}
+                onChange={(e) => handleInputChange('hours', e.target.value)}
                 placeholder="Segunda a Sexta: 9h às 18h&#10;Sábado: 9h às 15h&#10;Domingo: Fechado"
               />
             </div>
@@ -155,8 +229,22 @@ const StoreSettingsPage = () => {
         </Card>
 
         <div className="flex justify-end">
-          <Button onClick={handleSave} className="w-full md:w-auto">
-            Salvar Configurações
+          <Button 
+            onClick={handleSave} 
+            className="w-full md:w-auto"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Salvar Configurações
+              </>
+            )}
           </Button>
         </div>
       </div>
