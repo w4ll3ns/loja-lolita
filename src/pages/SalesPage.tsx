@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,15 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useStore, SaleItem } from '@/contexts/StoreContext';
+import { useStore, SaleItem, Product } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { QuickCustomerForm } from '@/components/sales/QuickCustomerForm';
 import { SaleConfirmation } from '@/components/sales/SaleConfirmation';
 import { Search, ShoppingCart, Barcode, User, Users, Plus, Percent, DollarSign } from 'lucide-react';
+import { ProductAutocomplete } from '@/components/ui/product-autocomplete';
 
 const SalesPage = () => {
-  const { products, customers, sellers, sales, searchCustomers, searchProductByBarcode, addSale } = useStore();
+  const { products, customers, sellers, sales, searchCustomers, searchProducts, createTemporaryProduct, addSale } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -34,7 +34,7 @@ const SalesPage = () => {
   // Estados de busca
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerSuggestions, setCustomerSuggestions] = useState<any[]>([]);
-  const [barcode, setBarcode] = useState('');
+  const [productSearch, setProductSearch] = useState('');
 
   const activeSellers = sellers.filter(s => s.active);
 
@@ -59,26 +59,22 @@ const SalesPage = () => {
     setSelectedCustomer({ ...genericCustomer, wantedToRegister: false });
   };
 
-  const handleBarcodeInput = (barcodeValue: string) => {
-    setBarcode(barcodeValue);
-    
-    if (barcodeValue.length >= 8) {
-      const product = searchProductByBarcode(barcodeValue);
-      if (product) {
-        handleAddProduct(product.id);
-        setBarcode('');
-        toast({
-          title: "Produto adicionado",
-          description: `${product.name} foi adicionado à venda`,
-        });
-      } else {
-        toast({
-          title: "Produto não encontrado",
-          description: "Código de barras não encontrado no sistema",
-          variant: "destructive",
-        });
-      }
-    }
+  const handleProductSelect = (product: Product) => {
+    handleAddProduct(product.id);
+    toast({
+      title: "Produto adicionado",
+      description: `${product.name} foi adicionado à venda`,
+    });
+  };
+
+  const handleCreateTemporaryProduct = (barcode: string) => {
+    const temporaryProduct = createTemporaryProduct(barcode);
+    handleAddProduct(temporaryProduct.id);
+    toast({
+      title: "Produto temporário criado",
+      description: `Produto com código ${barcode} foi criado temporariamente`,
+      variant: "default",
+    });
   };
 
   const handleAddProduct = (productId: string) => {
@@ -205,6 +201,7 @@ const SalesPage = () => {
     setPaymentMethod('pix');
     setDiscount({ value: 0, type: 'percentage' });
     setCustomerSearch('');
+    setProductSearch('');
     setBarcode('');
     setCustomerSuggestions([]);
     setIsSaleDialogOpen(false);
@@ -331,13 +328,15 @@ const SalesPage = () => {
                   </h3>
                   
                   <div className="space-y-2">
-                    <Label>Código de Barras</Label>
-                    <Input
-                      placeholder="Digite ou escaneie o código de barras..."
-                      value={barcode}
-                      onChange={(e) => handleBarcodeInput(e.target.value)}
-                      className="text-center font-mono"
-                      autoFocus
+                    <Label>Código de Barras ou Nome do Produto</Label>
+                    <ProductAutocomplete
+                      value={productSearch}
+                      onChange={setProductSearch}
+                      products={products}
+                      placeholder="Digite o código de barras ou nome do produto..."
+                      onProductSelect={handleProductSelect}
+                      onCreateTemporary={handleCreateTemporaryProduct}
+                      className="text-center"
                     />
                   </div>
 

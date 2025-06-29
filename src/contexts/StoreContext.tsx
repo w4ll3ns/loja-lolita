@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState } from 'react';
 
 export interface Product {
@@ -72,6 +71,8 @@ interface StoreContextType {
   addSale: (sale: Omit<Sale, 'id' | 'date'>) => void;
   searchCustomers: (query: string) => Customer[];
   searchProductByBarcode: (barcode: string) => Product | null;
+  searchProducts: (query: string) => Product[];
+  createTemporaryProduct: (barcode: string) => Product;
   addCategory: (category: string) => void;
   addCollection: (collection: string) => void;
   addSupplier: (supplier: string) => void;
@@ -190,6 +191,38 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return products.find(product => product.barcode === barcode) || null;
   };
 
+  const searchProducts = (query: string): Product[] => {
+    return products.filter(product =>
+      product.barcode.toLowerCase().includes(query.toLowerCase()) ||
+      product.name.toLowerCase().includes(query.toLowerCase())
+    );
+  };
+
+  const createTemporaryProduct = (barcode: string): Product => {
+    const temporaryProduct: Product = {
+      id: Date.now().toString(),
+      name: `Produto em edição - ${barcode}`,
+      description: 'Produto temporário criado durante a venda. Necessita edição.',
+      price: 0,
+      category: 'Temporário',
+      collection: 'Temporário',
+      size: 'N/A',
+      supplier: 'A definir',
+      brand: 'A definir',
+      quantity: 1,
+      barcode: barcode
+    };
+    
+    setProducts(prev => [...prev, temporaryProduct]);
+    
+    // Adicionar categoria temporária se não existir
+    if (!categories.includes('Temporário')) {
+      setCategories(prev => [...prev, 'Temporário']);
+    }
+    
+    return temporaryProduct;
+  };
+
   const addCategory = (category: string) => {
     if (!categories.includes(category)) {
       setCategories(prev => [...prev, category]);
@@ -233,6 +266,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addSale,
       searchCustomers,
       searchProductByBarcode,
+      searchProducts,
+      createTemporaryProduct,
       addCategory,
       addCollection,
       addSupplier,
