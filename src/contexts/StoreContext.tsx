@@ -13,6 +13,8 @@ export interface Product {
   quantity: number;
   image?: string;
   barcode: string;
+  color: string;
+  gender: 'Masculino' | 'Feminino' | 'Unissex';
 }
 
 export interface Customer {
@@ -63,6 +65,7 @@ interface StoreContextType {
   suppliers: string[];
   brands: string[];
   cities: string[];
+  colors: string[];
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
   deleteProduct: (id: string) => void;
@@ -77,7 +80,9 @@ interface StoreContextType {
   addCollection: (collection: string) => void;
   addSupplier: (supplier: string) => void;
   addBrand: (brand: string) => void;
+  addColor: (color: string) => void;
   getIncompleteProducts: () => Product[];
+  duplicateProduct: (product: Product) => Omit<Product, 'id'>;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -95,7 +100,9 @@ const initialProducts: Product[] = [
     supplier: 'Fornecedor A',
     brand: 'Marca X',
     quantity: 50,
-    barcode: '7891234567890'
+    barcode: '7891234567890',
+    color: 'Branco',
+    gender: 'Unissex'
   },
   {
     id: '2',
@@ -108,7 +115,9 @@ const initialProducts: Product[] = [
     supplier: 'Fornecedor B',
     brand: 'Marca Y',
     quantity: 25,
-    barcode: '7891234567891'
+    barcode: '7891234567891',
+    color: 'Azul',
+    gender: 'Feminino'
   }
 ];
 
@@ -138,6 +147,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [suppliers, setSuppliers] = useState<string[]>(['Fornecedor A', 'Fornecedor B', 'Fornecedor C']);
   const [brands, setBrands] = useState<string[]>(['Marca X', 'Marca Y', 'Marca Z']);
   const [cities, setCities] = useState<string[]>(['São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Salvador', 'Fortaleza']);
+  const [colors, setColors] = useState<string[]>(['Branco', 'Preto', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Roxo']);
 
   const addProduct = (product: Omit<Product, 'id'>) => {
     const newProduct = { ...product, id: Date.now().toString() };
@@ -237,6 +247,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return products.filter(product => product.category === 'Temporário');
   };
 
+  const duplicateProduct = (product: Product): Omit<Product, 'id'> => {
+    return {
+      name: `${product.name} (Cópia)`,
+      description: product.description,
+      price: product.price,
+      category: product.category,
+      collection: product.collection,
+      size: product.size,
+      supplier: product.supplier,
+      brand: product.brand,
+      quantity: product.quantity,
+      barcode: '', // Limpar código de barras para evitar duplicação
+      color: product.color,
+      gender: product.gender,
+      image: product.image
+    };
+  };
+
+  const addColor = (color: string) => {
+    if (!colors.includes(color)) {
+      setColors(prev => [...prev, color]);
+    }
+  };
+
   const addCategory = (category: string) => {
     if (!categories.includes(category)) {
       setCategories(prev => [...prev, category]);
@@ -272,6 +306,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       suppliers,
       brands,
       cities,
+      colors,
       addProduct,
       updateProduct,
       deleteProduct,
@@ -286,7 +321,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addCollection,
       addSupplier,
       addBrand,
-      getIncompleteProducts
+      addColor,
+      getIncompleteProducts,
+      duplicateProduct
     }}>
       {children}
     </StoreContext.Provider>

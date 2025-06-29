@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,13 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Search, ShoppingCart, Plus } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Copy } from 'lucide-react';
+import type { Product } from '@/contexts/StoreContext';
 
 const ProductsPage = () => {
-  const { products, addProduct, categories, collections, suppliers, brands, addCategory, addCollection, addSupplier, addBrand } = useStore();
+  const { products, addProduct, categories, collections, suppliers, brands, colors, addCategory, addCollection, addSupplier, addBrand, addColor, duplicateProduct } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,12 +24,14 @@ const ProductsPage = () => {
   const [isAddCollectionOpen, setIsAddCollectionOpen] = useState(false);
   const [isAddBrandOpen, setIsAddBrandOpen] = useState(false);
   const [isAddSupplierOpen, setIsAddSupplierOpen] = useState(false);
+  const [isAddColorOpen, setIsAddColorOpen] = useState(false);
 
   // Estados para novos itens
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newBrandName, setNewBrandName] = useState('');
   const [newSupplierName, setNewSupplierName] = useState('');
+  const [newColorName, setNewColorName] = useState('');
 
   const [newProduct, setNewProduct] = useState({
     name: '',
@@ -40,10 +43,13 @@ const ProductsPage = () => {
     supplier: '',
     brand: '',
     quantity: '',
-    barcode: ''
+    barcode: '',
+    color: '',
+    gender: '' as 'Masculino' | 'Feminino' | 'Unissex' | ''
   });
 
   const sizes = ['PP', 'P', 'M', 'G', 'GG', '34', '36', '38', '40', '42', '44'];
+  const genders = ['Masculino', 'Feminino', 'Unissex'];
 
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -86,6 +92,30 @@ const ProductsPage = () => {
       barcode: ''
     });
     setIsAddDialogOpen(false);
+  };
+
+  const handleDuplicateProduct = (product: Product) => {
+    const duplicatedProduct = duplicateProduct(product);
+    setNewProduct({
+      name: duplicatedProduct.name,
+      description: duplicatedProduct.description,
+      price: duplicatedProduct.price.toString(),
+      category: duplicatedProduct.category,
+      collection: duplicatedProduct.collection,
+      size: duplicatedProduct.size,
+      supplier: duplicatedProduct.supplier,
+      brand: duplicatedProduct.brand,
+      quantity: duplicatedProduct.quantity.toString(),
+      barcode: '', // Sempre vazio para evitar duplicação
+      color: duplicatedProduct.color,
+      gender: duplicatedProduct.gender
+    });
+    setIsAddDialogOpen(true);
+    
+    toast({
+      title: "Produto duplicado",
+      description: "Formulário preenchido com os dados do produto. Lembre-se de alterar o código de barras!",
+    });
   };
 
   // Funções para adicionar novos itens
@@ -145,6 +175,20 @@ const ProductsPage = () => {
     });
   };
 
+  const handleAddColor = () => {
+    if (!newColorName.trim()) return;
+    
+    addColor(newColorName.trim());
+    setNewProduct({ ...newProduct, color: newColorName.trim() });
+    setNewColorName('');
+    setIsAddColorOpen(false);
+    
+    toast({
+      title: "Sucesso",
+      description: "Nova cor adicionada!",
+    });
+  };
+
   const canEdit = user?.role === 'admin';
   const canAddStructuralData = user?.role === 'admin'; // Só admin pode adicionar categorias, marcas, etc.
 
@@ -163,11 +207,11 @@ const ProductsPage = () => {
                 Adicionar Produto
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-3xl">
               <DialogHeader>
                 <DialogTitle>Adicionar Novo Produto</DialogTitle>
               </DialogHeader>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome *</Label>
                   <Input
@@ -188,6 +232,23 @@ const ProductsPage = () => {
                     placeholder="0.00"
                   />
                 </div>
+
+                {/* Gênero */}
+                <div className="col-span-2 space-y-2">
+                  <Label>Gênero *</Label>
+                  <RadioGroup
+                    value={newProduct.gender}
+                    onValueChange={(value) => setNewProduct({ ...newProduct, gender: value as 'Masculino' | 'Feminino' | 'Unissex' })}
+                    className="flex flex-row gap-6"
+                  >
+                    {genders.map((gender) => (
+                      <div key={gender} className="flex items-center space-x-2">
+                        <RadioGroupItem value={gender} id={gender} />
+                        <Label htmlFor={gender}>{gender}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </div>
                 
                 {/* Categoria com opção de adicionar */}
                 <div className="space-y-2">
@@ -206,13 +267,42 @@ const ProductsPage = () => {
                       </Button>
                     )}
                   </div>
-                  <Select onValueChange={(value) => setNewProduct({ ...newProduct, category: value })}>
+                  <Select onValueChange={(value) => setNewProduct({ ...newProduct, category: value })} value={newProduct.category}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione uma categoria" />
                     </SelectTrigger>
                     <SelectContent className="bg-white z-50">
                       {categories.map((cat) => (
                         <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Cor com opção de adicionar */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="color">Cor *</Label>
+                    {canAddStructuralData && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsAddColorOpen(true)}
+                        className="text-xs text-blue-600 hover:text-blue-700"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Nova
+                      </Button>
+                    )}
+                  </div>
+                  <Select onValueChange={(value) => setNewProduct({ ...newProduct, color: value })} value={newProduct.color}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma cor" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      {colors.map((color) => (
+                        <SelectItem key={color} value={color}>{color}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -346,7 +436,11 @@ const ProductsPage = () => {
                     value={newProduct.barcode}
                     onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })}
                     placeholder="Deixe vazio para gerar automaticamente"
+                    className={!newProduct.barcode ? 'border-orange-300 bg-orange-50' : ''}
                   />
+                  {!newProduct.barcode && (
+                    <p className="text-xs text-orange-600">⚠️ Código de barras deve ser único para cada produto</p>
+                  )}
                 </div>
               </div>
               <div className="flex justify-end gap-2 mt-4">
@@ -361,6 +455,35 @@ const ProductsPage = () => {
           </Dialog>
         )}
       </div>
+
+      {/* Modal para Nova Cor */}
+      <Dialog open={isAddColorOpen} onOpenChange={setIsAddColorOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nova Cor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newColor">Nome da Cor</Label>
+              <Input
+                id="newColor"
+                value={newColorName}
+                onChange={(e) => setNewColorName(e.target.value)}
+                placeholder="Ex: Azul Marinho"
+                onKeyDown={(e) => e.key === 'Enter' && handleAddColor()}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsAddColorOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddColor} disabled={!newColorName.trim()}>
+                Adicionar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal para Nova Categoria */}
       <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
@@ -494,10 +617,24 @@ const ProductsPage = () => {
         {filteredProducts.map((product) => (
           <Card key={product.id} className="card-hover">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">{product.name}</CardTitle>
+              <div className="flex items-start justify-between">
+                <CardTitle className="text-lg">{product.name}</CardTitle>
+                {canEdit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDuplicateProduct(product)}
+                    className="text-gray-500 hover:text-blue-600 p-1"
+                    title="Duplicar produto"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
               <div className="text-sm text-muted-foreground space-y-1">
                 <p>{product.category} - {product.size}</p>
-                <p>{product.brand}</p>
+                <p>{product.brand} - {product.color}</p>
+                <p className="font-medium text-blue-600">{product.gender}</p>
               </div>
             </CardHeader>
             <CardContent>
