@@ -6,7 +6,8 @@ import {
   Settings, 
   User,
   Search,
-  File
+  File,
+  BarChart3
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,7 +40,7 @@ export function AppSidebar() {
   // Definir itens de menu baseado no perfil do usuário
   const getMenuItems = () => {
     const baseItems = [
-      { title: "Dashboard", url: "/dashboard", icon: Search },
+      { title: "Dashboard", url: "/dashboard", icon: BarChart3 },
     ];
 
     if (user?.role === 'admin') {

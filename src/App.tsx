@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 import Dashboard from "./pages/Dashboard";
 import ProductsPage from "./pages/ProductsPage";
 import SalesPage from "./pages/SalesPage";
+import CustomersPage from "./pages/CustomersPage";
+import SettingsPage from "./pages/SettingsPage";
+import MySalesPage from "./pages/MySalesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,9 +69,9 @@ const AppContent = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/sales" element={<SalesPage />} />
-              <Route path="/customers" element={<Dashboard />} />
-              <Route path="/settings" element={<Dashboard />} />
-              <Route path="/my-sales" element={<Dashboard />} />
+              <Route path="/customers" element={<CustomersPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/my-sales" element={<MySalesPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

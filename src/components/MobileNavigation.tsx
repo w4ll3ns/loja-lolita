@@ -5,7 +5,9 @@ import {
   Package, 
   LayoutDashboard, 
   Users, 
-  Settings 
+  Settings,
+  BarChart3,
+  FileText
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -17,7 +19,7 @@ export function MobileNavigation() {
 
   const getMenuItems = () => {
     const baseItems = [
-      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, emoji: "📊" },
+      { title: "Dashboard", url: "/dashboard", icon: BarChart3, emoji: "📊" },
     ];
 
     if (user?.role === 'admin') {
@@ -34,7 +36,7 @@ export function MobileNavigation() {
       return [
         ...baseItems,
         { title: "Estoque", url: "/products", icon: Package, emoji: "📦" },
-        { title: "Vendas", url: "/my-sales", icon: ShoppingCart, emoji: "🛒" },
+        { title: "Vendas", url: "/my-sales", icon: FileText, emoji: "🛒" },
         { title: "Clientes", url: "/customers", icon: Users, emoji: "👤" },
       ];
     }
