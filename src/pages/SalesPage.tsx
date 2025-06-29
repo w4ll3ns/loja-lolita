@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import { QuickCustomerForm } from '@/components/sales/QuickCustomerForm';
 import { SaleConfirmation } from '@/components/sales/SaleConfirmation';
 import { Search, ShoppingCart, Barcode, User, Users, Plus, Percent, DollarSign } from 'lucide-react';
 import { ProductAutocomplete } from '@/components/ui/product-autocomplete';
+import { cn } from '@/lib/utils';
 
 const SalesPage = () => {
   const { products, customers, sellers, sales, searchCustomers, searchProducts, createTemporaryProduct, addSale } = useStore();
@@ -68,8 +68,8 @@ const SalesPage = () => {
     });
   };
 
-  const handleCreateTemporaryProduct = (barcode: string) => {
-    const temporaryProduct = createTemporaryProduct(barcode);
+  const handleCreateTemporaryProduct = (barcode: string, price: number) => {
+    const temporaryProduct = createTemporaryProduct(barcode, price);
     handleAddProduct(temporaryProduct.id);
     toast({
       title: "Produto temporário criado",
@@ -82,6 +82,26 @@ const SalesPage = () => {
     const product = products.find(p => p.id === productId);
     if (!product) return;
 
+    // Para produtos temporários, sempre permitir adicionar
+    if (product.category === 'Temporário') {
+      const existingItem = selectedProducts.find(item => item.product.id === productId);
+      if (existingItem) {
+        setSelectedProducts(prev => prev.map(item =>
+          item.product.id === productId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        ));
+      } else {
+        setSelectedProducts(prev => [...prev, {
+          product,
+          quantity: 1,
+          price: product.price
+        }]);
+      }
+      return;
+    }
+
+    // Para produtos normais, verificar estoque
     if (product.quantity <= 0) {
       toast({
         title: "Produto sem estoque",
@@ -120,10 +140,23 @@ const SalesPage = () => {
     }
 
     const product = products.find(p => p.id === productId);
-    if (product && newQuantity <= product.quantity) {
+    if (product) {
+      // Para produtos temporários, permitir qualquer quantidade
+      if (product.category === 'Temporário' || newQuantity <= product.quantity) {
+        setSelectedProducts(prev => prev.map(item =>
+          item.product.id === productId
+            ? { ...item, quantity: newQuantity }
+            : item
+        ));
+      }
+    }
+  };
+
+  const handleUpdatePrice = (productId: string, newPrice: number) => {
+    if (newPrice > 0) {
       setSelectedProducts(prev => prev.map(item =>
         item.product.id === productId
-          ? { ...item, quantity: newQuantity }
+          ? { ...item, price: newPrice }
           : item
       ));
     }
@@ -168,6 +201,17 @@ const SalesPage = () => {
       toast({
         title: "Erro",
         description: "Adicione pelo menos um produto à venda",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar se todos os produtos têm preço definido
+    const productsWithoutPrice = selectedProducts.filter(item => item.price <= 0);
+    if (productsWithoutPrice.length > 0) {
+      toast({
+        title: "Erro",
+        description: "Todos os produtos devem ter um preço definido",
         variant: "destructive",
       });
       return;
@@ -345,18 +389,51 @@ const SalesPage = () => {
                       <h4 className="font-medium">Produtos Adicionados</h4>
                       <div className="max-h-60 overflow-y-auto space-y-2">
                         {selectedProducts.map((item) => (
-                          <div key={item.product.id} className="flex items-center justify-between p-3 bg-muted rounded border">
+                          <div 
+                            key={item.product.id} 
+                            className={cn(
+                              "flex items-center justify-between p-3 rounded border",
+                              item.product.category === 'Temporário' 
+                                ? "bg-orange-50 border-orange-200" 
+                                : "bg-muted"
+                            )}
+                          >
                             <div className="flex-1">
-                              <p className="font-medium">{item.product.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                R$ {item.price.toFixed(2)} cada
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium">{item.product.name}</p>
+                                {item.product.category === 'Temporário' && (
+                                  <Badge variant="destructive" className="text-xs">
+                                    Não cadastrado
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground font-mono">
+                                {item.product.barcode}
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
+                              {item.product.category === 'Temporário' && (
+                                <div className="flex flex-col gap-1">
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    placeholder="Preço"
+                                    value={item.price || ''}
+                                    onChange={(e) => handleUpdatePrice(item.product.id, parseFloat(e.target.value) || 0)}
+                                    className="w-20 text-xs"
+                                  />
+                                </div>
+                              )}
+                              {item.product.category !== 'Temporário' && (
+                                <p className="text-sm text-muted-foreground">
+                                  R$ {item.price.toFixed(2)} cada
+                                </p>
+                              )}
                               <Input
                                 type="number"
                                 min="1"
-                                max={item.product.quantity}
+                                max={item.product.category === 'Temporário' ? 999 : item.product.quantity}
                                 value={item.quantity}
                                 onChange={(e) => handleUpdateQuantity(item.product.id, parseInt(e.target.value))}
                                 className="w-16"

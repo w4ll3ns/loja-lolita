@@ -72,11 +72,12 @@ interface StoreContextType {
   searchCustomers: (query: string) => Customer[];
   searchProductByBarcode: (barcode: string) => Product | null;
   searchProducts: (query: string) => Product[];
-  createTemporaryProduct: (barcode: string) => Product;
+  createTemporaryProduct: (barcode: string, price?: number) => Product;
   addCategory: (category: string) => void;
   addCollection: (collection: string) => void;
   addSupplier: (supplier: string) => void;
   addBrand: (brand: string) => void;
+  getIncompleteProducts: () => Product[];
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -170,11 +171,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newSale = { ...sale, id: Date.now().toString(), date: new Date() };
     setSales(prev => [newSale, ...prev]);
     
-    // Reduzir estoque
+    // Reduzir estoque e criar produtos temporários se necessário
     sale.items.forEach(item => {
-      updateProduct(item.product.id, { 
-        quantity: item.product.quantity - item.quantity 
-      });
+      if (item.product.category === 'Temporário' && item.product.quantity === 1) {
+        // Produto temporário criado durante a venda, não reduzir estoque
+        // Mas marcar como vendido pelo menos uma vez
+        updateProduct(item.product.id, { 
+          description: `Produto criado em venda - ${newSale.date.toLocaleDateString()} - Necessita edição completa`
+        });
+      } else {
+        // Produto normal, reduzir estoque
+        updateProduct(item.product.id, { 
+          quantity: Math.max(0, item.product.quantity - item.quantity)
+        });
+      }
     });
   };
 
@@ -198,18 +208,18 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
-  const createTemporaryProduct = (barcode: string): Product => {
+  const createTemporaryProduct = (barcode: string, price: number = 0): Product => {
     const temporaryProduct: Product = {
       id: Date.now().toString(),
-      name: `Produto em edição - ${barcode}`,
-      description: 'Produto temporário criado durante a venda. Necessita edição.',
-      price: 0,
+      name: `🔧 Produto não cadastrado`,
+      description: 'Produto temporário criado durante a venda. Necessita edição completa dos dados.',
+      price: price,
       category: 'Temporário',
       collection: 'Temporário',
       size: 'N/A',
       supplier: 'A definir',
       brand: 'A definir',
-      quantity: 1,
+      quantity: 1, // Produto temporário sempre tem quantidade 1 inicialmente
       barcode: barcode
     };
     
@@ -221,6 +231,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     
     return temporaryProduct;
+  };
+
+  const getIncompleteProducts = (): Product[] => {
+    return products.filter(product => product.category === 'Temporário');
   };
 
   const addCategory = (category: string) => {
@@ -271,7 +285,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addCategory,
       addCollection,
       addSupplier,
-      addBrand
+      addBrand,
+      getIncompleteProducts
     }}>
       {children}
     </StoreContext.Provider>
