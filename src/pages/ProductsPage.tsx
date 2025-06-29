@@ -6,10 +6,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Search, ShoppingCart, Plus, Copy } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Copy, LayoutGrid, LayoutList } from 'lucide-react';
 import type { Product } from '@/contexts/StoreContext';
 
 const ProductsPage = () => {
@@ -18,6 +20,7 @@ const ProductsPage = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
 
   // Estados para modais de adição rápida
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
@@ -202,261 +205,273 @@ const ProductsPage = () => {
           <h1 className="text-3xl font-bold text-gray-900">Produtos</h1>
           <p className="text-gray-600">Gerencie o estoque da loja</p>
         </div>
-        {canEdit && (
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-store-blue-600 hover:bg-store-blue-700">
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Adicionar Produto
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Adicionar Novo Produto</DialogTitle>
-              </DialogHeader>
-              <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome *</Label>
-                  <Input
-                    id="name"
-                    value={newProduct.name}
-                    onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                    placeholder="Nome do produto"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="price">Preço *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={newProduct.price}
-                    onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                    placeholder="0.00"
-                  />
-                </div>
-
-                {/* Gênero */}
-                <div className="col-span-2 space-y-2">
-                  <Label>Gênero *</Label>
-                  <RadioGroup
-                    value={newProduct.gender}
-                    onValueChange={(value) => setNewProduct({ ...newProduct, gender: value as 'Masculino' | 'Feminino' | 'Unissex' })}
-                    className="flex flex-row gap-6"
-                  >
-                    {genders.map((gender) => (
-                      <div key={gender} className="flex items-center space-x-2">
-                        <RadioGroupItem value={gender} id={gender} />
-                        <Label htmlFor={gender}>{gender}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-                
-                {/* Categoria com opção de adicionar */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="category">Categoria *</Label>
-                    {canAddStructuralData && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsAddCategoryOpen(true)}
-                        className="text-xs text-blue-600 hover:text-blue-700"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Nova
-                      </Button>
-                    )}
-                  </div>
-                  <Select onValueChange={(value) => setNewProduct({ ...newProduct, category: value })} value={newProduct.category}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma categoria" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white z-50">
-                      {categories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Cor com opção de adicionar */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="color">Cor *</Label>
-                    {canAddStructuralData && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsAddColorOpen(true)}
-                        className="text-xs text-blue-600 hover:text-blue-700"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Nova
-                      </Button>
-                    )}
-                  </div>
-                  <Select onValueChange={(value) => setNewProduct({ ...newProduct, color: value })} value={newProduct.color}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma cor" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white z-50">
-                      {colors.map((color) => (
-                        <SelectItem key={color} value={color}>{color}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Coleção com opção de adicionar */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="collection">Coleção</Label>
-                    {canAddStructuralData && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsAddCollectionOpen(true)}
-                        className="text-xs text-blue-600 hover:text-blue-700"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Nova
-                      </Button>
-                    )}
-                  </div>
-                  <Select onValueChange={(value) => setNewProduct({ ...newProduct, collection: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma coleção" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white z-50">
-                      {collections.map((col) => (
-                        <SelectItem key={col} value={col}>{col}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="size">Tamanho</Label>
-                  <Select onValueChange={(value) => setNewProduct({ ...newProduct, size: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um tamanho" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white z-50">
-                      {sizes.map((size) => (
-                        <SelectItem key={size} value={size}>{size}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="quantity">Quantidade</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    value={newProduct.quantity}
-                    onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
-                    placeholder="0"
-                  />
-                </div>
-
-                {/* Marca com opção de adicionar */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="brand">Marca</Label>
-                    {canAddStructuralData && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsAddBrandOpen(true)}
-                        className="text-xs text-blue-600 hover:text-blue-700"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Nova
-                      </Button>
-                    )}
-                  </div>
-                  <Select onValueChange={(value) => setNewProduct({ ...newProduct, brand: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma marca" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white z-50">
-                      {brands.map((brand) => (
-                        <SelectItem key={brand} value={brand}>{brand}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Fornecedor com opção de adicionar */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="supplier">Fornecedor</Label>
-                    {canAddStructuralData && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsAddSupplierOpen(true)}
-                        className="text-xs text-blue-600 hover:text-blue-700"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Novo
-                      </Button>
-                    )}
-                  </div>
-                  <Select onValueChange={(value) => setNewProduct({ ...newProduct, supplier: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um fornecedor" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white z-50">
-                      {suppliers.map((supplier) => (
-                        <SelectItem key={supplier} value={supplier}>{supplier}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="description">Descrição</Label>
-                  <Input
-                    id="description"
-                    value={newProduct.description}
-                    onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                    placeholder="Descrição do produto"
-                  />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="barcode">Código de Barras</Label>
-                  <Input
-                    id="barcode"
-                    value={newProduct.barcode}
-                    onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })}
-                    placeholder="Deixe vazio para gerar automaticamente"
-                    className={!newProduct.barcode ? 'border-orange-300 bg-orange-50' : ''}
-                  />
-                  {!newProduct.barcode && (
-                    <p className="text-xs text-orange-600">⚠️ Código de barras deve ser único para cada produto</p>
-                  )}
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 mt-4">
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleAddProduct} className="bg-store-blue-600 hover:bg-store-blue-700">
+        <div className="flex items-center gap-4">
+          {/* Toggle de visualização */}
+          <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'cards' | 'list')}>
+            <ToggleGroupItem value="cards" aria-label="Visualização em cards">
+              <LayoutGrid className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="list" aria-label="Visualização em lista">
+              <LayoutList className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          
+          {canEdit && (
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-store-blue-600 hover:bg-store-blue-700">
+                  <ShoppingCart className="h-4 w-4 mr-2" />
                   Adicionar Produto
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Adicionar Novo Produto</DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nome *</Label>
+                    <Input
+                      id="name"
+                      value={newProduct.name}
+                      onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                      placeholder="Nome do produto"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Preço *</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price}
+                      onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  {/* Gênero */}
+                  <div className="col-span-2 space-y-2">
+                    <Label>Gênero *</Label>
+                    <RadioGroup
+                      value={newProduct.gender}
+                      onValueChange={(value) => setNewProduct({ ...newProduct, gender: value as 'Masculino' | 'Feminino' | 'Unissex' })}
+                      className="flex flex-row gap-6"
+                    >
+                      {genders.map((gender) => (
+                        <div key={gender} className="flex items-center space-x-2">
+                          <RadioGroupItem value={gender} id={gender} />
+                          <Label htmlFor={gender}>{gender}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  
+                  {/* Categoria com opção de adicionar */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="category">Categoria *</Label>
+                      {canAddStructuralData && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsAddCategoryOpen(true)}
+                          className="text-xs text-blue-600 hover:text-blue-700"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Nova
+                        </Button>
+                      )}
+                    </div>
+                    <Select onValueChange={(value) => setNewProduct({ ...newProduct, category: value })} value={newProduct.category}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {categories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Cor com opção de adicionar */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="color">Cor *</Label>
+                      {canAddStructuralData && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsAddColorOpen(true)}
+                          className="text-xs text-blue-600 hover:text-blue-700"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Nova
+                        </Button>
+                      )}
+                    </div>
+                    <Select onValueChange={(value) => setNewProduct({ ...newProduct, color: value })} value={newProduct.color}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma cor" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {colors.map((color) => (
+                          <SelectItem key={color} value={color}>{color}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Coleção com opção de adicionar */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="collection">Coleção</Label>
+                      {canAddStructuralData && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsAddCollectionOpen(true)}
+                          className="text-xs text-blue-600 hover:text-blue-700"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Nova
+                        </Button>
+                      )}
+                    </div>
+                    <Select onValueChange={(value) => setNewProduct({ ...newProduct, collection: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma coleção" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {collections.map((col) => (
+                          <SelectItem key={col} value={col}>{col}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="size">Tamanho</Label>
+                    <Select onValueChange={(value) => setNewProduct({ ...newProduct, size: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um tamanho" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {sizes.map((size) => (
+                          <SelectItem key={size} value={size}>{size}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Quantidade</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      value={newProduct.quantity}
+                      onChange={(e) => setNewProduct({ ...newProduct, quantity: e.target.value })}
+                      placeholder="0"
+                    />
+                  </div>
+
+                  {/* Marca com opção de adicionar */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="brand">Marca</Label>
+                      {canAddStructuralData && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsAddBrandOpen(true)}
+                          className="text-xs text-blue-600 hover:text-blue-700"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Nova
+                        </Button>
+                      )}
+                    </div>
+                    <Select onValueChange={(value) => setNewProduct({ ...newProduct, brand: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma marca" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {brands.map((brand) => (
+                          <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Fornecedor com opção de adicionar */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="supplier">Fornecedor</Label>
+                      {canAddStructuralData && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsAddSupplierOpen(true)}
+                          className="text-xs text-blue-600 hover:text-blue-700"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Novo
+                        </Button>
+                      )}
+                    </div>
+                    <Select onValueChange={(value) => setNewProduct({ ...newProduct, supplier: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um fornecedor" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {suppliers.map((supplier) => (
+                          <SelectItem key={supplier} value={supplier}>{supplier}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="col-span-2 space-y-2">
+                    <Label htmlFor="description">Descrição</Label>
+                    <Input
+                      id="description"
+                      value={newProduct.description}
+                      onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                      placeholder="Descrição do produto"
+                    />
+                  </div>
+                  <div className="col-span-2 space-y-2">
+                    <Label htmlFor="barcode">Código de Barras</Label>
+                    <Input
+                      id="barcode"
+                      value={newProduct.barcode}
+                      onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })}
+                      placeholder="Deixe vazio para gerar automaticamente"
+                      className={!newProduct.barcode ? 'border-orange-300 bg-orange-50' : ''}
+                    />
+                    {!newProduct.barcode && (
+                      <p className="text-xs text-orange-600">⚠️ Código de barras deve ser único para cada produto</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleAddProduct} className="bg-store-blue-600 hover:bg-store-blue-700">
+                    Adicionar Produto
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
 
       {/* Modal para Nova Cor */}
@@ -615,61 +630,122 @@ const ProductsPage = () => {
         />
       </div>
 
-      {/* Lista de produtos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredProducts.map((product) => (
-          <Card key={product.id} className="card-hover">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <CardTitle className="text-lg">{product.name}</CardTitle>
-                {canEdit && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDuplicateProduct(product)}
-                    className="text-gray-500 hover:text-blue-600 p-1"
-                    title="Duplicar produto"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <div className="text-sm text-muted-foreground space-y-1">
-                <p>{product.category} - {product.size}</p>
-                <p>{product.brand} - {product.color}</p>
-                <p className="font-medium text-blue-600">{product.gender}</p>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Preço:</span>
-                  <span className="font-semibold text-store-green-600">
+      {/* Lista de produtos - Visualização condicional */}
+      {viewMode === 'cards' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredProducts.map((product) => (
+            <Card key={product.id} className="card-hover">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-lg">{product.name}</CardTitle>
+                  {canEdit && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDuplicateProduct(product)}
+                      className="text-gray-500 hover:text-blue-600 p-1"
+                      title="Duplicar produto"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p>{product.category} - {product.size}</p>
+                  <p>{product.brand} - {product.color}</p>
+                  <p className="font-medium text-blue-600">{product.gender}</p>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Preço:</span>
+                    <span className="font-semibold text-store-green-600">
+                      R$ {product.price.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Estoque:</span>
+                    <span className={`font-semibold ${
+                      product.quantity <= 5 ? 'text-red-600' : 'text-green-600'
+                    }`}>
+                      {product.quantity} unidades
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Código:</span>
+                    <span className="text-xs font-mono">{product.barcode}</span>
+                  </div>
+                  {product.description && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {product.description}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="border rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Categoria</TableHead>
+                <TableHead>Marca</TableHead>
+                <TableHead>Cor</TableHead>
+                <TableHead>Tamanho</TableHead>
+                <TableHead>Gênero</TableHead>
+                <TableHead>Preço</TableHead>
+                <TableHead>Estoque</TableHead>
+                <TableHead>Código</TableHead>
+                {canEdit && <TableHead>Ações</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProducts.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{product.category}</TableCell>
+                  <TableCell>{product.brand}</TableCell>
+                  <TableCell>{product.color}</TableCell>
+                  <TableCell>{product.size}</TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {product.gender}
+                    </span>
+                  </TableCell>
+                  <TableCell className="font-semibold text-store-green-600">
                     R$ {product.price.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Estoque:</span>
-                  <span className={`font-semibold ${
-                    product.quantity <= 5 ? 'text-red-600' : 'text-green-600'
-                  }`}>
-                    {product.quantity} unidades
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Código:</span>
-                  <span className="text-xs font-mono">{product.barcode}</span>
-                </div>
-                {product.description && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {product.description}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`font-semibold ${
+                      product.quantity <= 5 ? 'text-red-600' : 'text-green-600'
+                    }`}>
+                      {product.quantity}
+                    </span>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">{product.barcode}</TableCell>
+                  {canEdit && (
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDuplicateProduct(product)}
+                        className="text-gray-500 hover:text-blue-600"
+                        title="Duplicar produto"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {filteredProducts.length === 0 && (
         <div className="text-center py-12">
