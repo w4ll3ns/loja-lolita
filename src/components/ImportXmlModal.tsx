@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -52,6 +51,8 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'upload' | 'preview' | 'edit'>('upload');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState<{ [key: number]: boolean }>({});
   const { categories, suppliers, brands, colors, addCategory, addSupplier, addBrand, addColor } = useStore();
   const { toast } = useToast();
 
@@ -207,6 +208,36 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
     });
   };
 
+  const handleAddNewCategory = (index: number) => {
+    if (newCategoryName.trim()) {
+      addCategory(newCategoryName.trim());
+      updateProductField(index, 'editableCategory', newCategoryName.trim());
+      setNewCategoryName('');
+      setShowNewCategoryInput(prev => ({ ...prev, [index]: false }));
+      toast({
+        title: "Categoria adicionada",
+        description: `A categoria "${newCategoryName.trim()}" foi criada`,
+      });
+    }
+  };
+
+  const formatCurrency = (value: string): string => {
+    const numValue = parseFloat(value) || 0;
+    return numValue.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+  };
+
+  const handlePriceChange = (index: number, field: 'editableCostPrice' | 'editableSalePrice', value: string) => {
+    // Remove caracteres não numéricos exceto vírgula e ponto
+    const cleanValue = value.replace(/[^\d.,]/g, '');
+    // Converte vírgula para ponto para cálculos
+    const numericValue = cleanValue.replace(',', '.');
+    
+    updateProductField(index, field, numericValue);
+  };
+
   const handleImportProducts = () => {
     const selectedProducts = extractedProducts.filter(p => p.selected);
     
@@ -244,6 +275,8 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
     setExtractedProducts([]);
     setStep('upload');
     setEditingIndex(null);
+    setShowNewCategoryInput({});
+    setNewCategoryName('');
     onClose();
   };
 
@@ -253,23 +286,6 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
 
   const deselectAll = () => {
     setExtractedProducts(prev => prev.map(p => ({ ...p, selected: false })));
-  };
-
-  const handleAddNewOption = (type: 'category' | 'supplier' | 'brand' | 'color', value: string) => {
-    switch (type) {
-      case 'category':
-        addCategory(value);
-        break;
-      case 'supplier':
-        addSupplier(value);
-        break;
-      case 'brand':
-        addBrand(value);
-        break;
-      case 'color':
-        addColor(value);
-        break;
-    }
   };
 
   return (
@@ -368,22 +384,21 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
                         }}
                       />
                     </TableHead>
-                    <TableHead>Produto</TableHead>
-                    <TableHead>Código</TableHead>
-                    <TableHead>Preço Custo</TableHead>
-                    <TableHead>Preço Venda</TableHead>
-                    <TableHead>Margem</TableHead>
-                    <TableHead>Qtd</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Tamanho</TableHead>
-                    <TableHead>Gênero</TableHead>
+                    <TableHead className="min-w-48">Produto</TableHead>
+                    <TableHead className="min-w-32">Código</TableHead>
+                    <TableHead className="min-w-32">Preço Custo</TableHead>
+                    <TableHead className="min-w-32">Preço Venda</TableHead>
+                    <TableHead className="min-w-32">Margem</TableHead>
+                    <TableHead className="min-w-32">Categoria</TableHead>
+                    <TableHead className="min-w-24">Tamanho</TableHead>
+                    <TableHead className="min-w-28">Gênero</TableHead>
                     <TableHead>Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {extractedProducts.map((product, index) => {
-                    const salePrice = parseFloat(product.editableSalePrice);
-                    const costPrice = parseFloat(product.editableCostPrice);
+                    const salePrice = parseFloat(product.editableSalePrice) || 0;
+                    const costPrice = parseFloat(product.editableCostPrice) || 0;
                     
                     return (
                       <TableRow key={index}>
@@ -393,12 +408,40 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
                             onCheckedChange={() => toggleProductSelection(index)}
                           />
                         </TableCell>
-                        <TableCell className="font-medium max-w-48 truncate" title={product.editableName}>
-                          {product.editableName}
+                        <TableCell>
+                          <Input
+                            value={product.editableName}
+                            onChange={(e) => updateProductField(index, 'editableName', e.target.value)}
+                            className="min-w-44"
+                            placeholder="Nome do produto"
+                          />
                         </TableCell>
-                        <TableCell className="font-mono text-xs">{product.editableBarcode || product.cProd}</TableCell>
-                        <TableCell>R$ {costPrice.toFixed(2)}</TableCell>
-                        <TableCell>R$ {salePrice.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Input
+                            value={product.editableBarcode}
+                            onChange={(e) => updateProductField(index, 'editableBarcode', e.target.value)}
+                            className="font-mono text-xs"
+                            placeholder="Código"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={product.editableCostPrice}
+                            onChange={(e) => handlePriceChange(index, 'editableCostPrice', e.target.value)}
+                            placeholder="0,00"
+                            className="text-right"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={product.editableSalePrice}
+                            onChange={(e) => handlePriceChange(index, 'editableSalePrice', e.target.value)}
+                            placeholder="0,00"
+                            className="text-right"
+                          />
+                        </TableCell>
                         <TableCell>
                           <ProfitMarginDisplay 
                             salePrice={salePrice} 
@@ -406,13 +449,92 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
                             className="text-xs"
                           />
                         </TableCell>
-                        <TableCell>{product.editableQuantity}</TableCell>
-                        <TableCell>{product.editableCategory}</TableCell>
-                        <TableCell>{product.editableSize || '-'}</TableCell>
                         <TableCell>
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {product.editableGender}
-                          </span>
+                          <div className="space-y-1">
+                            <Select
+                              value={product.editableCategory}
+                              onValueChange={(value) => {
+                                if (value === 'add-new') {
+                                  setShowNewCategoryInput(prev => ({ ...prev, [index]: true }));
+                                } else {
+                                  updateProductField(index, 'editableCategory', value);
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {categories.map((category) => (
+                                  <SelectItem key={category} value={category}>
+                                    {category}
+                                  </SelectItem>
+                                ))}
+                                <SelectItem value="add-new">
+                                  <div className="flex items-center gap-2">
+                                    <Plus className="h-3 w-3" />
+                                    <span>Adicionar novo</span>
+                                  </div>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {showNewCategoryInput[index] && (
+                              <div className="flex gap-1">
+                                <Input
+                                  value={newCategoryName}
+                                  onChange={(e) => setNewCategoryName(e.target.value)}
+                                  placeholder="Nova categoria"
+                                  className="text-xs"
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleAddNewCategory(index);
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleAddNewCategory(index)}
+                                  className="px-2"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={product.editableSize}
+                            onValueChange={(value) => updateProductField(index, 'editableSize', value)}
+                          >
+                            <SelectTrigger className="w-20">
+                              <SelectValue placeholder="-" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {sizes.map((size) => (
+                                <SelectItem key={size} value={size}>
+                                  {size}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={product.editableGender}
+                            onValueChange={(value) => updateProductField(index, 'editableGender', value as 'Masculino' | 'Feminino' | 'Unissex')}
+                          >
+                            <SelectTrigger className="w-24">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {genders.map((gender) => (
+                                <SelectItem key={gender} value={gender}>
+                                  {gender}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell>
                           <Button
@@ -420,7 +542,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
                             size="sm"
                             onClick={() => handleEditProduct(index)}
                             className="text-blue-600 hover:text-blue-800"
-                            title="Editar produto"
+                            title="Edição avançada"
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -451,7 +573,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">
-                Editar Produto: {extractedProducts[editingIndex].editableName}
+                Edição Avançada: {extractedProducts[editingIndex].editableName}
               </h3>
             </div>
 
