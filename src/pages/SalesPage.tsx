@@ -12,7 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { QuickCustomerForm } from '@/components/sales/QuickCustomerForm';
 import { SaleConfirmation } from '@/components/sales/SaleConfirmation';
-import { Search, ShoppingCart, Barcode, User, Users, Plus, Percent, DollarSign } from 'lucide-react';
+import { SaleFinalizationSection } from '@/components/sales/SaleFinalizationSection';
+import { Search, ShoppingCart, Barcode, User, Users, Plus } from 'lucide-react';
 import { ProductAutocomplete } from '@/components/ui/product-autocomplete';
 import { cn } from '@/lib/utils';
 
@@ -38,6 +39,7 @@ const SalesPage = () => {
   const [productSearch, setProductSearch] = useState('');
 
   const activeSellers = sellers.filter(s => s.active);
+  const hasProducts = selectedProducts.length > 0;
 
   const handleCustomerSearch = (query: string) => {
     setCustomerSearch(query);
@@ -255,7 +257,7 @@ const SalesPage = () => {
   const canMakeSale = user?.role === 'admin' || user?.role === 'caixa';
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="p-6 space-y-6 animate-fade-in pb-32">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Vendas</h1>
@@ -269,12 +271,12 @@ const SalesPage = () => {
                 Nova Venda
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
+            <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Nova Venda</DialogTitle>
               </DialogHeader>
               
-              <div className="space-y-6">
+              <div className="space-y-6 pb-6">
                 {/* Linha 1: Cliente e Vendedor lado a lado */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Seleção do Cliente */}
@@ -458,85 +460,21 @@ const SalesPage = () => {
                     </div>
                   )}
                 </div>
-
-                {/* Linha 3: Totais e Finalização */}
-                {selectedProducts.length > 0 && (
-                  <div className="border-t pt-4 space-y-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                      {/* Desconto */}
-                      <div className="space-y-2">
-                        <Label>Desconto</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            value={discount.value}
-                            onChange={(e) => setDiscount({ ...discount, value: Number(e.target.value) })}
-                            className="flex-1"
-                          />
-                          <Select 
-                            value={discount.type} 
-                            onValueChange={(value: 'percentage' | 'value') => setDiscount({ ...discount, type: value })}
-                          >
-                            <SelectTrigger className="w-20">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-white z-50">
-                              <SelectItem value="percentage">
-                                <Percent className="h-4 w-4" />
-                              </SelectItem>
-                              <SelectItem value="value">
-                                <DollarSign className="h-4 w-4" />
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      {/* Forma de Pagamento */}
-                      <div className="space-y-2">
-                        <Label>Forma de Pagamento</Label>
-                        <Select value={paymentMethod} onValueChange={(value: 'pix' | 'debito' | 'credito') => setPaymentMethod(value)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white z-50">
-                            <SelectItem value="pix">PIX</SelectItem>
-                            <SelectItem value="debito">Cartão de Débito</SelectItem>
-                            <SelectItem value="credito">Cartão de Crédito</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Totais */}
-                      <div className="space-y-2">
-                        <div className="text-right space-y-1">
-                          <p className="text-sm text-muted-foreground">
-                            Subtotal: R$ {getSubtotal().toFixed(2)}
-                          </p>
-                          {getDiscountAmount() > 0 && (
-                            <p className="text-sm text-red-600">
-                              Desconto: -R$ {getDiscountAmount().toFixed(2)}
-                            </p>
-                          )}
-                          <p className="text-xl font-bold text-store-green-600">
-                            Total: R$ {getTotalSale().toFixed(2)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Botão de Finalizar */}
-                    <Button 
-                      onClick={handleFinalizeSale}
-                      className="w-full bg-store-green-600 hover:bg-store-green-700 h-12 text-lg"
-                      disabled={!selectedCustomer || !selectedSeller || selectedProducts.length === 0}
-                    >
-                      Finalizar Venda - R$ {getTotalSale().toFixed(2)}
-                    </Button>
-                  </div>
-                )}
               </div>
+
+              {/* Área de Finalização Fixa */}
+              <SaleFinalizationSection
+                hasProducts={hasProducts}
+                discount={discount}
+                paymentMethod={paymentMethod}
+                subtotal={getSubtotal()}
+                discountAmount={getDiscountAmount()}
+                total={getTotalSale()}
+                onDiscountChange={setDiscount}
+                onPaymentMethodChange={setPaymentMethod}
+                onFinalizeSale={handleFinalizeSale}
+                disabled={!selectedCustomer || !selectedSeller}
+              />
             </DialogContent>
           </Dialog>
         )}
