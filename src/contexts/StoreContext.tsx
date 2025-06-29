@@ -44,6 +44,9 @@ export interface Sale {
   id: string;
   customer: Customer;
   items: SaleItem[];
+  subtotal: number;
+  discount: number;
+  discountType: 'percentage' | 'value';
   total: number;
   paymentMethod: 'pix' | 'debito' | 'credito';
   seller: string;

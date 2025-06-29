@@ -3,53 +3,73 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MaskedInput } from '@/components/ui/masked-input';
-import { Autocomplete } from '@/components/ui/autocomplete';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useStore, SaleItem } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Search, ShoppingCart, Barcode, User, Users } from 'lucide-react';
+import { QuickCustomerForm } from '@/components/sales/QuickCustomerForm';
+import { SaleConfirmation } from '@/components/sales/SaleConfirmation';
+import { Search, ShoppingCart, Barcode, User, Users, Plus, Percent, DollarSign } from 'lucide-react';
+
+type SaleStep = 'customer' | 'seller' | 'products' | 'payment';
 
 const SalesPage = () => {
-  const { products, customers, sellers, sales, cities, addSale, addCustomer, searchCustomers, searchProductByBarcode } = useStore();
+  const { products, customers, sellers, sales, searchCustomers, searchProductByBarcode, addSale } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   
   const [isSaleDialogOpen, setIsSaleDialogOpen] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<SaleItem[]>([]);
-  const [barcode, setBarcode] = useState('');
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
-  const [customerSuggestions, setCustomerSuggestions] = useState<any[]>([]);
-  const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
-  const [wantToRegister, setWantToRegister] = useState(true);
+  const [currentStep, setCurrentStep] = useState<SaleStep>('customer');
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   
-  const [newCustomer, setNewCustomer] = useState({
-    name: '',
-    whatsapp: '',
-    gender: 'M' as 'M' | 'F' | 'Outro',
-    city: ''
-  });
-
-  const [saleData, setSaleData] = useState({
-    paymentMethod: 'pix' as 'pix' | 'debito' | 'credito',
-    sellerId: ''
-  });
+  // Estados da venda
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [selectedSeller, setSelectedSeller] = useState<string>('');
+  const [selectedProducts, setSelectedProducts] = useState<SaleItem[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'debito' | 'credito'>('pix');
+  const [discount, setDiscount] = useState({ value: 0, type: 'percentage' as 'percentage' | 'value' });
+  
+  // Estados de busca
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [customerSuggestions, setCustomerSuggestions] = useState<any[]>([]);
+  const [barcode, setBarcode] = useState('');
 
   const activeSellers = sellers.filter(s => s.active);
+
+  const handleCustomerSearch = (query: string) => {
+    setCustomerSearch(query);
+    if (query.length > 2) {
+      const suggestions = searchCustomers(query);
+      setCustomerSuggestions(suggestions);
+    } else {
+      setCustomerSuggestions([]);
+    }
+  };
+
+  const handleSelectCustomer = (customer: any) => {
+    setSelectedCustomer(customer);
+    setCustomerSearch(customer.name);
+    setCustomerSuggestions([]);
+  };
+
+  const handleCustomerNotWantRegister = () => {
+    const genericCustomer = customers.find(c => c.isGeneric);
+    setSelectedCustomer({ ...genericCustomer, wantedToRegister: false });
+  };
 
   const handleBarcodeInput = (barcodeValue: string) => {
     setBarcode(barcodeValue);
     
-    if (barcodeValue.length >= 8) { // Mínimo para código de barras
+    if (barcodeValue.length >= 8) {
       const product = searchProductByBarcode(barcodeValue);
       if (product) {
         handleAddProduct(product.id);
-        setBarcode(''); // Limpar após adicionar
+        setBarcode('');
         toast({
           title: "Produto adicionado",
           description: `${product.name} foi adicionado à venda`,
@@ -62,26 +82,6 @@ const SalesPage = () => {
         });
       }
     }
-  };
-
-  const handleCustomerSearch = (query: string) => {
-    setCustomerSearch(query);
-    if (query.length > 2) {
-      const suggestions = searchCustomers(query);
-      setCustomerSuggestions(suggestions);
-      setShowNewCustomerForm(suggestions.length === 0);
-    } else {
-      setCustomerSuggestions([]);
-      setShowNewCustomerForm(false);
-    }
-    setSelectedCustomer(null);
-  };
-
-  const handleSelectCustomer = (customer: any) => {
-    setSelectedCustomer(customer);
-    setCustomerSearch(customer.name);
-    setCustomerSuggestions([]);
-    setShowNewCustomerForm(false);
   };
 
   const handleAddProduct = (productId: string) => {
@@ -135,12 +135,42 @@ const SalesPage = () => {
     }
   };
 
-  const getTotalSale = () => {
+  const getSubtotal = () => {
     return selectedProducts.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  const handleFinalizeSale = () => {
-    if (selectedProducts.length === 0) {
+  const getDiscountAmount = () => {
+    const subtotal = getSubtotal();
+    if (discount.type === 'percentage') {
+      return (subtotal * discount.value) / 100;
+    }
+    return discount.value;
+  };
+
+  const getTotalSale = () => {
+    return getSubtotal() - getDiscountAmount();
+  };
+
+  const handleNextStep = () => {
+    if (currentStep === 'customer' && !selectedCustomer) {
+      toast({
+        title: "Erro",
+        description: "Selecione um cliente ou marque que não quis se cadastrar",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (currentStep === 'seller' && !selectedSeller) {
+      toast({
+        title: "Erro",
+        description: "Selecione o vendedor responsável",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (currentStep === 'products' && selectedProducts.length === 0) {
       toast({
         title: "Erro",
         description: "Adicione pelo menos um produto à venda",
@@ -149,64 +179,66 @@ const SalesPage = () => {
       return;
     }
 
-    if (!saleData.sellerId) {
-      toast({
-        title: "Erro",
-        description: "Selecione um vendedor",
-        variant: "destructive",
-      });
-      return;
+    const steps: SaleStep[] = ['customer', 'seller', 'products', 'payment'];
+    const currentIndex = steps.indexOf(currentStep);
+    if (currentIndex < steps.length - 1) {
+      setCurrentStep(steps[currentIndex + 1]);
     }
+  };
 
-    let finalCustomer = selectedCustomer;
-    const selectedSeller = sellers.find(s => s.id === saleData.sellerId);
-
-    if (!selectedCustomer) {
-      if (wantToRegister && showNewCustomerForm) {
-        if (!newCustomer.name || !newCustomer.whatsapp) {
-          toast({
-            title: "Erro",
-            description: "Preencha os dados do cliente",
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        addCustomer({ ...newCustomer, wantedToRegister: true });
-        finalCustomer = { ...newCustomer, id: Date.now().toString(), wantedToRegister: true };
-      } else {
-        // Cliente genérico
-        finalCustomer = customers.find(c => c.isGeneric);
-      }
+  const handlePreviousStep = () => {
+    const steps: SaleStep[] = ['customer', 'seller', 'products', 'payment'];
+    const currentIndex = steps.indexOf(currentStep);
+    if (currentIndex > 0) {
+      setCurrentStep(steps[currentIndex - 1]);
     }
+  };
+
+  const handleFinalizeSale = () => {
+    const selectedSellerData = sellers.find(s => s.id === selectedSeller);
+    const subtotal = getSubtotal();
+    const discountAmount = getDiscountAmount();
+    const total = getTotalSale();
 
     const sale = {
-      customer: finalCustomer,
+      customer: selectedCustomer,
       items: selectedProducts,
-      total: getTotalSale(),
-      paymentMethod: saleData.paymentMethod,
-      seller: selectedSeller?.name || '',
+      subtotal,
+      discount: discountAmount,
+      discountType: discount.type,
+      total,
+      paymentMethod,
+      seller: selectedSellerData?.name || '',
       cashier: user?.name || 'Sistema'
     };
 
     addSale(sale);
+    
+    setShowConfirmation(true);
+  };
 
-    toast({
-      title: "Sucesso",
-      description: "Venda finalizada com sucesso!",
-    });
-
-    // Reset form
-    setSelectedProducts([]);
-    setBarcode('');
-    setCustomerSearch('');
+  const resetSale = () => {
+    setCurrentStep('customer');
     setSelectedCustomer(null);
-    setNewCustomer({ name: '', whatsapp: '', gender: 'M', city: '' });
-    setSaleData({ paymentMethod: 'pix', sellerId: '' });
+    setSelectedSeller('');
+    setSelectedProducts([]);
+    setPaymentMethod('pix');
+    setDiscount({ value: 0, type: 'percentage' });
+    setCustomerSearch('');
+    setBarcode('');
+    setCustomerSuggestions([]);
     setIsSaleDialogOpen(false);
+    setShowConfirmation(false);
   };
 
   const canMakeSale = user?.role === 'admin' || user?.role === 'caixa';
+
+  const stepTitles = {
+    customer: '1. Seleção do Cliente',
+    seller: '2. Vendedor Responsável',
+    products: '3. Adição de Produtos',
+    payment: '4. Finalização'
+  };
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -218,201 +250,302 @@ const SalesPage = () => {
         {canMakeSale && (
           <Dialog open={isSaleDialogOpen} onOpenChange={setIsSaleDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-store-green-600 hover:bg-store-green-700">
+              <Button className="bg-store-green-600 hover:bg-store-green-700" onClick={() => setCurrentStep('customer')}>
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 Nova Venda
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Nova Venda</DialogTitle>
+                <DialogTitle>{stepTitles[currentStep]}</DialogTitle>
               </DialogHeader>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Código de barras */}
-                <div className="lg:col-span-2 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Barcode className="h-5 w-5 text-store-blue-600" />
-                    <h3 className="font-semibold">Código de Barras</h3>
-                  </div>
-                  <Input
-                    placeholder="Digite ou escaneie o código de barras..."
-                    value={barcode}
-                    onChange={(e) => handleBarcodeInput(e.target.value)}
-                    className="text-center font-mono"
-                    autoFocus
-                  />
-                </div>
-
-                {/* Produtos selecionados */}
-                {selectedProducts.length > 0 && (
-                  <div className="lg:col-span-2 space-y-2">
-                    <h4 className="font-medium">Produtos Selecionados</h4>
-                    <div className="max-h-40 overflow-y-auto space-y-2">
-                      {selectedProducts.map((item) => (
-                        <div key={item.product.id} className="flex items-center justify-between p-3 bg-muted rounded border">
-                          <div className="flex-1">
-                            <p className="font-medium">{item.product.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              R$ {item.price.toFixed(2)} cada | Código: {item.product.barcode}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              min="1"
-                              max={item.product.quantity}
-                              value={item.quantity}
-                              onChange={(e) => handleUpdateQuantity(item.product.id, parseInt(e.target.value))}
-                              className="w-16"
-                            />
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleRemoveProduct(item.product.id)}
+              {/* Etapa 1: Seleção do Cliente */}
+              {currentStep === 'customer' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Buscar Cliente
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        placeholder="Digite o nome ou WhatsApp do cliente..."
+                        value={customerSearch}
+                        onChange={(e) => handleCustomerSearch(e.target.value)}
+                      />
+                      {customerSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 bg-white border rounded-md shadow-lg z-50 max-h-40 overflow-y-auto">
+                          {customerSuggestions.map((customer) => (
+                            <div
+                              key={customer.id}
+                              className="p-2 hover:bg-gray-100 cursor-pointer"
+                              onClick={() => handleSelectCustomer(customer)}
                             >
-                              ×
-                            </Button>
-                          </div>
+                              <p className="font-medium">{customer.name}</p>
+                              <p className="text-sm text-muted-foreground">{customer.whatsapp}</p>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                    <div className="text-right font-semibold text-xl text-store-green-600 border-t pt-2">
-                      Total: R$ {getTotalSale().toFixed(2)}
+                      )}
                     </div>
                   </div>
-                )}
 
-                {/* Busca de cliente */}
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Cliente
-                  </Label>
-                  <div className="relative">
+                  {selectedCustomer && (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded">
+                      <p className="font-medium text-green-800">Cliente Selecionado:</p>
+                      <p className="text-green-700">{selectedCustomer.name} - {selectedCustomer.whatsapp}</p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Popover open={showCustomerForm} onOpenChange={setShowCustomerForm}>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="flex-1">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Cadastrar Novo Cliente
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="center">
+                        <QuickCustomerForm
+                          onClose={() => setShowCustomerForm(false)}
+                          onCustomerCreated={handleSelectCustomer}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    
+                    <Button 
+                      variant="outline" 
+                      onClick={handleCustomerNotWantRegister}
+                      className="flex-1"
+                    >
+                      Cliente Não Quis se Cadastrar
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Etapa 2: Seleção do Vendedor */}
+              {currentStep === 'seller' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Vendedor Responsável
+                    </Label>
+                    <Select onValueChange={setSelectedSeller} value={selectedSeller}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o vendedor" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        {activeSellers.map((seller) => (
+                          <SelectItem key={seller.id} value={seller.id}>
+                            {seller.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
+              {/* Etapa 3: Adição de Produtos */}
+              {currentStep === 'products' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Barcode className="h-4 w-4" />
+                      Código de Barras
+                    </Label>
                     <Input
-                      placeholder="Digite o nome ou WhatsApp do cliente..."
-                      value={customerSearch}
-                      onChange={(e) => handleCustomerSearch(e.target.value)}
+                      placeholder="Digite ou escaneie o código de barras..."
+                      value={barcode}
+                      onChange={(e) => handleBarcodeInput(e.target.value)}
+                      className="text-center font-mono"
+                      autoFocus
                     />
-                    {customerSuggestions.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 bg-white border rounded-md shadow-lg z-50 max-h-40 overflow-y-auto">
-                        {customerSuggestions.map((customer) => (
-                          <div
-                            key={customer.id}
-                            className="p-2 hover:bg-gray-100 cursor-pointer"
-                            onClick={() => handleSelectCustomer(customer)}
-                          >
-                            <p className="font-medium">{customer.name}</p>
-                            <p className="text-sm text-muted-foreground">{customer.whatsapp}</p>
+                  </div>
+
+                  {selectedProducts.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Produtos Adicionados</h4>
+                      <div className="max-h-60 overflow-y-auto space-y-2">
+                        {selectedProducts.map((item) => (
+                          <div key={item.product.id} className="flex items-center justify-between p-3 bg-muted rounded border">
+                            <div className="flex-1">
+                              <p className="font-medium">{item.product.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                R$ {item.price.toFixed(2)} cada
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                min="1"
+                                max={item.product.quantity}
+                                value={item.quantity}
+                                onChange={(e) => handleUpdateQuantity(item.product.id, parseInt(e.target.value))}
+                                className="w-16"
+                              />
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleRemoveProduct(item.product.id)}
+                              >
+                                ×
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
-                    )}
-                  </div>
-                </div>
 
-                {/* Vendedor */}
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Vendedor *
-                  </Label>
-                  <Select onValueChange={(value) => setSaleData({ ...saleData, sellerId: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o vendedor" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white z-50">
-                      {activeSellers.map((seller) => (
-                        <SelectItem key={seller.id} value={seller.id}>
-                          {seller.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                      <div className="border-t pt-4 space-y-2">
+                        <div className="flex gap-2">
+                          <div className="flex-1">
+                            <Label>Desconto</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                value={discount.value}
+                                onChange={(e) => setDiscount({ ...discount, value: Number(e.target.value) })}
+                                className="flex-1"
+                              />
+                              <Select 
+                                value={discount.type} 
+                                onValueChange={(value: 'percentage' | 'value') => setDiscount({ ...discount, type: value })}
+                              >
+                                <SelectTrigger className="w-24">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white z-50">
+                                  <SelectItem value="percentage">
+                                    <Percent className="h-4 w-4" />
+                                  </SelectItem>
+                                  <SelectItem value="value">
+                                    <DollarSign className="h-4 w-4" />
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </div>
 
-                {/* Novo cliente */}
-                {showNewCustomerForm && (
-                  <div className="lg:col-span-2 space-y-4 p-4 border rounded">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={wantToRegister}
-                        onChange={(e) => setWantToRegister(e.target.checked)}
-                      />
-                      <Label>Cliente quer se cadastrar</Label>
-                    </div>
-
-                    {wantToRegister ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input
-                          placeholder="Nome do cliente *"
-                          value={newCustomer.name}
-                          onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                        />
-                        <MaskedInput
-                          mask="whatsapp"
-                          placeholder="WhatsApp *"
-                          value={newCustomer.whatsapp}
-                          onChange={(value) => setNewCustomer({ ...newCustomer, whatsapp: value })}
-                        />
-                        <Select onValueChange={(value: 'M' | 'F' | 'Outro') => setNewCustomer({ ...newCustomer, gender: value })}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sexo" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white z-50">
-                            <SelectItem value="M">Masculino</SelectItem>
-                            <SelectItem value="F">Feminino</SelectItem>
-                            <SelectItem value="Outro">Outro</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Autocomplete
-                          placeholder="Cidade (opcional)"
-                          value={newCustomer.city}
-                          onChange={(value) => setNewCustomer({ ...newCustomer, city: value })}
-                          suggestions={cities}
-                        />
+                        <div className="text-right space-y-1">
+                          <p className="text-sm text-muted-foreground">
+                            Subtotal: R$ {getSubtotal().toFixed(2)}
+                          </p>
+                          {getDiscountAmount() > 0 && (
+                            <p className="text-sm text-red-600">
+                              Desconto: -R$ {getDiscountAmount().toFixed(2)}
+                            </p>
+                          )}
+                          <p className="text-xl font-bold text-store-green-600">
+                            Total: R$ {getTotalSale().toFixed(2)}
+                          </p>
+                        </div>
                       </div>
-                    ) : (
-                      <p className="text-muted-foreground">
-                        Venda será associada ao cliente padrão
-                      </p>
-                    )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Etapa 4: Finalização */}
+              {currentStep === 'payment' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Forma de Pagamento</Label>
+                    <Select value={paymentMethod} onValueChange={(value: 'pix' | 'debito' | 'credito') => setPaymentMethod(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-50">
+                        <SelectItem value="pix">PIX</SelectItem>
+                        <SelectItem value="debito">Cartão de Débito</SelectItem>
+                        <SelectItem value="credito">Cartão de Crédito</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
 
-                {/* Forma de pagamento */}
-                <div className="lg:col-span-2 space-y-2">
-                  <Label>Forma de Pagamento</Label>
-                  <Select onValueChange={(value: 'pix' | 'debito' | 'credito') => setSaleData({ ...saleData, paymentMethod: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a forma de pagamento" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white z-50">
-                      <SelectItem value="pix">PIX</SelectItem>
-                      <SelectItem value="debito">Cartão de Débito</SelectItem>
-                      <SelectItem value="credito">Cartão de Crédito</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="p-4 bg-muted rounded border">
+                    <h4 className="font-medium mb-2">Resumo da Venda</h4>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span>Cliente:</span>
+                        <span>{selectedCustomer?.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Vendedor:</span>
+                        <span>{sellers.find(s => s.id === selectedSeller)?.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Itens:</span>
+                        <span>{selectedProducts.length} produto(s)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span>R$ {getSubtotal().toFixed(2)}</span>
+                      </div>
+                      {getDiscountAmount() > 0 && (
+                        <div className="flex justify-between text-red-600">
+                          <span>Desconto:</span>
+                          <span>-R$ {getDiscountAmount().toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-bold text-lg border-t pt-1">
+                        <span>Total:</span>
+                        <span className="text-store-green-600">R$ {getTotalSale().toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              )}
 
-                <div className="lg:col-span-2">
-                  <Button
+              {/* Botões de navegação */}
+              <div className="flex justify-between pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={handlePreviousStep}
+                  disabled={currentStep === 'customer'}
+                >
+                  Voltar
+                </Button>
+                
+                {currentStep === 'payment' ? (
+                  <Button 
                     onClick={handleFinalizeSale}
-                    className="w-full bg-store-green-600 hover:bg-store-green-700 text-lg py-3"
-                    disabled={selectedProducts.length === 0}
+                    className="bg-store-green-600 hover:bg-store-green-700"
                   >
-                    Finalizar Venda - R$ {getTotalSale().toFixed(2)}
+                    Finalizar Venda
                   </Button>
-                </div>
+                ) : (
+                  <Button 
+                    onClick={handleNextStep}
+                    className="bg-store-blue-600 hover:bg-store-blue-700"
+                  >
+                    Próximo
+                  </Button>
+                )}
               </div>
             </DialogContent>
           </Dialog>
         )}
       </div>
 
-      {/* Lista de vendas */}
+      {/* Confirmação de venda */}
+      <SaleConfirmation
+        open={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onNewSale={resetSale}
+        onBackToDashboard={() => {
+          resetSale();
+          // Navegar para dashboard se necessário
+        }}
+        saleTotal={getTotalSale()}
+        customerWhatsApp={selectedCustomer?.whatsapp}
+      />
+
+      {/* Lista de vendas recentes */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Vendas Recentes</h2>
         {sales.length === 0 ? (
@@ -458,6 +591,12 @@ const SalesPage = () => {
                         <span className="text-muted-foreground">Caixa:</span> {sale.cashier}
                       </div>
                     </div>
+                    {sale.discount > 0 && (
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Subtotal:</span> R$ {sale.subtotal.toFixed(2)} | 
+                        <span className="text-red-600 ml-1">Desconto: R$ {sale.discount.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Itens:</p>
                       <div className="space-y-1">
