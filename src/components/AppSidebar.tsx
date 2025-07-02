@@ -30,13 +30,13 @@ const navigationItems = [
     title: 'Dashboard',
     url: '/dashboard',
     icon: LayoutDashboard,
-    roles: ['admin', 'caixa', 'consultivo']
+    roles: ['admin']
   },
   {
     title: 'Produtos',
     url: '/products',
     icon: ShoppingCart,
-    roles: ['admin', 'vendedor', 'caixa']
+    roles: ['admin', 'vendedor', 'caixa', 'consultivo']
   },
   {
     title: 'Vendas',
@@ -48,7 +48,7 @@ const navigationItems = [
     title: 'Minhas Vendas',
     url: '/my-sales',
     icon: BarChart3,
-    roles: ['vendedor']
+    roles: ['vendedor', 'caixa']
   },
   {
     title: 'Clientes',

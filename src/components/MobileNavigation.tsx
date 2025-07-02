@@ -18,13 +18,9 @@ export function MobileNavigation() {
   const currentPath = location.pathname;
 
   const getMenuItems = () => {
-    const baseItems = [
-      { title: "Dashboard", url: "/dashboard", icon: BarChart3, emoji: "📊" },
-    ];
-
     if (user?.role === 'admin') {
       return [
-        ...baseItems,
+        { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, emoji: "📊" },
         { title: "Vendas", url: "/sales", icon: ShoppingCart, emoji: "🛒" },
         { title: "Estoque", url: "/products", icon: Package, emoji: "📦" },
         { title: "Clientes", url: "/customers", icon: Users, emoji: "👤" },
@@ -41,21 +37,21 @@ export function MobileNavigation() {
 
     if (user?.role === 'caixa') {
       return [
-        ...baseItems,
         { title: "Vendas", url: "/sales", icon: ShoppingCart, emoji: "🛒" },
         { title: "Estoque", url: "/products", icon: Package, emoji: "📦" },
+        { title: "Minhas Vendas", url: "/my-sales", icon: FileText, emoji: "💼" },
         { title: "Clientes", url: "/customers", icon: Users, emoji: "👤" },
       ];
     }
 
     if (user?.role === 'consultivo') {
       return [
-        ...baseItems,
         { title: "Estoque", url: "/products", icon: Package, emoji: "📦" },
+        { title: "Clientes", url: "/customers", icon: Users, emoji: "👤" },
       ];
     }
 
-    return baseItems;
+    return [];
   };
 
   const menuItems = getMenuItems();

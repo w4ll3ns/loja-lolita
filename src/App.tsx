@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Navigate } from 'react-router-dom';
 import { Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -46,11 +47,11 @@ function AppRoutes() {
           <Routes>
             <Route path="/" element={<Index />} />
             
-            {/* Dashboard - apenas para admin, caixa e consultivo */}
+            {/* Dashboard - apenas para admin */}
             <Route 
               path="/dashboard" 
               element={
-                <ProtectedRoute allowedRoles={['admin', 'caixa', 'consultivo']}>
+                <ProtectedRoute allowedRoles={['admin']}>
                   <Dashboard />
                 </ProtectedRoute>
               } 
@@ -69,11 +70,11 @@ function AppRoutes() {
               } 
             />
             
-            {/* Minhas Vendas - apenas vendedores */}
+            {/* Minhas Vendas - vendedores e caixa */}
             <Route 
               path="/my-sales" 
               element={
-                <ProtectedRoute allowedRoles={['vendedor']}>
+                <ProtectedRoute allowedRoles={['vendedor', 'caixa']}>
                   <MySalesPage />
                 </ProtectedRoute>
               } 

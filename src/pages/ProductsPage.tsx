@@ -345,7 +345,7 @@ const ProductsPage = () => {
     });
   };
 
-  const canEdit = user?.role === 'admin';
+  const canEdit = user?.role === 'admin' || user?.role === 'vendedor' || user?.role === 'caixa';
   const canAddStructuralData = user?.role === 'admin';
 
   const resetForm = () => {
