@@ -75,7 +75,6 @@ export const extractProductsFromXml = (xmlDoc: Document, supplierName: string): 
       const xPed = prod.getElementsByTagName('xPed')[0]?.textContent || '';
 
       const costPrice = parseFloat(vUnCom.replace(',', '.')) || 0;
-      const suggestedSalePrice = costPrice * 1.5; // Margem sugerida de 50%
 
       const size = inferSizeFromProduct(xProd, cProd);
       const gender = inferGenderFromProduct(xProd);
@@ -98,7 +97,7 @@ export const extractProductsFromXml = (xmlDoc: Document, supplierName: string): 
         editableQuantity: qCom,
         editableUnit: uCom,
         editableCostPrice: costPrice.toFixed(2),
-        editableSalePrice: suggestedSalePrice.toFixed(2),
+        editableSalePrice: '',
         editableCategory: 'Importado',
         editableSize: size,
         editableGender: gender,
