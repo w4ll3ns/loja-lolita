@@ -32,25 +32,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session);
         setSession(session);
         
         if (session?.user) {
+          console.log('User found in session:', session.user);
           // Get user profile from profiles table
-          const { data: profile } = await supabase
+          const { data: profile, error } = await supabase
             .from('profiles')
             .select('*')
             .eq('user_id', session.user.id)
             .single();
             
+          console.log('Profile query result:', { profile, error });
+            
           if (profile) {
-            setUser({
+            const userData = {
               id: profile.user_id,
               name: profile.name,
               email: session.user.email || '',
               role: profile.role
-            });
+            };
+            console.log('Setting user data:', userData);
+            setUser(userData);
+          } else {
+            console.log('No profile found for user');
+            setUser(null);
           }
         } else {
+          console.log('No user in session');
           setUser(null);
         }
         
@@ -69,17 +79,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setIsLoading(true);
+      console.log('Attempting login with:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
+      console.log('Login result:', { data, error });
+
       if (error) {
+        console.log('Login error:', error.message);
         return { success: false, error: error.message };
       }
 
-      return { success: true };
+      if (data.user) {
+        console.log('Login successful, user:', data.user);
+        return { success: true };
+      }
+
+      console.log('Login failed - no user returned');
+      return { success: false, error: 'Login failed' };
     } catch (error) {
       console.error('Erro no login:', error);
       return { success: false, error: 'Erro interno no login' };
