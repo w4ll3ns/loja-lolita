@@ -60,54 +60,90 @@ export const useDataManagementLogic = (
     }
   };
 
-  // Update operations (these will need Supabase implementation later)
-  const updateCategory = (oldName: string, newName: string) => {
-    setters.setCategories(prev => prev.map(item => item === oldName ? newName : item));
+  // Update operations
+  const updateCategory = async (oldName: string, newName: string) => {
+    const success = await operations.updateDropdownItem('categories', oldName, newName);
+    if (success) {
+      setters.setCategories(prev => prev.map(item => item === oldName ? newName : item));
+    }
   };
 
-  const updateCollection = (oldName: string, newName: string) => {
-    setters.setCollections(prev => prev.map(item => item === oldName ? newName : item));
+  const updateCollection = async (oldName: string, newName: string) => {
+    const success = await operations.updateDropdownItem('collections', oldName, newName);
+    if (success) {
+      setters.setCollections(prev => prev.map(item => item === oldName ? newName : item));
+    }
   };
 
-  const updateSupplier = (oldName: string, newName: string) => {
-    setters.setSuppliers(prev => prev.map(item => item === oldName ? newName : item));
+  const updateSupplier = async (oldName: string, newName: string) => {
+    const success = await operations.updateDropdownItem('suppliers', oldName, newName);
+    if (success) {
+      setters.setSuppliers(prev => prev.map(item => item === oldName ? newName : item));
+    }
   };
 
-  const updateBrand = (oldName: string, newName: string) => {
-    setters.setBrands(prev => prev.map(item => item === oldName ? newName : item));
+  const updateBrand = async (oldName: string, newName: string) => {
+    const success = await operations.updateDropdownItem('brands', oldName, newName);
+    if (success) {
+      setters.setBrands(prev => prev.map(item => item === oldName ? newName : item));
+    }
   };
 
-  const updateColor = (oldName: string, newName: string) => {
-    setters.setColors(prev => prev.map(item => item === oldName ? newName : item));
+  const updateColor = async (oldName: string, newName: string) => {
+    const success = await operations.updateDropdownItem('colors', oldName, newName);
+    if (success) {
+      setters.setColors(prev => prev.map(item => item === oldName ? newName : item));
+    }
   };
 
-  const updateSize = (oldName: string, newName: string) => {
-    setters.setSizes(prev => prev.map(item => item === oldName ? newName : item));
+  const updateSize = async (oldName: string, newName: string) => {
+    const success = await operations.updateDropdownItem('sizes', oldName, newName);
+    if (success) {
+      setters.setSizes(prev => prev.map(item => item === oldName ? newName : item));
+    }
   };
 
-  // Delete operations - Fixed to use name instead of index
-  const deleteCategory = (name: string) => {
-    setters.setCategories(prev => prev.filter(item => item !== name));
+  // Delete operations
+  const deleteCategory = async (name: string) => {
+    const success = await operations.deleteDropdownItem('categories', name);
+    if (success) {
+      setters.setCategories(prev => prev.filter(item => item !== name));
+    }
   };
 
-  const deleteCollection = (name: string) => {
-    setters.setCollections(prev => prev.filter(item => item !== name));
+  const deleteCollection = async (name: string) => {
+    const success = await operations.deleteDropdownItem('collections', name);
+    if (success) {
+      setters.setCollections(prev => prev.filter(item => item !== name));
+    }
   };
 
-  const deleteSupplier = (name: string) => {
-    setters.setSuppliers(prev => prev.filter(item => item !== name));
+  const deleteSupplier = async (name: string) => {
+    const success = await operations.deleteDropdownItem('suppliers', name);
+    if (success) {
+      setters.setSuppliers(prev => prev.filter(item => item !== name));
+    }
   };
 
-  const deleteBrand = (name: string) => {
-    setters.setBrands(prev => prev.filter(item => item !== name));
+  const deleteBrand = async (name: string) => {
+    const success = await operations.deleteDropdownItem('brands', name);
+    if (success) {
+      setters.setBrands(prev => prev.filter(item => item !== name));
+    }
   };
 
-  const deleteColor = (name: string) => {
-    setters.setColors(prev => prev.filter(item => item !== name));
+  const deleteColor = async (name: string) => {
+    const success = await operations.deleteDropdownItem('colors', name);
+    if (success) {
+      setters.setColors(prev => prev.filter(item => item !== name));
+    }
   };
 
-  const deleteSize = (name: string) => {
-    setters.setSizes(prev => prev.filter(item => item !== name));
+  const deleteSize = async (name: string) => {
+    const success = await operations.deleteDropdownItem('sizes', name);
+    if (success) {
+      setters.setSizes(prev => prev.filter(item => item !== name));
+    }
   };
 
   return {

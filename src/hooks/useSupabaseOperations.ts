@@ -279,6 +279,90 @@ export const useSupabaseOperations = () => {
     );
   };
 
+  // Update dropdown data
+  const updateDropdownItem = async (tableName: string, oldName: string, newName: string) => {
+    const validTables = {
+      'categories': 'categories',
+      'collections': 'collections', 
+      'suppliers': 'suppliers',
+      'brands': 'brands',
+      'colors': 'colors',
+      'sizes': 'sizes',
+      'cities': 'cities'
+    } as const;
+
+    const table = validTables[tableName as keyof typeof validTables];
+    
+    if (!table) {
+      console.error('Invalid table name:', tableName);
+      return false;
+    }
+
+    const { error } = await supabase
+      .from(table)
+      .update({ name: newName })
+      .eq('name', oldName);
+
+    if (error) {
+      console.error(`Error updating ${table} item:`, error);
+      toast({
+        title: "Erro",
+        description: `Erro ao atualizar ${table}`,
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    toast({
+      title: "Sucesso",
+      description: "Item atualizado com sucesso"
+    });
+
+    return true;
+  };
+
+  // Delete dropdown data
+  const deleteDropdownItem = async (tableName: string, name: string) => {
+    const validTables = {
+      'categories': 'categories',
+      'collections': 'collections', 
+      'suppliers': 'suppliers',
+      'brands': 'brands',
+      'colors': 'colors',
+      'sizes': 'sizes',
+      'cities': 'cities'
+    } as const;
+
+    const table = validTables[tableName as keyof typeof validTables];
+    
+    if (!table) {
+      console.error('Invalid table name:', tableName);
+      return false;
+    }
+
+    const { error } = await supabase
+      .from(table)
+      .delete()
+      .eq('name', name);
+
+    if (error) {
+      console.error(`Error deleting ${table} item:`, error);
+      toast({
+        title: "Erro",
+        description: `Erro ao excluir ${table}`,
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    toast({
+      title: "Sucesso",
+      description: "Item excluído com sucesso"
+    });
+
+    return true;
+  };
+
   return {
     addProduct,
     updateProduct,
@@ -286,6 +370,8 @@ export const useSupabaseOperations = () => {
     addCustomer,
     addSale,
     addDropdownItem,
+    updateDropdownItem,
+    deleteDropdownItem,
     generateUniqueId,
     searchCustomers
   };
