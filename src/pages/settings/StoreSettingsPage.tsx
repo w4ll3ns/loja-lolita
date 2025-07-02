@@ -7,21 +7,58 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Upload, Store, CheckCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useStore } from '@/contexts/StoreContext';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 const StoreSettingsPage = () => {
   const navigate = useNavigate();
-  const { storeSettings, updateStoreSettings } = useStore();
   const { toast } = useToast();
-  const [storeData, setStoreData] = useState(storeSettings);
+  const [storeData, setStoreData] = useState({
+    name: 'Minha Loja',
+    address: '',
+    phone: '',
+    email: '',
+    instagram: '',
+    facebook: '',
+    hours: '',
+    logo: null
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Sincronizar com o contexto quando as configurações mudarem
+  // Carregar configurações do Supabase
   useEffect(() => {
-    setStoreData(storeSettings);
-  }, [storeSettings]);
+    fetchStoreSettings();
+  }, []);
+
+  const fetchStoreSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('store_settings')
+        .select('*')
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error fetching store settings:', error);
+        return;
+      }
+
+      if (data) {
+        setStoreData({
+          name: data.name || 'Minha Loja',
+          address: data.address || '',
+          phone: data.phone || '',
+          email: data.email || '',
+          instagram: data.instagram || '',
+          facebook: data.facebook || '',
+          hours: data.hours || '',
+          logo: data.logo || null
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
   const validateFields = () => {
     const newErrors: Record<string, string> = {};
@@ -55,18 +92,58 @@ const StoreSettingsPage = () => {
     setIsLoading(true);
 
     try {
-      // Simular salvamento (em um cenário real, seria uma chamada à API)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Salvar no contexto
-      updateStoreSettings(storeData);
+      // Primeiro, tentar buscar configurações existentes
+      const { data: existingData } = await supabase
+        .from('store_settings')
+        .select('id')
+        .single();
+
+      let result;
+      if (existingData) {
+        // Atualizar configurações existentes
+        result = await supabase
+          .from('store_settings')
+          .update({
+            name: storeData.name,
+            address: storeData.address,
+            phone: storeData.phone,
+            email: storeData.email,
+            instagram: storeData.instagram,
+            facebook: storeData.facebook,
+            hours: storeData.hours
+          })
+          .eq('id', existingData.id);
+      } else {
+        // Inserir novas configurações
+        result = await supabase
+          .from('store_settings')
+          .insert({
+            name: storeData.name,
+            address: storeData.address,
+            phone: storeData.phone,
+            email: storeData.email,
+            instagram: storeData.instagram,
+            facebook: storeData.facebook,
+            hours: storeData.hours
+          });
+      }
+
+      if (result.error) {
+        console.error('Error saving store settings:', result.error);
+        toast({
+          title: "Erro ao salvar",
+          description: result.error.message,
+          variant: "destructive",
+        });
+        return;
+      }
       
       toast({
         title: "✅ Configurações salvas com sucesso",
-        description: "As informações da loja foram atualizadas.",
+        description: "As informações da loja foram atualizadas no banco de dados.",
       });
 
-      console.log('Configurações da loja salvas:', storeData);
+      console.log('Configurações da loja salvas no Supabase:', storeData);
     } catch (error) {
       toast({
         title: "Erro ao salvar",
