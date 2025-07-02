@@ -93,8 +93,8 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
   const sizes = ['PP', 'P', 'M', 'G', 'GG', '34', '36', '38', '40', '42', '44', '46', '48', '50', '52'];
   const genders = ['Masculino', 'Feminino', 'Unissex'];
 
-  // Verificar se usuário pode cadastrar fornecedores
-  const canManageSuppliers = user?.role === 'admin' || user?.role === 'gerente';
+  // Verificar se usuário pode cadastrar fornecedores - usando 'admin' que existe no tipo User
+  const canManageSuppliers = user?.role === 'admin';
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -113,7 +113,26 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
   };
 
   const extractSupplierFromXml = (xmlDoc: Document): XmlSupplier | null => {
-    const emit = xmlDoc.getElementsByTagName('emit')[0];
+    // Buscar pelo caminho completo da NF-e
+    const nfeProc = xmlDoc.getElementsByTagName('nfeProc')[0];
+    let emit: Element | null = null;
+    
+    if (nfeProc) {
+      // Caminho: nfeProc.NFe.infNFe.emit
+      const nfe = nfeProc.getElementsByTagName('NFe')[0];
+      if (nfe) {
+        const infNFe = nfe.getElementsByTagName('infNFe')[0];
+        if (infNFe) {
+          emit = infNFe.getElementsByTagName('emit')[0];
+        }
+      }
+    }
+    
+    // Fallback para estrutura mais simples
+    if (!emit) {
+      emit = xmlDoc.getElementsByTagName('emit')[0];
+    }
+    
     if (!emit) return null;
 
     const cnpj = emit.getElementsByTagName('CNPJ')[0]?.textContent || '';
@@ -209,7 +228,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
       setExtractedSupplier(supplierData);
 
       // Verificar se o fornecedor já existe
-      let supplierCheck = { exists: false, existingName: '' };
+      let supplierCheck = { exists: false, existingName: undefined as string | undefined };
       if (supplierData) {
         supplierCheck = checkSupplierExists(supplierData);
         setSupplierExists(supplierCheck.exists);
