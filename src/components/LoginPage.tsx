@@ -29,23 +29,23 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-store-blue-50 to-store-green-50 p-4">
-      <Card className="w-full max-w-sm sm:max-w-md animate-fade-in">
-        <CardHeader className="text-center space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-store-blue-50 to-store-green-50 px-4 py-8">
+      <Card className="w-full max-w-md min-w-[320px] sm:min-w-[400px] animate-fade-in shadow-lg">
+        <CardHeader className="text-center space-y-4 pb-6">
           <div className="mx-auto p-3 bg-store-blue-100 rounded-full w-fit">
-            <ShoppingCart className="h-8 w-8 text-store-blue-600" />
+            <ShoppingCart className="h-10 w-10 text-store-blue-600" />
           </div>
           <div className="space-y-2">
             <CardTitle className="text-2xl sm:text-3xl font-bold gradient-bg bg-clip-text text-transparent">
               Sistema de Vendas
             </CardTitle>
-            <CardDescription className="text-sm sm:text-base">
+            <CardDescription className="text-sm sm:text-base text-muted-foreground">
               Faça login para acessar o sistema
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="space-y-6 px-6 pb-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">Email</Label>
               <Input
@@ -55,7 +55,8 @@ const LoginPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-11"
+                className="h-12 text-base"
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -67,38 +68,39 @@ const LoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="h-11"
+                className="h-12 text-base"
+                autoComplete="current-password"
               />
             </div>
             <Button 
               type="submit" 
-              className="w-full h-11 bg-store-blue-600 hover:bg-store-blue-700 text-base font-medium"
+              className="w-full h-12 bg-store-blue-600 hover:bg-store-blue-700 text-base font-medium transition-colors"
               disabled={isLoading}
             >
               {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
           
-          <div className="p-4 bg-muted/50 rounded-lg border">
+          <div className="p-4 bg-muted/50 rounded-lg border border-muted">
             <p className="font-semibold mb-3 text-sm">Contas de teste:</p>
             <div className="grid grid-cols-1 gap-2 text-xs">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center py-1">
                 <span className="font-medium text-muted-foreground">Admin:</span>
-                <span className="font-mono">admin@loja.com</span>
+                <span className="font-mono text-foreground">admin@loja.com</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center py-1">
                 <span className="font-medium text-muted-foreground">Vendedor:</span>
-                <span className="font-mono">vendedor@loja.com</span>
+                <span className="font-mono text-foreground">vendedor@loja.com</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center py-1">
                 <span className="font-medium text-muted-foreground">Caixa:</span>
-                <span className="font-mono">caixa@loja.com</span>
+                <span className="font-mono text-foreground">caixa@loja.com</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center py-1">
                 <span className="font-medium text-muted-foreground">Consultivo:</span>
-                <span className="font-mono">consulta@loja.com</span>
+                <span className="font-mono text-foreground">consulta@loja.com</span>
               </div>
-              <div className="mt-2 pt-2 border-t border-muted-foreground/20">
+              <div className="mt-3 pt-3 border-t border-muted-foreground/20">
                 <p className="text-center text-muted-foreground">
                   <span className="font-medium">Senha para todos:</span> 123456
                 </p>

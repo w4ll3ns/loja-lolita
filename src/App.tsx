@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Navigate } from 'react-router-dom';
 import { Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -37,27 +38,35 @@ function AppRoutes() {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/products" element={<ProductsPage />} />
-      <Route path="/sales" element={<SalesPage />} />
-      <Route path="/my-sales" element={<MySalesPage />} />
-      <Route path="/customers" element={<CustomersPage />} />
-      <Route path="/management" element={<ManagementIndexPage />} />
-      <Route path="/management/categories" element={<CategoriesManagementPage />} />
-      <Route path="/management/colors" element={<ColorsManagementPage />} />
-      <Route path="/management/collections" element={<CollectionsManagementPage />} />
-      <Route path="/management/brands" element={<BrandsManagementPage />} />
-      <Route path="/management/suppliers" element={<SuppliersManagementPage />} />
-      <Route path="/management/sizes" element={<SizesManagementPage />} />
-      <Route path="/settings" element={<SettingsPage />} />
-      <Route path="/settings/store" element={<StoreSettingsPage />} />
-      <Route path="/settings/users" element={<UsersSettingsPage />} />
-      <Route path="/settings/notifications" element={<NotificationsSettingsPage />} />
-      <Route path="/settings/security" element={<SecuritySettingsPage />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <SidebarProvider>
+      <div className="flex h-screen antialiased text-gray-900 w-full">
+        <AppSidebar />
+        <MobileNavigation />
+        <main className="flex-1 p-4">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/sales" element={<SalesPage />} />
+            <Route path="/my-sales" element={<MySalesPage />} />
+            <Route path="/customers" element={<CustomersPage />} />
+            <Route path="/management" element={<ManagementIndexPage />} />
+            <Route path="/management/categories" element={<CategoriesManagementPage />} />
+            <Route path="/management/colors" element={<ColorsManagementPage />} />
+            <Route path="/management/collections" element={<CollectionsManagementPage />} />
+            <Route path="/management/brands" element={<BrandsManagementPage />} />
+            <Route path="/management/suppliers" element={<SuppliersManagementPage />} />
+            <Route path="/management/sizes" element={<SizesManagementPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings/store" element={<StoreSettingsPage />} />
+            <Route path="/settings/users" element={<UsersSettingsPage />} />
+            <Route path="/settings/notifications" element={<NotificationsSettingsPage />} />
+            <Route path="/settings/security" element={<SecuritySettingsPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 }
 
@@ -69,15 +78,7 @@ function App() {
       <StoreProvider>
         <QueryClientProvider client={queryClient}>
           <Router>
-            <SidebarProvider>
-              <div className="flex h-screen antialiased text-gray-900">
-                <AppSidebar />
-                <MobileNavigation />
-                <main className="flex-1 p-4">
-                  <AppRoutes />
-                </main>
-              </div>
-            </SidebarProvider>
+            <AppRoutes />
             <Toaster />
           </Router>
         </QueryClientProvider>
