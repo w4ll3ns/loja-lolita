@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { XmlProduct, XmlSupplier } from '@/types/xml-import';
 import { extractSupplierFromXml, extractProductsFromXml } from '@/utils/xmlParser';
 import { checkSupplierExists } from '@/utils/supplierUtils';
+import { generateNfeHash } from '@/utils/xmlHasher';
 import { SupplierInfoCard } from '@/components/xml-import/SupplierInfoCard';
 import { ProductPreviewTable } from '@/components/xml-import/ProductPreviewTable';
 import { ProductEditForm } from '@/components/xml-import/ProductEditForm';
@@ -46,7 +48,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
     email: ''
   });
 
-  const { categories, suppliers, brands, colors, addCategory, addSupplier, addBrand, addColor } = useStore();
+  const { categories, suppliers, brands, colors, addCategory, addSupplier, addBrand, addColor, isXmlAlreadyImported, markXmlAsImported } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -56,7 +58,6 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
   // Verificar se usuário pode cadastrar fornecedores
   const canManageSuppliers = user?.role === 'admin';
 
-  // ... keep existing code (handleFileUpload function)
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -84,6 +85,19 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
 
       if (xmlDoc.documentElement.nodeName === 'parsererror') {
         throw new Error('XML inválido');
+      }
+
+      // Gerar hash do XML para verificar se já foi importado
+      const xmlHash = generateNfeHash(xmlDoc);
+      
+      if (isXmlAlreadyImported(xmlHash)) {
+        toast({
+          title: "XML já importado",
+          description: "Este arquivo XML já foi importado anteriormente. Não é possível importar o mesmo XML novamente para evitar duplicidade de produtos.",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return;
       }
 
       // Extrair dados do fornecedor
@@ -154,6 +168,10 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
           description: `Fornecedor "${supplierData.razaoSocial}" pode ser cadastrado automaticamente.`, // SEMPRE usar razão social
         });
       }
+
+      // Marcar XML como importado após processamento bem-sucedido
+      markXmlAsImported(xmlHash);
+      
     } catch (error) {
       toast({
         title: "Erro ao processar XML",

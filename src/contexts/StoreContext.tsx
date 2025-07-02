@@ -58,6 +58,7 @@ interface StoreContextType {
   storeSettings: StoreSettings;
   notificationSettings: NotificationSettings;
   securitySettings: SecuritySettings;
+  importedXmlHashes: string[];
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
   deleteProduct: (id: string, userId: string, userName: string, reason?: string) => void;
@@ -86,6 +87,8 @@ interface StoreContextType {
   updateNotificationSettings: (settings: Partial<NotificationSettings>) => void;
   updateSecuritySettings: (settings: Partial<SecuritySettings>) => void;
   getLowStockProducts: () => Product[];
+  isXmlAlreadyImported: (xmlHash: string) => boolean;
+  markXmlAsImported: (xmlHash: string) => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -106,6 +109,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(initialStoreSettings);
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(initialNotificationSettings);
   const [securitySettings, setSecuritySettings] = useState<SecuritySettings>(initialSecuritySettings);
+  const [importedXmlHashes, setImportedXmlHashes] = useState<string[]>([]);
 
   const operations = useStoreOperations();
 
@@ -251,6 +255,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     console.log('Configurações de segurança atualizadas:', settings);
   };
 
+  const isXmlAlreadyImported = (xmlHash: string): boolean => {
+    return importedXmlHashes.includes(xmlHash);
+  };
+
+  const markXmlAsImported = (xmlHash: string) => {
+    setImportedXmlHashes(prev => [...prev, xmlHash]);
+  };
+
   return (
     <StoreContext.Provider value={{
       products,
@@ -268,6 +280,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       storeSettings,
       notificationSettings,
       securitySettings,
+      importedXmlHashes,
       addProduct,
       updateProduct,
       deleteProduct,
@@ -295,7 +308,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updateStoreSettings,
       updateNotificationSettings,
       updateSecuritySettings,
-      getLowStockProducts: () => operations.getLowStockProducts(products, notificationSettings.lowStockQuantity)
+      getLowStockProducts: () => operations.getLowStockProducts(products, notificationSettings.lowStockQuantity),
+      isXmlAlreadyImported,
+      markXmlAsImported
     }}>
       {children}
     </StoreContext.Provider>
