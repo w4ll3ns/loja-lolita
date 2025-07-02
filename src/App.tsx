@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Navigate } from 'react-router-dom';
 import { Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -6,6 +5,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { MobileNavigation } from '@/components/MobileNavigation';
 import { Toaster } from '@/components/ui/toaster';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { StoreProvider } from '@/contexts/StoreContext';
 import LoginPage from '@/components/LoginPage';
@@ -45,23 +45,150 @@ function AppRoutes() {
         <main className="flex-1 p-4">
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            
+            {/* Dashboard - apenas para admin, caixa e consultivo */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'caixa', 'consultivo']}>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Produtos - acessível para todos os perfis */}
             <Route path="/products" element={<ProductsPage />} />
-            <Route path="/sales" element={<SalesPage />} />
-            <Route path="/my-sales" element={<MySalesPage />} />
-            <Route path="/customers" element={<CustomersPage />} />
-            <Route path="/management" element={<ManagementIndexPage />} />
-            <Route path="/management/categories" element={<CategoriesManagementPage />} />
-            <Route path="/management/colors" element={<ColorsManagementPage />} />
-            <Route path="/management/collections" element={<CollectionsManagementPage />} />
-            <Route path="/management/brands" element={<BrandsManagementPage />} />
-            <Route path="/management/suppliers" element={<SuppliersManagementPage />} />
-            <Route path="/management/sizes" element={<SizesManagementPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/settings/store" element={<StoreSettingsPage />} />
-            <Route path="/settings/users" element={<UsersSettingsPage />} />
-            <Route path="/settings/notifications" element={<NotificationsSettingsPage />} />
-            <Route path="/settings/security" element={<SecuritySettingsPage />} />
+            
+            {/* Vendas - apenas admin e caixa */}
+            <Route 
+              path="/sales" 
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'caixa']}>
+                  <SalesPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Minhas Vendas - apenas vendedores */}
+            <Route 
+              path="/my-sales" 
+              element={
+                <ProtectedRoute allowedRoles={['vendedor']}>
+                  <MySalesPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Clientes - admin, caixa e consultivo */}
+            <Route 
+              path="/customers" 
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'caixa', 'consultivo']}>
+                  <CustomersPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Gerenciamento - apenas admin */}
+            <Route 
+              path="/management" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <ManagementIndexPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/management/categories" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <CategoriesManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/management/colors" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <ColorsManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/management/collections" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <CollectionsManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/management/brands" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <BrandsManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/management/suppliers" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <SuppliersManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/management/sizes" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <SizesManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Configurações - apenas admin */}
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <SettingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings/store" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <StoreSettingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings/users" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <UsersSettingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings/notifications" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <NotificationsSettingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings/security" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <SecuritySettingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
