@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileText } from 'lucide-react';
@@ -17,7 +16,7 @@ interface ImportXmlModalProps {
 }
 
 export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose, onImport }) => {
-  const { suppliers, brands, colors } = useStore();
+  const { suppliers, brands, colors, sizes } = useStore();
   const { toast } = useToast();
   
   const {
@@ -185,6 +184,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
             suppliers={suppliers}
             brands={brands}
             colors={colors}
+            sizes={sizes}
             onUpdateField={(field, value) => updateProductField(editingIndex, field, value)}
             onBack={() => setStep('preview')}
             onSave={handleSaveEdit}
