@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '@/contexts/StoreContext';
-import { Tag, Palette, Layers, Award, Truck } from 'lucide-react';
+import { Tag, Palette, Layers, Award, Truck, Ruler } from 'lucide-react';
 
 const ManagementIndexPage = () => {
   const navigate = useNavigate();
-  const { categories, colors, collections, brands, suppliers } = useStore();
+  const { categories, colors, collections, brands, suppliers, sizes } = useStore();
 
   const managementItems = [
     {
@@ -50,6 +50,14 @@ const ManagementIndexPage = () => {
       count: suppliers.length,
       path: '/management/suppliers',
       color: 'bg-red-500'
+    },
+    {
+      title: 'Tamanhos',
+      description: 'Gerencie os tamanhos dos produtos',
+      icon: Ruler,
+      count: sizes.length,
+      path: '/management/sizes',
+      color: 'bg-indigo-500'
     }
   ];
 

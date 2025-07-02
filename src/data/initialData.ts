@@ -120,3 +120,4 @@ export const initialSuppliers = ['Fornecedor A', 'Fornecedor B', 'Fornecedor C']
 export const initialBrands = ['Marca X', 'Marca Y', 'Marca Z'];
 export const initialCities = ['São Paulo', 'Rio de Janeiro', 'Belo Horizonte', 'Salvador', 'Fortaleza'];
 export const initialColors = ['Branco', 'Preto', 'Azul', 'Vermelho', 'Verde', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Roxo'];
+export const initialSizes = ['PP', 'P', 'M', 'G', 'GG', '34', '36', '38', '40', '42', '44', '46', '48', '50', '52'];

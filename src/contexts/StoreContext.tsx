@@ -24,7 +24,8 @@ import {
   initialSuppliers,
   initialBrands,
   initialCities,
-  initialColors
+  initialColors,
+  initialSizes
 } from '@/data/initialData';
 import { useStoreOperations } from '@/hooks/useStoreOperations';
 
@@ -54,6 +55,7 @@ interface StoreContextType {
   brands: string[];
   cities: string[];
   colors: string[];
+  sizes: string[];
   deleteLogs: DeleteLog[];
   storeSettings: StoreSettings;
   notificationSettings: NotificationSettings;
@@ -79,6 +81,7 @@ interface StoreContextType {
   addSupplier: (supplier: string) => void;
   addBrand: (brand: string) => void;
   addColor: (color: string) => void;
+  addSize: (size: string) => void;
   getIncompleteProducts: () => Product[];
   duplicateProduct: (product: Product) => Omit<Product, 'id'>;
   isBarcodeTaken: (barcode: string, excludeId?: string) => boolean;
@@ -105,6 +108,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [brands, setBrands] = useState<string[]>(initialBrands);
   const [cities, setCities] = useState<string[]>(initialCities);
   const [colors, setColors] = useState<string[]>(initialColors);
+  const [sizes, setSizes] = useState<string[]>(initialSizes);
   const [deleteLogs, setDeleteLogs] = useState<DeleteLog[]>([]);
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(initialStoreSettings);
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(initialNotificationSettings);
@@ -217,6 +221,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const addSize = (size: string) => {
+    if (!sizes.includes(size)) {
+      setSizes(prev => [...prev, size]);
+    }
+  };
+
   const addCategory = (category: string) => {
     if (!categories.includes(category)) {
       setCategories(prev => [...prev, category]);
@@ -276,6 +286,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       brands,
       cities,
       colors,
+      sizes,
       deleteLogs,
       storeSettings,
       notificationSettings,
@@ -301,6 +312,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addSupplier,
       addBrand,
       addColor,
+      addSize,
       getIncompleteProducts: () => operations.getIncompleteProducts(products),
       duplicateProduct: operations.duplicateProduct,
       isBarcodeTaken: (barcode, excludeId) => operations.isBarcodeTaken(products, barcode, excludeId),
