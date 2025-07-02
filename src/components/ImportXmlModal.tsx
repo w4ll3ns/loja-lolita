@@ -94,7 +94,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
   const genders = ['Masculino', 'Feminino', 'Unissex'];
 
   // Verificar se usuário pode cadastrar fornecedores
-  const canManageSuppliers = user?.role === 'admin' || user?.role === 'manager';
+  const canManageSuppliers = user?.role === 'admin' || user?.role === 'gerente';
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
