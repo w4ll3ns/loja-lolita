@@ -36,8 +36,7 @@ export function MobileNavigation() {
       return [
         ...baseItems,
         { title: "Estoque", url: "/products", icon: Package, emoji: "📦" },
-        { title: "Vendas", url: "/my-sales", icon: FileText, emoji: "🛒" },
-        { title: "Clientes", url: "/customers", icon: Users, emoji: "👤" },
+        { title: "Minhas Vendas", url: "/my-sales", icon: FileText, emoji: "💼" },
       ];
     }
 

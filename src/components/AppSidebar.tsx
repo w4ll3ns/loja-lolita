@@ -19,7 +19,8 @@ import {
   ShoppingBag, 
   BarChart3, 
   Settings,
-  Database
+  Database,
+  Package
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,7 +42,7 @@ const navigationItems = [
     title: 'Vendas',
     url: '/sales',
     icon: ShoppingBag,
-    roles: ['admin', 'vendedor', 'caixa']
+    roles: ['admin', 'caixa']
   },
   {
     title: 'Minhas Vendas',
@@ -53,7 +54,7 @@ const navigationItems = [
     title: 'Clientes',
     url: '/customers',
     icon: Users,
-    roles: ['admin', 'vendedor', 'caixa', 'consultivo']
+    roles: ['admin', 'caixa', 'consultivo']
   },
   {
     title: 'Gerenciamento',
