@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
 import { 
@@ -20,7 +21,7 @@ import {
   BarChart3, 
   Settings,
   Database,
-  Package
+  LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -73,7 +74,7 @@ const navigationItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   
   const isCollapsed = state === 'collapsed';
   
@@ -87,6 +88,10 @@ export function AppSidebar() {
   const filteredItems = navigationItems.filter(item => 
     user && item.roles.includes(user.role)
   );
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <Sidebar className={cn("border-r", isCollapsed ? "w-14" : "w-60")} collapsible="icon">
@@ -119,6 +124,17 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
+              {!isCollapsed && <span>Sair</span>}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
