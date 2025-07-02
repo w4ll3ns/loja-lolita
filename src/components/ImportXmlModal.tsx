@@ -101,7 +101,13 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
         if (!supplierCheck.exists) {
           setSupplierFormData({
             name: supplierData.razaoSocial, // SEMPRE usar razão social
-            cnpj: supplierData.cnpj
+            cnpj: supplierData.cnpj,
+            address: '',
+            city: '',
+            state: '',
+            cep: '',
+            phone: '',
+            email: ''
           });
         }
       }
@@ -280,7 +286,13 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
     setNewCategoryName('');
     setSupplierFormData({
       name: '',
-      cnpj: ''
+      cnpj: '',
+      address: '',
+      city: '',
+      state: '',
+      cep: '',
+      phone: '',
+      email: ''
     });
     onClose();
   };
