@@ -1,75 +1,82 @@
 
-import { Product, DeleteLog } from '@/types/store';
+import { Product } from '@/types/store';
 
 export const useProductsLogic = (
   products: Product[],
   setProducts: (fn: (prev: Product[]) => Product[]) => void,
-  deleteLogs: DeleteLog[],
-  setDeleteLogs: (fn: (prev: DeleteLog[]) => DeleteLog[]) => void,
-  sales: any[],
-  operations: any,
   categories: string[],
-  setCategories: (fn: (prev: string[]) => string[]) => void
+  setCategories: (fn: (prev: string[]) => string[]) => void,
+  collections: string[],
+  setCollections: (fn: (prev: string[]) => string[]) => void,
+  suppliers: string[],
+  setSuppliers: (fn: (prev: string[]) => string[]) => void,
+  brands: string[],
+  setBrands: (fn: (prev: string[]) => string[]) => void,
+  colors: string[],
+  setColors: (fn: (prev: string[]) => string[]) => void,
+  sizes: string[],
+  setSizes: (fn: (prev: string[]) => string[]) => void,
+  operations: any
 ) => {
-  const addProduct = (product: Omit<Product, 'id'>) => {
-    const newProduct = { ...product, id: operations.generateUniqueId() };
-    setProducts(prev => [...prev, newProduct]);
-  };
-
-  const updateProduct = (id: string, updatedProduct: Partial<Product>) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updatedProduct } : p));
-  };
-
-  const bulkUpdateProducts = (productIds: string[], updates: Partial<Product>) => {
-    setProducts(prev => prev.map(p => 
-      productIds.includes(p.id) ? { ...p, ...updates } : p
-    ));
-  };
-
-  const deleteProduct = (id: string, userId: string, userName: string, reason?: string) => {
-    const product = products.find(p => p.id === id);
-    if (!product) return;
-
-    const requiresPassword = operations.hasProductBeenSold(sales, id);
-    
-    const deleteLog: DeleteLog = {
-      id: operations.generateUniqueId(),
-      productId: id,
-      productName: product.name,
-      userId,
-      userName,
-      date: new Date(),
-      reason,
-      requiredPassword: requiresPassword
-    };
-
-    setDeleteLogs(prev => [...prev, deleteLog]);
-    setProducts(prev => prev.filter(p => p.id !== id));
-  };
-
-  const createTemporaryProduct = (barcode: string, price: number = 0): Product => {
-    const temporaryProduct = operations.createTemporaryProduct(barcode, price);
-    setProducts(prev => [...prev, temporaryProduct]);
-    
-    if (!categories.includes('Temporário')) {
-      setCategories(prev => [...prev, 'Temporário']);
+  const addProduct = async (product: Omit<Product, 'id'>) => {
+    const result = await operations.addProduct(product);
+    if (result) {
+      // Reload products from database
+      await operations.loadProducts?.();
+      
+      // Add new categories/collections/etc if they don't exist
+      if (!categories.includes(product.category)) {
+        setCategories(prev => [...prev, product.category]);
+      }
+      if (!collections.includes(product.collection)) {
+        setCollections(prev => [...prev, product.collection]);
+      }
+      if (!suppliers.includes(product.supplier)) {
+        setSuppliers(prev => [...prev, product.supplier]);
+      }
+      if (!brands.includes(product.brand)) {
+        setBrands(prev => [...prev, product.brand]);
+      }
+      if (!colors.includes(product.color)) {
+        setColors(prev => [...prev, product.color]);
+      }
+      if (!sizes.includes(product.size)) {
+        setSizes(prev => [...prev, product.size]);
+      }
     }
-    
-    return temporaryProduct;
+  };
+
+  const updateProduct = async (id: string, updates: Partial<Product>) => {
+    const success = await operations.updateProduct(id, updates);
+    if (success) {
+      setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+    }
+  };
+
+  const deleteProduct = async (id: string, reason?: string, requirePassword?: boolean) => {
+    const success = await operations.deleteProduct(id);
+    if (success) {
+      setProducts(prev => prev.filter(p => p.id !== id));
+    }
+  };
+
+  const bulkEditProducts = async (ids: string[], updates: Partial<Product>) => {
+    for (const id of ids) {
+      await updateProduct(id, updates);
+    }
+  };
+
+  const importProducts = async (productsToImport: Omit<Product, 'id'>[]) => {
+    for (const product of productsToImport) {
+      await addProduct(product);
+    }
   };
 
   return {
     addProduct,
     updateProduct,
-    bulkUpdateProducts,
     deleteProduct,
-    createTemporaryProduct,
-    searchProducts: (query: string) => operations.searchProducts(products, query),
-    searchProductByBarcode: (barcode: string) => operations.searchProductByBarcode(products, barcode),
-    getIncompleteProducts: () => operations.getIncompleteProducts(products),
-    duplicateProduct: operations.duplicateProduct,
-    isBarcodeTaken: (barcode: string, excludeId?: string) => operations.isBarcodeTaken(products, barcode, excludeId),
-    hasProductBeenSold: (productId: string) => operations.hasProductBeenSold(sales, productId),
-    getLowStockProducts: () => operations.getLowStockProducts(products, 5)
+    bulkEditProducts,
+    importProducts
   };
 };

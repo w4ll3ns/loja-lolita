@@ -7,21 +7,13 @@ export const useSalesLogic = (
   operations: any,
   updateProduct: (id: string, updates: any) => void
 ) => {
-  const addSale = (sale: Omit<Sale, 'id' | 'date'>) => {
-    const newSale = { ...sale, id: operations.generateUniqueId(), date: new Date() };
-    setSales(prev => [newSale, ...prev]);
-    
-    sale.items.forEach(item => {
-      if (item.product.category === 'Temporário' && item.product.quantity === 1) {
-        updateProduct(item.product.id, { 
-          description: `Produto criado em venda - ${newSale.date.toLocaleDateString()} - Necessita edição completa`
-        });
-      } else {
-        updateProduct(item.product.id, { 
-          quantity: Math.max(0, item.product.quantity - item.quantity)
-        });
-      }
-    });
+  const addSale = async (sale: Omit<Sale, 'id' | 'date'>) => {
+    const result = await operations.addSale(sale);
+    if (result) {
+      // The database operations are handled in useSupabaseOperations
+      // We need to reload sales to get the full sale with items
+      await operations.loadSales?.();
+    }
   };
 
   return {
