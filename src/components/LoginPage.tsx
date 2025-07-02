@@ -6,11 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, UserPlus } from 'lucide-react';
+import SignupPage from './SignupPage';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showSignup, setShowSignup] = useState(false);
   const { login, isLoading } = useAuth();
   const { toast } = useToast();
 
@@ -27,6 +29,10 @@ const LoginPage = () => {
       });
     }
   };
+
+  if (showSignup) {
+    return <SignupPage onBackToLogin={() => setShowSignup(false)} />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-store-blue-50 to-store-green-50 px-4 py-8">
@@ -81,31 +87,20 @@ const LoginPage = () => {
             </Button>
           </form>
           
+          <Button
+            variant="outline"
+            onClick={() => setShowSignup(true)}
+            className="w-full h-12 text-base font-medium"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Criar Nova Conta
+          </Button>
+          
           <div className="p-4 bg-muted/50 rounded-lg border border-muted">
-            <p className="font-semibold mb-3 text-sm">Contas de teste:</p>
-            <div className="grid grid-cols-1 gap-2 text-xs">
-              <div className="flex justify-between items-center py-1">
-                <span className="font-medium text-muted-foreground">Admin:</span>
-                <span className="font-mono text-foreground">admin@loja.com</span>
-              </div>
-              <div className="flex justify-between items-center py-1">
-                <span className="font-medium text-muted-foreground">Vendedor:</span>
-                <span className="font-mono text-foreground">vendedor@loja.com</span>
-              </div>
-              <div className="flex justify-between items-center py-1">
-                <span className="font-medium text-muted-foreground">Caixa:</span>
-                <span className="font-mono text-foreground">caixa@loja.com</span>
-              </div>
-              <div className="flex justify-between items-center py-1">
-                <span className="font-medium text-muted-foreground">Consultivo:</span>
-                <span className="font-mono text-foreground">consulta@loja.com</span>
-              </div>
-              <div className="mt-3 pt-3 border-t border-muted-foreground/20">
-                <p className="text-center text-muted-foreground">
-                  <span className="font-medium">Senha para todos:</span> 123456
-                </p>
-              </div>
-            </div>
+            <p className="font-semibold mb-2 text-sm">Para testar o sistema:</p>
+            <p className="text-xs text-muted-foreground">
+              Crie uma conta ou use: <strong>wallen.santiago@live.com</strong> com senha <strong>123456</strong>
+            </p>
           </div>
         </CardContent>
       </Card>
