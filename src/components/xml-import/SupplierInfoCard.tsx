@@ -54,11 +54,6 @@ export const SupplierInfoCard: React.FC<SupplierInfoCardProps> = ({
           <div>
             <strong>Razão Social:</strong> {supplier.razaoSocial}
           </div>
-          {supplier.nomeFantasia && (
-            <div>
-              <strong>Nome Fantasia:</strong> {supplier.nomeFantasia}
-            </div>
-          )}
           <div><strong>CNPJ:</strong> {supplier.cnpj}</div>
         </div>
         
