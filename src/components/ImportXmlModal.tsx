@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -35,7 +34,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showNewCategoryInput, setShowNewCategoryInput] = useState<{ [key: number]: boolean }>({});
   
-  // Estados para formulário de fornecedor
+  // Estados para formulário de fornecedor (simplificado)
   const [supplierFormData, setSupplierFormData] = useState({
     name: '',
     cnpj: '',
@@ -54,9 +53,10 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
   const sizes = ['PP', 'P', 'M', 'G', 'GG', '34', '36', '38', '40', '42', '44', '46', '48', '50', '52'];
   const genders = ['Masculino', 'Feminino', 'Unissex'];
 
-  // Verificar se usuário pode cadastrar fornecedores - usando 'admin' que existe no tipo User
+  // Verificar se usuário pode cadastrar fornecedores
   const canManageSuppliers = user?.role === 'admin';
 
+  // ... keep existing code (handleFileUpload function)
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -86,7 +86,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
         throw new Error('XML inválido');
       }
 
-      // Extrair dados completos do fornecedor
+      // Extrair dados do fornecedor (apenas razão social e CNPJ)
       const supplierData = extractSupplierFromXml(xmlDoc);
       setExtractedSupplier(supplierData);
 
@@ -97,16 +97,16 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
         setSupplierExists(supplierCheck.exists);
         setExistingSupplierName(supplierCheck.existingName || '');
 
-        // Preencher formulário de fornecedor se não existir
+        // Preencher formulário de fornecedor se não existir (simplificado)
         if (!supplierCheck.exists) {
           const displayName = supplierData.nomeFantasia || supplierData.razaoSocial;
           setSupplierFormData({
             name: displayName,
             cnpj: supplierData.cnpj,
-            address: `${supplierData.endereco.logradouro}, ${supplierData.endereco.numero} - ${supplierData.endereco.bairro}`,
-            city: supplierData.endereco.cidade,
-            state: supplierData.endereco.estado,
-            cep: supplierData.endereco.cep,
+            address: '',
+            city: '',
+            state: '',
+            cep: '',
             phone: '',
             email: ''
           });

@@ -23,5 +23,5 @@ export const checkSupplierExists = (supplierData: XmlSupplier, suppliers: string
     return { exists: true, existingName: existingByName };
   }
 
-  return { exists: false };
+  return { exists: false, existingName: undefined };
 };

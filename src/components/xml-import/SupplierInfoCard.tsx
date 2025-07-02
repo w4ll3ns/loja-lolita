@@ -60,13 +60,6 @@ export const SupplierInfoCard: React.FC<SupplierInfoCardProps> = ({
             </div>
           )}
           <div><strong>CNPJ:</strong> {supplier.cnpj}</div>
-          <div><strong>Cidade:</strong> {supplier.endereco.cidade}/{supplier.endereco.estado}</div>
-          <div className="col-span-2">
-            <strong>Endereço:</strong> {supplier.endereco.logradouro}, {supplier.endereco.numero} - {supplier.endereco.bairro}
-          </div>
-          {supplier.endereco.cep && (
-            <div><strong>CEP:</strong> {supplier.endereco.cep}</div>
-          )}
         </div>
         
         {supplierExists && (
@@ -126,55 +119,6 @@ export const SupplierInfoCard: React.FC<SupplierInfoCardProps> = ({
                         placeholder="CNPJ"
                         readOnly
                         className="bg-gray-50"
-                      />
-                    </div>
-                    <div className="space-y-2 col-span-2">
-                      <Label>Endereço</Label>
-                      <Input
-                        value={supplierFormData.address}
-                        onChange={(e) => setSupplierFormData(prev => ({ ...prev, address: e.target.value }))}
-                        placeholder="Endereço completo"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Cidade</Label>
-                      <Input
-                        value={supplierFormData.city}
-                        onChange={(e) => setSupplierFormData(prev => ({ ...prev, city: e.target.value }))}
-                        placeholder="Cidade"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Estado</Label>
-                      <Input
-                        value={supplierFormData.state}
-                        onChange={(e) => setSupplierFormData(prev => ({ ...prev, state: e.target.value }))}
-                        placeholder="UF"
-                        maxLength={2}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>CEP</Label>
-                      <Input
-                        value={supplierFormData.cep}
-                        onChange={(e) => setSupplierFormData(prev => ({ ...prev, cep: e.target.value }))}
-                        placeholder="CEP"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Telefone</Label>
-                      <Input
-                        value={supplierFormData.phone}
-                        onChange={(e) => setSupplierFormData(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="Telefone (opcional)"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>E-mail</Label>
-                      <Input
-                        value={supplierFormData.email}
-                        onChange={(e) => setSupplierFormData(prev => ({ ...prev, email: e.target.value }))}
-                        placeholder="E-mail (opcional)"
                       />
                     </div>
                   </div>

@@ -30,14 +30,6 @@ export interface XmlSupplier {
   cnpj: string;
   razaoSocial: string;
   nomeFantasia?: string;
-  endereco: {
-    logradouro: string;
-    numero: string;
-    bairro: string;
-    cidade: string;
-    estado: string;
-    cep: string;
-  };
 }
 
 export interface SupplierCheckResult {

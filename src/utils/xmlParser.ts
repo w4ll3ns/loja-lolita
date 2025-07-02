@@ -27,33 +27,11 @@ export const extractSupplierFromXml = (xmlDoc: Document): XmlSupplier | null => 
   const cnpj = emit.getElementsByTagName('CNPJ')[0]?.textContent || '';
   const razaoSocial = emit.getElementsByTagName('xNome')[0]?.textContent || '';
   const nomeFantasia = emit.getElementsByTagName('xFant')[0]?.textContent || '';
-  
-  const enderEmit = emit.getElementsByTagName('enderEmit')[0];
-  let endereco = {
-    logradouro: '',
-    numero: '',
-    bairro: '',
-    cidade: '',
-    estado: '',
-    cep: ''
-  };
-  
-  if (enderEmit) {
-    endereco = {
-      logradouro: enderEmit.getElementsByTagName('xLgr')[0]?.textContent || '',
-      numero: enderEmit.getElementsByTagName('nro')[0]?.textContent || '',
-      bairro: enderEmit.getElementsByTagName('xBairro')[0]?.textContent || '',
-      cidade: enderEmit.getElementsByTagName('xMun')[0]?.textContent || '',
-      estado: enderEmit.getElementsByTagName('UF')[0]?.textContent || '',
-      cep: enderEmit.getElementsByTagName('CEP')[0]?.textContent || ''
-    };
-  }
 
   return {
     cnpj,
     razaoSocial,
-    nomeFantasia,
-    endereco
+    nomeFantasia
   };
 };
 
