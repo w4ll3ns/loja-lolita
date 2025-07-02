@@ -78,10 +78,7 @@ const LoginPage = () => {
             </Button>
           </form>
           
-          <Button variant="outline" onClick={() => setShowSignup(true)} className="w-full h-12 text-base font-medium">
-            <UserPlus className="w-4 h-4 mr-2" />
-            Criar Nova Conta
-          </Button>
+          
           
           
         </CardContent>
