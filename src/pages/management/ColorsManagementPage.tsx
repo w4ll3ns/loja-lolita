@@ -25,7 +25,7 @@ const ColorsManagementPage = () => {
     color.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newColorName.trim()) {
       toast({
         title: "Erro",
@@ -44,14 +44,9 @@ const ColorsManagementPage = () => {
       return;
     }
 
-    addColor(newColorName.trim());
+    await addColor(newColorName.trim());
     setNewColorName('');
     setIsAddDialogOpen(false);
-    
-    toast({
-      title: "Sucesso",
-      description: "Cor adicionada com sucesso!",
-    });
   };
 
   const handleEdit = (index: number) => {
@@ -60,7 +55,7 @@ const ColorsManagementPage = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!newColorName.trim()) {
       toast({
         title: "Erro",
@@ -82,24 +77,14 @@ const ColorsManagementPage = () => {
       return;
     }
 
-    updateColor(oldName, trimmedName);
+    await updateColor(oldName, trimmedName);
     setIsEditDialogOpen(false);
     setEditingIndex(null);
     setNewColorName('');
-    
-    toast({
-      title: "Sucesso",
-      description: "Cor atualizada com sucesso!",
-    });
   };
 
-  const handleDelete = (colorName: string) => {
-    deleteColor(colorName);
-    
-    toast({
-      title: "Sucesso",
-      description: `Cor "${colorName}" removida com sucesso!`,
-    });
+  const handleDelete = async (colorName: string) => {
+    await deleteColor(colorName);
   };
 
   const canEdit = user?.role === 'admin';

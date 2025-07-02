@@ -25,7 +25,7 @@ const CollectionsManagementPage = () => {
     collection.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newCollectionName.trim()) {
       toast({
         title: "Erro",
@@ -44,14 +44,9 @@ const CollectionsManagementPage = () => {
       return;
     }
 
-    addCollection(newCollectionName.trim());
+    await addCollection(newCollectionName.trim());
     setNewCollectionName('');
     setIsAddDialogOpen(false);
-    
-    toast({
-      title: "Sucesso",
-      description: "Coleção adicionada com sucesso!",
-    });
   };
 
   const handleEdit = (index: number) => {
@@ -60,7 +55,7 @@ const CollectionsManagementPage = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!newCollectionName.trim()) {
       toast({
         title: "Erro",
@@ -82,24 +77,14 @@ const CollectionsManagementPage = () => {
       return;
     }
 
-    updateCollection(oldName, trimmedName);
+    await updateCollection(oldName, trimmedName);
     setIsEditDialogOpen(false);
     setEditingIndex(null);
     setNewCollectionName('');
-    
-    toast({
-      title: "Sucesso",
-      description: "Coleção atualizada com sucesso!",
-    });
   };
 
-  const handleDelete = (collectionName: string) => {
-    deleteCollection(collectionName);
-    
-    toast({
-      title: "Sucesso",
-      description: `Coleção "${collectionName}" removida com sucesso!`,
-    });
+  const handleDelete = async (collectionName: string) => {
+    await deleteCollection(collectionName);
   };
 
   const canEdit = user?.role === 'admin';

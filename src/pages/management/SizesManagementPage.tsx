@@ -25,7 +25,7 @@ const SizesManagementPage = () => {
     size.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddSize = () => {
+  const handleAddSize = async () => {
     if (!newSizeName.trim()) {
       toast({
         title: "Erro",
@@ -44,14 +44,9 @@ const SizesManagementPage = () => {
       return;
     }
 
-    addSize(newSizeName.trim());
+    await addSize(newSizeName.trim());
     setNewSizeName('');
     setIsAddDialogOpen(false);
-    
-    toast({
-      title: "Sucesso",
-      description: "Tamanho adicionado com sucesso!",
-    });
   };
 
   const handleEditSize = (index: number, currentName: string) => {
@@ -60,7 +55,7 @@ const SizesManagementPage = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdateSize = () => {
+  const handleUpdateSize = async () => {
     if (!editingSizeName.trim()) {
       toast({
         title: "Erro",
@@ -82,24 +77,14 @@ const SizesManagementPage = () => {
       return;
     }
 
-    updateSize(oldName, trimmedName);
+    await updateSize(oldName, trimmedName);
     setIsEditDialogOpen(false);
     setEditingSizeIndex(-1);
     setEditingSizeName('');
-    
-    toast({
-      title: "Sucesso",
-      description: "Tamanho atualizado com sucesso!",
-    });
   };
 
-  const handleDeleteSize = (sizeName: string) => {
-    deleteSize(sizeName);
-    
-    toast({
-      title: "Sucesso",
-      description: `Tamanho "${sizeName}" removido com sucesso!`,
-    });
+  const handleDeleteSize = async (sizeName: string) => {
+    await deleteSize(sizeName);
   };
 
   return (

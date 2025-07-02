@@ -26,7 +26,7 @@ const BrandsManagementPage = () => {
     brand.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newBrandName.trim()) {
       toast({
         title: "Erro",
@@ -45,14 +45,9 @@ const BrandsManagementPage = () => {
       return;
     }
 
-    addBrand(newBrandName.trim());
+    await addBrand(newBrandName.trim());
     setNewBrandName('');
     setIsAddDialogOpen(false);
-    
-    toast({
-      title: "Sucesso",
-      description: "Marca adicionada com sucesso!",
-    });
   };
 
   const handleEdit = (index: number) => {
@@ -61,7 +56,7 @@ const BrandsManagementPage = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!newBrandName.trim()) {
       toast({
         title: "Erro",
@@ -83,24 +78,14 @@ const BrandsManagementPage = () => {
       return;
     }
 
-    updateBrand(oldName, trimmedName);
+    await updateBrand(oldName, trimmedName);
     setIsEditDialogOpen(false);
     setEditingIndex(null);
     setNewBrandName('');
-    
-    toast({
-      title: "Sucesso",
-      description: "Marca atualizada com sucesso!",
-    });
   };
 
-  const handleDelete = (brandName: string) => {
-    deleteBrand(brandName);
-    
-    toast({
-      title: "Sucesso",
-      description: `Marca "${brandName}" removida com sucesso!`,
-    });
+  const handleDelete = async (brandName: string) => {
+    await deleteBrand(brandName);
   };
 
   const canEdit = user?.role === 'admin';

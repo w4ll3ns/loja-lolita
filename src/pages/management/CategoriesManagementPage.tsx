@@ -25,7 +25,7 @@ const CategoriesManagementPage = () => {
     category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newCategoryName.trim()) {
       toast({
         title: "Erro",
@@ -44,14 +44,9 @@ const CategoriesManagementPage = () => {
       return;
     }
 
-    addCategory(newCategoryName.trim());
+    await addCategory(newCategoryName.trim());
     setNewCategoryName('');
     setIsAddDialogOpen(false);
-    
-    toast({
-      title: "Sucesso",
-      description: "Categoria adicionada com sucesso!",
-    });
   };
 
   const handleEdit = (index: number) => {
@@ -60,7 +55,7 @@ const CategoriesManagementPage = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!newCategoryName.trim()) {
       toast({
         title: "Erro",
@@ -82,24 +77,14 @@ const CategoriesManagementPage = () => {
       return;
     }
 
-    updateCategory(oldName, trimmedName);
+    await updateCategory(oldName, trimmedName);
     setIsEditDialogOpen(false);
     setEditingIndex(null);
     setNewCategoryName('');
-    
-    toast({
-      title: "Sucesso",
-      description: "Categoria atualizada com sucesso!",
-    });
   };
 
-  const handleDelete = (categoryName: string) => {
-    deleteCategory(categoryName);
-    
-    toast({
-      title: "Sucesso",
-      description: `Categoria "${categoryName}" removida com sucesso!`,
-    });
+  const handleDelete = async (categoryName: string) => {
+    await deleteCategory(categoryName);
   };
 
   const canEdit = user?.role === 'admin';

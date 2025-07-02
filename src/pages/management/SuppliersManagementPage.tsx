@@ -25,7 +25,7 @@ const SuppliersManagementPage = () => {
     supplier.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newSupplierName.trim()) {
       toast({
         title: "Erro",
@@ -44,14 +44,9 @@ const SuppliersManagementPage = () => {
       return;
     }
 
-    addSupplier(newSupplierName.trim());
+    await addSupplier(newSupplierName.trim());
     setNewSupplierName('');
     setIsAddDialogOpen(false);
-    
-    toast({
-      title: "Sucesso",
-      description: "Fornecedor adicionado com sucesso!",
-    });
   };
 
   const handleEdit = (index: number) => {
@@ -60,7 +55,7 @@ const SuppliersManagementPage = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!newSupplierName.trim()) {
       toast({
         title: "Erro",
@@ -82,24 +77,14 @@ const SuppliersManagementPage = () => {
       return;
     }
 
-    updateSupplier(oldName, trimmedName);
+    await updateSupplier(oldName, trimmedName);
     setIsEditDialogOpen(false);
     setEditingIndex(null);
     setNewSupplierName('');
-    
-    toast({
-      title: "Sucesso",
-      description: "Fornecedor atualizado com sucesso!",
-    });
   };
 
-  const handleDelete = (supplierName: string) => {
-    deleteSupplier(supplierName);
-    
-    toast({
-      title: "Sucesso",
-      description: `Fornecedor "${supplierName}" removido com sucesso!`,
-    });
+  const handleDelete = async (supplierName: string) => {
+    await deleteSupplier(supplierName);
   };
 
   const canEdit = user?.role === 'admin';
