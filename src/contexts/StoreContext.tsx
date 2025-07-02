@@ -184,14 +184,18 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
     operations
   );
 
-  const settingsLogic = useSettingsLogic(
-    supabaseStore.storeSettings,
-    supabaseStore.setStoreSettings,
-    supabaseStore.notificationSettings,
-    supabaseStore.setNotificationSettings,
-    supabaseStore.securitySettings,
-    supabaseStore.setSecuritySettings
-  );
+  const settingsLogic = useSettingsLogic({
+    storeSettings: supabaseStore.storeSettings,
+    setStoreSettings: supabaseStore.setStoreSettings,
+    notificationSettings: supabaseStore.notificationSettings,
+    setNotificationSettings: supabaseStore.setNotificationSettings,
+    securitySettings: supabaseStore.securitySettings,
+    setSecuritySettings: supabaseStore.setSecuritySettings,
+    roleSettings: null,
+    setRoleSettings: () => {},
+    importedXmlHashes: supabaseStore.importedXmlHashes,
+    setImportedXmlHashes: supabaseStore.setImportedXmlHashes
+  });
 
   // Helper functions
   const duplicateProduct = (product: Product): Product => {

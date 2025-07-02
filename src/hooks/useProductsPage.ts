@@ -105,7 +105,7 @@ export const useProductsPage = () => {
   const handleDeleteConfirm = (reason?: string) => {
     if (!productToDelete || !user) return;
     
-    deleteProduct(productToDelete.id, user.id, user.name, reason);
+    deleteProduct(productToDelete.id, reason);
     
     toast({
       title: "Produto excluído",

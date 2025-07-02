@@ -82,7 +82,7 @@ const ColorsManagementPage = () => {
       return;
     }
 
-    updateColor(editingIndex!, trimmedName);
+    updateColor(oldName, trimmedName);
     setIsEditDialogOpen(false);
     setEditingIndex(null);
     setNewColorName('');
