@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -8,10 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, FileText, CheckCircle, Edit2, Plus, Building2 } from 'lucide-react';
+import { Upload, FileText, CheckCircle, Edit2, Plus, Building2, AlertCircle, UserCheck } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfitMarginDisplay } from '@/components/ProfitMarginDisplay';
 import { useStore } from '@/contexts/StoreContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface XmlProduct {
   cProd: string;
@@ -42,11 +43,16 @@ interface XmlProduct {
 
 interface XmlSupplier {
   cnpj: string;
-  name: string;
-  fantasia?: string;
-  address?: string;
-  city?: string;
-  state?: string;
+  razaoSocial: string;
+  nomeFantasia?: string;
+  endereco: {
+    logradouro: string;
+    numero: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    cep: string;
+  };
 }
 
 interface ImportXmlModalProps {
@@ -59,17 +65,36 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
   const [xmlFile, setXmlFile] = useState<File | null>(null);
   const [extractedProducts, setExtractedProducts] = useState<XmlProduct[]>([]);
   const [extractedSupplier, setExtractedSupplier] = useState<XmlSupplier | null>(null);
+  const [supplierExists, setSupplierExists] = useState<boolean>(false);
+  const [existingSupplierName, setExistingSupplierName] = useState<string>('');
   const [shouldImportSupplier, setShouldImportSupplier] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'upload' | 'preview' | 'edit'>('upload');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showNewCategoryInput, setShowNewCategoryInput] = useState<{ [key: number]: boolean }>({});
+  
+  // Estados para formulário de fornecedor
+  const [supplierFormData, setSupplierFormData] = useState({
+    name: '',
+    cnpj: '',
+    address: '',
+    city: '',
+    state: '',
+    cep: '',
+    phone: '',
+    email: ''
+  });
+
   const { categories, suppliers, brands, colors, addCategory, addSupplier, addBrand, addColor } = useStore();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const sizes = ['PP', 'P', 'M', 'G', 'GG', '34', '36', '38', '40', '42', '44', '46', '48', '50', '52'];
   const genders = ['Masculino', 'Feminino', 'Unissex'];
+
+  // Verificar se usuário pode cadastrar fornecedores
+  const canManageSuppliers = user?.role === 'admin' || user?.role === 'manager';
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -92,29 +117,61 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
     if (!emit) return null;
 
     const cnpj = emit.getElementsByTagName('CNPJ')[0]?.textContent || '';
-    const name = emit.getElementsByTagName('xNome')[0]?.textContent || '';
-    const fantasia = emit.getElementsByTagName('xFant')[0]?.textContent || '';
+    const razaoSocial = emit.getElementsByTagName('xNome')[0]?.textContent || '';
+    const nomeFantasia = emit.getElementsByTagName('xFant')[0]?.textContent || '';
     
     const enderEmit = emit.getElementsByTagName('enderEmit')[0];
-    let address = '', city = '', state = '';
+    let endereco = {
+      logradouro: '',
+      numero: '',
+      bairro: '',
+      cidade: '',
+      estado: '',
+      cep: ''
+    };
     
     if (enderEmit) {
-      const xLgr = enderEmit.getElementsByTagName('xLgr')[0]?.textContent || '';
-      const nro = enderEmit.getElementsByTagName('nro')[0]?.textContent || '';
-      const xBairro = enderEmit.getElementsByTagName('xBairro')[0]?.textContent || '';
-      address = `${xLgr}, ${nro} - ${xBairro}`.trim();
-      city = enderEmit.getElementsByTagName('xMun')[0]?.textContent || '';
-      state = enderEmit.getElementsByTagName('UF')[0]?.textContent || '';
+      endereco = {
+        logradouro: enderEmit.getElementsByTagName('xLgr')[0]?.textContent || '',
+        numero: enderEmit.getElementsByTagName('nro')[0]?.textContent || '',
+        bairro: enderEmit.getElementsByTagName('xBairro')[0]?.textContent || '',
+        cidade: enderEmit.getElementsByTagName('xMun')[0]?.textContent || '',
+        estado: enderEmit.getElementsByTagName('UF')[0]?.textContent || '',
+        cep: enderEmit.getElementsByTagName('CEP')[0]?.textContent || ''
+      };
     }
 
     return {
       cnpj,
-      name: fantasia || name,
-      fantasia,
-      address,
-      city,
-      state
+      razaoSocial,
+      nomeFantasia,
+      endereco
     };
+  };
+
+  const checkSupplierExists = (supplierData: XmlSupplier): { exists: boolean; existingName?: string } => {
+    // Verificar por CNPJ primeiro (mais preciso)
+    const existingByCnpj = suppliers.find(s => 
+      s.toLowerCase().includes(supplierData.cnpj) ||
+      supplierData.cnpj.includes(s)
+    );
+    
+    if (existingByCnpj) {
+      return { exists: true, existingName: existingByCnpj };
+    }
+
+    // Verificar por nome (razão social ou fantasia)
+    const nameToCheck = supplierData.nomeFantasia || supplierData.razaoSocial;
+    const existingByName = suppliers.find(s => 
+      s.toLowerCase().includes(nameToCheck.toLowerCase()) ||
+      nameToCheck.toLowerCase().includes(s.toLowerCase())
+    );
+
+    if (existingByName) {
+      return { exists: true, existingName: existingByName };
+    }
+
+    return { exists: false };
   };
 
   const inferSizeFromProduct = (productName: string, productCode: string): string => {
@@ -147,15 +204,32 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
         throw new Error('XML inválido');
       }
 
-      // Extrair dados do fornecedor
+      // Extrair dados completos do fornecedor
       const supplierData = extractSupplierFromXml(xmlDoc);
       setExtractedSupplier(supplierData);
 
       // Verificar se o fornecedor já existe
-      const supplierExists = supplierData && suppliers.some(s => 
-        s.toLowerCase().includes(supplierData.name.toLowerCase()) ||
-        supplierData.name.toLowerCase().includes(s.toLowerCase())
-      );
+      let supplierCheck = { exists: false, existingName: '' };
+      if (supplierData) {
+        supplierCheck = checkSupplierExists(supplierData);
+        setSupplierExists(supplierCheck.exists);
+        setExistingSupplierName(supplierCheck.existingName || '');
+
+        // Preencher formulário de fornecedor se não existir
+        if (!supplierCheck.exists) {
+          const displayName = supplierData.nomeFantasia || supplierData.razaoSocial;
+          setSupplierFormData({
+            name: displayName,
+            cnpj: supplierData.cnpj,
+            address: `${supplierData.endereco.logradouro}, ${supplierData.endereco.numero} - ${supplierData.endereco.bairro}`,
+            city: supplierData.endereco.cidade,
+            state: supplierData.endereco.estado,
+            cep: supplierData.endereco.cep,
+            phone: '',
+            email: ''
+          });
+        }
+      }
 
       const detElements = xmlDoc.getElementsByTagName('det');
       const products: XmlProduct[] = [];
@@ -183,13 +257,15 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
           const size = inferSizeFromProduct(xProd, cProd);
           const gender = inferGenderFromProduct(xProd);
 
-          // Usar o fornecedor extraído ou o padrão
-          const defaultSupplier = supplierExists ? 
-            suppliers.find(s => 
-              s.toLowerCase().includes(supplierData?.name.toLowerCase() || '') ||
-              (supplierData?.name.toLowerCase() || '').includes(s.toLowerCase())
-            ) || 'A definir' 
-            : (supplierData?.name || 'A definir');
+          // Definir o fornecedor baseado na verificação
+          let defaultSupplier = 'A definir';
+          if (supplierData) {
+            if (supplierCheck.exists) {
+              defaultSupplier = supplierCheck.existingName || 'A definir';
+            } else {
+              defaultSupplier = supplierData.nomeFantasia || supplierData.razaoSocial;
+            }
+          }
 
           products.push({
             cProd,
@@ -227,17 +303,27 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
       setExtractedProducts(products);
       setStep('preview');
       
+      let successMessage = `${products.length} produtos extraídos do XML`;
+      if (supplierData) {
+        successMessage += ` - Fornecedor: ${supplierData.nomeFantasia || supplierData.razaoSocial}`;
+        if (supplierCheck.exists) {
+          successMessage += ' (já cadastrado)';
+        } else {
+          successMessage += ' (novo)';
+        }
+      }
+
       toast({
         title: "Sucesso",
-        description: `${products.length} produtos extraídos do XML${supplierData ? ` - Fornecedor: ${supplierData.name}` : ''}`,
+        description: successMessage,
       });
 
-      // Se o fornecedor não existe, sugerir importação
-      if (supplierData && !supplierExists) {
+      // Se o fornecedor não existe e usuário tem permissão, sugerir importação
+      if (supplierData && !supplierCheck.exists && canManageSuppliers) {
         setShouldImportSupplier(true);
         toast({
           title: "Novo fornecedor encontrado",
-          description: `Fornecedor "${supplierData.name}" não está cadastrado. Você pode importá-lo junto com os produtos.`,
+          description: `Fornecedor "${supplierData.nomeFantasia || supplierData.razaoSocial}" pode ser cadastrado automaticamente.`,
         });
       }
     } catch (error) {
@@ -307,6 +393,34 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
     updateProductField(index, field, numericValue);
   };
 
+  const handleRegisterSupplier = () => {
+    if (!supplierFormData.name.trim()) {
+      toast({
+        title: "Erro",
+        description: "O nome do fornecedor é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    addSupplier(supplierFormData.name.trim());
+    
+    // Atualizar produtos para usar o novo fornecedor
+    setExtractedProducts(prev => prev.map(p => ({
+      ...p,
+      editableSupplier: supplierFormData.name.trim()
+    })));
+
+    setShouldImportSupplier(false);
+    setSupplierExists(true);
+    setExistingSupplierName(supplierFormData.name.trim());
+
+    toast({
+      title: "Fornecedor cadastrado",
+      description: `Fornecedor "${supplierFormData.name.trim()}" foi adicionado ao sistema`,
+    });
+  };
+
   const handleImportProducts = () => {
     const selectedProducts = extractedProducts.filter(p => p.selected);
     
@@ -317,15 +431,6 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
         variant: "destructive",
       });
       return;
-    }
-
-    // Importar fornecedor se necessário
-    if (shouldImportSupplier && extractedSupplier) {
-      addSupplier(extractedSupplier.name);
-      toast({
-        title: "Fornecedor importado",
-        description: `Fornecedor "${extractedSupplier.name}" foi adicionado ao sistema`,
-      });
     }
 
     const productsToImport = selectedProducts.map(p => ({
@@ -352,11 +457,23 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
     setXmlFile(null);
     setExtractedProducts([]);
     setExtractedSupplier(null);
+    setSupplierExists(false);
+    setExistingSupplierName('');
     setShouldImportSupplier(false);
     setStep('upload');
     setEditingIndex(null);
     setShowNewCategoryInput({});
     setNewCategoryName('');
+    setSupplierFormData({
+      name: '',
+      cnpj: '',
+      address: '',
+      city: '',
+      state: '',
+      cep: '',
+      phone: '',
+      email: ''
+    });
     onClose();
   };
 
@@ -384,7 +501,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
               <CardHeader>
                 <CardTitle>Upload do XML da NF-e</CardTitle>
                 <CardDescription>
-                  Selecione o arquivo XML da Nota Fiscal Eletrônica para extrair os produtos
+                  Selecione o arquivo XML da Nota Fiscal Eletrônica para extrair os produtos e dados do fornecedor
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -439,43 +556,155 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
           <div className="space-y-4">
             {/* Informações do fornecedor extraído */}
             {extractedSupplier && (
-              <Card className="border-blue-200 bg-blue-50">
+              <Card className={supplierExists ? "border-green-200 bg-green-50" : "border-blue-200 bg-blue-50"}>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-blue-700">
+                  <CardTitle className={`flex items-center gap-2 ${supplierExists ? 'text-green-700' : 'text-blue-700'}`}>
                     <Building2 className="h-5 w-5" />
-                    Fornecedor Identificado
+                    {supplierExists ? 'Fornecedor Identificado (Cadastrado)' : 'Novo Fornecedor Encontrado'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <strong>Nome:</strong> {extractedSupplier.name}
-                      {extractedSupplier.fantasia && extractedSupplier.fantasia !== extractedSupplier.name && (
-                        <span className="text-gray-600"> ({extractedSupplier.fantasia})</span>
-                      )}
+                      <strong>Razão Social:</strong> {extractedSupplier.razaoSocial}
                     </div>
-                    <div><strong>CNPJ:</strong> {extractedSupplier.cnpj}</div>
-                    {extractedSupplier.city && (
-                      <div><strong>Cidade:</strong> {extractedSupplier.city}/{extractedSupplier.state}</div>
+                    {extractedSupplier.nomeFantasia && (
+                      <div>
+                        <strong>Nome Fantasia:</strong> {extractedSupplier.nomeFantasia}
+                      </div>
                     )}
-                    {extractedSupplier.address && (
-                      <div><strong>Endereço:</strong> {extractedSupplier.address}</div>
+                    <div><strong>CNPJ:</strong> {extractedSupplier.cnpj}</div>
+                    <div><strong>Cidade:</strong> {extractedSupplier.endereco.cidade}/{extractedSupplier.endereco.estado}</div>
+                    <div className="col-span-2">
+                      <strong>Endereço:</strong> {extractedSupplier.endereco.logradouro}, {extractedSupplier.endereco.numero} - {extractedSupplier.endereco.bairro}
+                    </div>
+                    {extractedSupplier.endereco.cep && (
+                      <div><strong>CEP:</strong> {extractedSupplier.endereco.cep}</div>
                     )}
                   </div>
                   
-                  {!suppliers.some(s => 
-                    s.toLowerCase().includes(extractedSupplier.name.toLowerCase()) ||
-                    extractedSupplier.name.toLowerCase().includes(s.toLowerCase())
-                  ) && (
-                    <div className="mt-4 flex items-center space-x-2">
-                      <Checkbox
-                        id="importSupplier"
-                        checked={shouldImportSupplier}
-                        onCheckedChange={(checked) => setShouldImportSupplier(checked === true)}
-                      />
-                      <Label htmlFor="importSupplier" className="text-blue-700 font-medium">
-                        Importar este fornecedor para o sistema
-                      </Label>
+                  {supplierExists && (
+                    <Alert className="mt-4">
+                      <CheckCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Este fornecedor já está cadastrado como "{existingSupplierName}". Os produtos serão vinculados automaticamente.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {!supplierExists && !canManageSuppliers && (
+                    <Alert className="mt-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        <div className="flex items-center gap-2">
+                          <UserCheck className="h-4 w-4" />
+                          <span>Apenas usuários com permissão podem cadastrar novos fornecedores. Os produtos serão importados com fornecedor "A definir".</span>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {!supplierExists && canManageSuppliers && (
+                    <div className="mt-4 space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="importSupplier"
+                          checked={shouldImportSupplier}
+                          onCheckedChange={(checked) => setShouldImportSupplier(checked === true)}
+                        />
+                        <Label htmlFor="importSupplier" className="text-blue-700 font-medium">
+                          Cadastrar este fornecedor no sistema
+                        </Label>
+                      </div>
+
+                      {shouldImportSupplier && (
+                        <Card className="bg-white border-blue-200">
+                          <CardHeader>
+                            <CardTitle className="text-base">Dados do Fornecedor</CardTitle>
+                            <CardDescription>
+                              Revise e complete os dados extraídos do XML
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>Nome/Razão Social *</Label>
+                                <Input
+                                  value={supplierFormData.name}
+                                  onChange={(e) => setSupplierFormData(prev => ({ ...prev, name: e.target.value }))}
+                                  placeholder="Nome do fornecedor"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>CNPJ</Label>
+                                <Input
+                                  value={supplierFormData.cnpj}
+                                  onChange={(e) => setSupplierFormData(prev => ({ ...prev, cnpj: e.target.value }))}
+                                  placeholder="CNPJ"
+                                  readOnly
+                                  className="bg-gray-50"
+                                />
+                              </div>
+                              <div className="space-y-2 col-span-2">
+                                <Label>Endereço</Label>
+                                <Input
+                                  value={supplierFormData.address}
+                                  onChange={(e) => setSupplierFormData(prev => ({ ...prev, address: e.target.value }))}
+                                  placeholder="Endereço completo"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Cidade</Label>
+                                <Input
+                                  value={supplierFormData.city}
+                                  onChange={(e) => setSupplierFormData(prev => ({ ...prev, city: e.target.value }))}
+                                  placeholder="Cidade"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Estado</Label>
+                                <Input
+                                  value={supplierFormData.state}
+                                  onChange={(e) => setSupplierFormData(prev => ({ ...prev, state: e.target.value }))}
+                                  placeholder="UF"
+                                  maxLength={2}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>CEP</Label>
+                                <Input
+                                  value={supplierFormData.cep}
+                                  onChange={(e) => setSupplierFormData(prev => ({ ...prev, cep: e.target.value }))}
+                                  placeholder="CEP"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Telefone</Label>
+                                <Input
+                                  value={supplierFormData.phone}
+                                  onChange={(e) => setSupplierFormData(prev => ({ ...prev, phone: e.target.value }))}
+                                  placeholder="Telefone (opcional)"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>E-mail</Label>
+                                <Input
+                                  value={supplierFormData.email}
+                                  onChange={(e) => setSupplierFormData(prev => ({ ...prev, email: e.target.value }))}
+                                  placeholder="E-mail (opcional)"
+                                />
+                              </div>
+                            </div>
+                            <Button 
+                              onClick={handleRegisterSupplier}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Building2 className="h-4 w-4 mr-2" />
+                              Cadastrar Fornecedor
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -689,9 +918,6 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
                 className="bg-store-green-600 hover:bg-store-green-700"
               >
                 Importar Produtos Selecionados ({extractedProducts.filter(p => p.selected).length})
-                {shouldImportSupplier && extractedSupplier && (
-                  <span className="ml-1">+ Fornecedor</span>
-                )}
               </Button>
             </div>
           </div>
