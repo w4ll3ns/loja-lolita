@@ -296,7 +296,6 @@ const SalesPage = () => {
 
                   <SellerSelectionSection
                     selectedSeller={selectedSeller}
-                    sellers={sellers}
                     onSellerChange={setSelectedSeller}
                   />
                 </div>
