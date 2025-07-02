@@ -1,66 +1,120 @@
-
-import { useState } from 'react';
-import { useStore } from '@/contexts/StoreContext';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { NotificationSettings } from '@/types/store';
+
+interface NotificationSettings {
+  low_stock_alert: boolean;
+  low_stock_quantity: number;
+  thank_you_message: boolean;
+  birthday_message: boolean;
+  whatsapp_notifications: boolean;
+  email_notifications: boolean;
+  alert_frequency: 'realtime' | 'daily' | 'weekly';
+  alert_time: string;
+}
 
 export const useNotificationSettings = () => {
-  const { notificationSettings, updateNotificationSettings, getLowStockProducts } = useStore();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [settings, setSettings] = useState(notificationSettings);
+  const [settings, setSettings] = useState<NotificationSettings>({
+    low_stock_alert: true,
+    low_stock_quantity: 5,
+    thank_you_message: true,
+    birthday_message: false,
+    whatsapp_notifications: true,
+    email_notifications: false,
+    alert_frequency: 'daily',
+    alert_time: '09:00'
+  });
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notification_settings')
+        .select('*')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching notification settings:', error);
+        return;
+      }
+
+      if (data) {
+        setSettings({
+          low_stock_alert: data.low_stock_alert,
+          low_stock_quantity: data.low_stock_quantity,
+          thank_you_message: data.thank_you_message,
+          birthday_message: data.birthday_message,
+          whatsapp_notifications: data.whatsapp_notifications,
+          email_notifications: data.email_notifications,
+          alert_frequency: data.alert_frequency,
+          alert_time: data.alert_time
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
   const handleSave = async () => {
     setIsLoading(true);
     
     try {
       // Validations
-      if (settings.lowStockQuantity < 0) {
+      if (settings.low_stock_quantity < 0) {
         toast({
           title: "Erro de validação",
-          description: "A quantidade mínima para alerta deve ser maior ou igual a 0",
-          variant: "destructive"
+          description: "A quantidade mínima de estoque não pode ser negativa",
+          variant: "destructive",
         });
         setIsLoading(false);
         return;
       }
 
-      if (!settings.alertTime || !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(settings.alertTime)) {
+      // Verificar se já existe configuração
+      const { data: existingData } = await supabase
+        .from('notification_settings')
+        .select('id')
+        .single();
+
+      let result;
+      if (existingData) {
+        // Atualizar
+        result = await supabase
+          .from('notification_settings')
+          .update(settings)
+          .eq('id', existingData.id);
+      } else {
+        // Inserir
+        result = await supabase
+          .from('notification_settings')
+          .insert(settings);
+      }
+
+      if (result.error) {
         toast({
-          title: "Erro de validação",
-          description: "Por favor, insira um horário válido (HH:MM)",
-          variant: "destructive"
+          title: "Erro ao salvar",
+          description: result.error.message,
+          variant: "destructive",
         });
         setIsLoading(false);
         return;
       }
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      updateNotificationSettings(settings);
-      
       toast({
         title: "✅ Configurações salvas",
-        description: "As configurações de notificações foram atualizadas com sucesso",
+        description: "As configurações de notificações foram atualizadas no banco de dados.",
       });
-
-      // Show low stock alert if enabled
-      if (settings.lowStockAlert) {
-        const lowStockProducts = getLowStockProducts();
-        if (lowStockProducts.length > 0) {
-          toast({
-            title: "⚠️ Produtos com estoque baixo",
-            description: `${lowStockProducts.length} produto(s) com estoque abaixo de ${settings.lowStockQuantity}`,
-            variant: "destructive"
-          });
-        }
-      }
     } catch (error) {
+      console.error('Error saving notification settings:', error);
       toast({
         title: "Erro ao salvar",
-        description: "Ocorreu um erro ao salvar as configurações. Tente novamente.",
-        variant: "destructive"
+        description: "Erro interno ao salvar configurações",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
