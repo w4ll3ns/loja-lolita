@@ -46,6 +46,7 @@ interface StoreContextType {
   updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string, reason?: string, requirePassword?: boolean) => Promise<void>;
   bulkEditProducts: (ids: string[], updates: Partial<Product>) => Promise<void>;
+  bulkUpdateProducts: (ids: string[], updates: Partial<Product>) => Promise<void>;
   importProducts: (products: Omit<Product, 'id'>[]) => Promise<void>;
   duplicateProduct: (product: Product) => Product;
   isBarcodeTaken: (barcode: string, excludeId?: string) => boolean;
@@ -91,6 +92,12 @@ interface StoreContextType {
   deleteBrand: (name: string) => void;
   deleteColor: (name: string) => void;
   deleteSize: (name: string) => void;
+  removeCategory: (index: number) => void;
+  removeCollection: (index: number) => void;
+  removeSupplier: (index: number) => void;
+  removeBrand: (index: number) => void;
+  removeColor: (index: number) => void;
+  removeSize: (index: number) => void;
   
   // Settings operations
   updateStoreSettings: (settings: StoreSettings) => void;
@@ -262,6 +269,49 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
     console.log('Reset password for user:', userId);
   };
 
+  // Remove operations (for compatibility with management pages)
+  const removeCategory = (index: number) => {
+    const categoryName = supabaseStore.categories[index];
+    if (categoryName) {
+      dataManagementLogic.deleteCategory(categoryName);
+    }
+  };
+
+  const removeCollection = (index: number) => {
+    const collectionName = supabaseStore.collections[index];
+    if (collectionName) {
+      dataManagementLogic.deleteCollection(collectionName);
+    }
+  };
+
+  const removeSupplier = (index: number) => {
+    const supplierName = supabaseStore.suppliers[index];
+    if (supplierName) {
+      dataManagementLogic.deleteSupplier(supplierName);
+    }
+  };
+
+  const removeBrand = (index: number) => {
+    const brandName = supabaseStore.brands[index];
+    if (brandName) {
+      dataManagementLogic.deleteBrand(brandName);
+    }
+  };
+
+  const removeColor = (index: number) => {
+    const colorName = supabaseStore.colors[index];
+    if (colorName) {
+      dataManagementLogic.deleteColor(colorName);
+    }
+  };
+
+  const removeSize = (index: number) => {
+    const sizeName = supabaseStore.sizes[index];
+    if (sizeName) {
+      dataManagementLogic.deleteSize(sizeName);
+    }
+  };
+
   const contextValue: StoreContextType = {
     // Data from Supabase
     products: supabaseStore.products,
@@ -302,6 +352,17 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
     isXmlAlreadyImported,
     markXmlAsImported,
     resetUserPassword,
+    
+    // Remove operations for backward compatibility
+    removeCategory,
+    removeCollection,
+    removeSupplier,
+    removeBrand,
+    removeColor,
+    removeSize,
+    
+    // Bulk operations
+    bulkUpdateProducts: productsLogic.bulkEditProducts,
     
     // Seller operations (basic implementation)
     addSeller: (seller) => {

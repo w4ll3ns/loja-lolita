@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Pencil, Trash2 } from 'lucide-react';
 
 const CollectionsManagementPage = () => {
-  const { collections, addCollection, updateCollection, removeCollection } = useStore();
+  const { collections, addCollection, updateCollection, deleteCollection } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -83,7 +82,7 @@ const CollectionsManagementPage = () => {
       return;
     }
 
-    updateCollection(editingIndex!, trimmedName);
+    updateCollection(oldName, trimmedName);
     setIsEditDialogOpen(false);
     setEditingIndex(null);
     setNewCollectionName('');
@@ -94,8 +93,8 @@ const CollectionsManagementPage = () => {
     });
   };
 
-  const handleDelete = (index: number, collectionName: string) => {
-    removeCollection(index);
+  const handleDelete = (collectionName: string) => {
+    deleteCollection(collectionName);
     
     toast({
       title: "Sucesso",
@@ -179,7 +178,7 @@ const CollectionsManagementPage = () => {
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                 <AlertDialogAction
-                                  onClick={() => handleDelete(originalIndex, collection)}
+                                  onClick={() => handleDelete(collection)}
                                   className="bg-red-600 hover:bg-red-700"
                                 >
                                   Excluir

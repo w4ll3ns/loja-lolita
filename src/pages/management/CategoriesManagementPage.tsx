@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Pencil, Trash2 } from 'lucide-react';
 
 const CategoriesManagementPage = () => {
-  const { categories, addCategory, updateCategory, removeCategory } = useStore();
+  const { categories, addCategory, updateCategory, deleteCategory } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -83,7 +82,7 @@ const CategoriesManagementPage = () => {
       return;
     }
 
-    updateCategory(editingIndex!, trimmedName);
+    updateCategory(oldName, trimmedName);
     setIsEditDialogOpen(false);
     setEditingIndex(null);
     setNewCategoryName('');
@@ -94,8 +93,8 @@ const CategoriesManagementPage = () => {
     });
   };
 
-  const handleDelete = (index: number, categoryName: string) => {
-    removeCategory(index);
+  const handleDelete = (categoryName: string) => {
+    deleteCategory(categoryName);
     
     toast({
       title: "Sucesso",
@@ -179,7 +178,7 @@ const CategoriesManagementPage = () => {
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                 <AlertDialogAction
-                                  onClick={() => handleDelete(originalIndex, category)}
+                                  onClick={() => handleDelete(category)}
                                   className="bg-red-600 hover:bg-red-700"
                                 >
                                   Excluir

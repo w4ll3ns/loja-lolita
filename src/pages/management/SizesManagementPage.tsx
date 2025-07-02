@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Ruler, Edit, Trash2 } from 'lucide-react';
 
 const SizesManagementPage = () => {
-  const { sizes, addSize, updateSize, removeSize } = useStore();
+  const { sizes, addSize, updateSize, deleteSize } = useStore();
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -83,7 +82,7 @@ const SizesManagementPage = () => {
       return;
     }
 
-    updateSize(editingSizeIndex, trimmedName);
+    updateSize(oldName, trimmedName);
     setIsEditDialogOpen(false);
     setEditingSizeIndex(-1);
     setEditingSizeName('');
@@ -94,8 +93,8 @@ const SizesManagementPage = () => {
     });
   };
 
-  const handleDeleteSize = (index: number, sizeName: string) => {
-    removeSize(index);
+  const handleDeleteSize = (sizeName: string) => {
+    deleteSize(sizeName);
     
     toast({
       title: "Sucesso",
@@ -145,7 +144,6 @@ const SizesManagementPage = () => {
         </Dialog>
       </div>
 
-      {/* Dialog de Edição */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -174,7 +172,6 @@ const SizesManagementPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Busca */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
@@ -185,7 +182,6 @@ const SizesManagementPage = () => {
         />
       </div>
 
-      {/* Lista de Tamanhos */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -230,7 +226,7 @@ const SizesManagementPage = () => {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleDeleteSize(originalIndex, size)}
+                              onClick={() => handleDeleteSize(size)}
                               className="bg-red-600 hover:bg-red-700"
                             >
                               Excluir

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Pencil, Trash2 } from 'lucide-react';
 
 const SuppliersManagementPage = () => {
-  const { suppliers, addSupplier, updateSupplier, removeSupplier } = useStore();
+  const { suppliers, addSupplier, updateSupplier, deleteSupplier } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -83,7 +82,7 @@ const SuppliersManagementPage = () => {
       return;
     }
 
-    updateSupplier(editingIndex!, trimmedName);
+    updateSupplier(oldName, trimmedName);
     setIsEditDialogOpen(false);
     setEditingIndex(null);
     setNewSupplierName('');
@@ -94,8 +93,8 @@ const SuppliersManagementPage = () => {
     });
   };
 
-  const handleDelete = (index: number, supplierName: string) => {
-    removeSupplier(index);
+  const handleDelete = (supplierName: string) => {
+    deleteSupplier(supplierName);
     
     toast({
       title: "Sucesso",
@@ -179,7 +178,7 @@ const SuppliersManagementPage = () => {
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                 <AlertDialogAction
-                                  onClick={() => handleDelete(originalIndex, supplier)}
+                                  onClick={() => handleDelete(supplier)}
                                   className="bg-red-600 hover:bg-red-700"
                                 >
                                   Excluir
