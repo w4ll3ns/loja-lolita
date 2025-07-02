@@ -378,30 +378,33 @@ const ProductsPage = () => {
   };
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6 animate-fade-in pb-20 md:pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Produtos</h1>
-          <p className="text-gray-600">Gerencie o estoque da loja</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Produtos</h1>
+          <p className="text-sm md:text-base text-gray-600">Gerencie o estoque da loja</p>
         </div>
-        <div className="flex items-center gap-4">
-          {/* Toggle de visualização */}
-          <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'cards' | 'list')}>
-            <ToggleGroupItem value="cards" aria-label="Visualização em cards">
-              <LayoutGrid className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="list" aria-label="Visualização em lista">
-              <LayoutList className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
+          {/* Toggle de visualização - Hidden on mobile */}
+          <div className="hidden md:block">
+            <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'cards' | 'list')}>
+              <ToggleGroupItem value="cards" aria-label="Visualização em cards">
+                <LayoutGrid className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="list" aria-label="Visualização em lista">
+                <LayoutList className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
           
           {canEdit && (
-            <div className="flex gap-2">
+            <div className="flex flex-col md:flex-row gap-2">
               {selectedProducts.length > 0 && (
                 <Button
                   variant="outline"
                   onClick={handleBulkEdit}
-                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50 text-sm"
+                  size="sm"
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   Editar em Lote ({selectedProducts.length})
@@ -411,17 +414,20 @@ const ProductsPage = () => {
               <Button
                 variant="outline"
                 onClick={() => setIsImportXmlOpen(true)}
-                className="border-store-blue-600 text-store-blue-600 hover:bg-store-blue-50"
+                className="border-store-blue-600 text-store-blue-600 hover:bg-store-blue-50 text-sm"
+                size="sm"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Importar via NF-e
+                <span className="hidden sm:inline">Importar via NF-e</span>
+                <span className="sm:hidden">Importar</span>
               </Button>
               
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-store-blue-600 hover:bg-store-blue-700">
+                  <Button className="bg-store-blue-600 hover:bg-store-blue-700 text-sm" size="sm">
                     <ShoppingCart className="h-4 w-4 mr-2" />
-                    Adicionar Produto
+                    <span className="hidden sm:inline">Adicionar Produto</span>
+                    <span className="sm:hidden">Adicionar</span>
                   </Button>
                 </DialogTrigger>
               </Dialog>
@@ -555,13 +561,14 @@ const ProductsPage = () => {
           placeholder="Buscar produtos por nome, categoria ou código de barras..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+          className="pl-10 text-sm"
         />
       </div>
 
       {/* Lista de produtos - Visualização condicional */}
-      {viewMode === 'cards' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {/* On mobile, always show cards. On desktop, respect viewMode */}
+      <div className="md:hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {filteredProducts.map((product) => (
             <ProductCard
               key={product.id}
@@ -575,23 +582,42 @@ const ProductsPage = () => {
             />
           ))}
         </div>
-      ) : (
-        <ProductTable
-          products={filteredProducts}
-          canEdit={canEdit}
-          onEdit={handleEditProduct}
-          onDuplicate={handleDuplicateProduct}
-          onDelete={handleDeleteClick}
-          selectedProducts={selectedProducts}
-          onSelectProduct={handleSelectProduct}
-          onSelectAll={handleSelectAll}
-        />
-      )}
+      </div>
+      
+      <div className="hidden md:block">
+        {viewMode === 'cards' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                canEdit={canEdit}
+                onEdit={handleEditProduct}
+                onDuplicate={handleDuplicateProduct}
+                onDelete={handleDeleteClick}
+                isSelected={selectedProducts.includes(product.id)}
+                onSelect={handleSelectProduct}
+              />
+            ))}
+          </div>
+        ) : (
+          <ProductTable
+            products={filteredProducts}
+            canEdit={canEdit}
+            onEdit={handleEditProduct}
+            onDuplicate={handleDuplicateProduct}
+            onDelete={handleDeleteClick}
+            selectedProducts={selectedProducts}
+            onSelectProduct={handleSelectProduct}
+            onSelectAll={handleSelectAll}
+          />
+        )}
+      </div>
 
       {filteredProducts.length === 0 && (
         <div className="text-center py-12">
           <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">
+          <p className="text-gray-500 text-sm md:text-base">
             {searchTerm ? 'Nenhum produto encontrado' : 'Nenhum produto cadastrado'}
           </p>
         </div>

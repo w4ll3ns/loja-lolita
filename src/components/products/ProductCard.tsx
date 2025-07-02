@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onSelect
 }) => {
   return (
-    <Card className="card-hover relative">
+    <Card className="card-hover relative h-full flex flex-col">
       {canEdit && onSelect && (
         <div className="absolute top-3 left-3 z-10">
           <Checkbox
@@ -36,82 +37,85 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
       )}
       
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 flex-shrink-0">
         <div className="flex items-start justify-between">
-          <CardTitle className="text-lg pr-2">{product.name}</CardTitle>
-          <div className="flex gap-1">
+          <CardTitle className="text-base md:text-lg pr-2 leading-tight">{product.name}</CardTitle>
+          <div className="flex gap-1 flex-shrink-0">
             {canEdit && (
               <>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onEdit(product)}
-                  className="text-gray-500 hover:text-blue-600 p-1"
+                  className="text-gray-500 hover:text-blue-600 p-1 h-8 w-8"
                   title="Editar produto"
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className="h-3 w-3 md:h-4 md:w-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onDuplicate(product)}
-                  className="text-gray-500 hover:text-green-600 p-1"
+                  className="text-gray-500 hover:text-green-600 p-1 h-8 w-8"
                   title="Duplicar produto"
                 >
-                  <Copy className="h-4 w-4" />
+                  <Copy className="h-3 w-3 md:h-4 md:w-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(product)}
-                  className="text-gray-500 hover:text-red-600 p-1"
+                  className="text-gray-500 hover:text-red-600 p-1 h-8 w-8"
                   title="Excluir produto"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                 </Button>
               </>
             )}
           </div>
         </div>
-        <div className="text-sm text-muted-foreground space-y-1">
+        <div className="text-xs md:text-sm text-muted-foreground space-y-1">
           <p>{product.category} - {product.size}</p>
           <p>{product.brand} - {product.color}</p>
-          <p className="font-medium text-blue-600">{product.gender}</p>
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            {product.gender}
+          </span>
         </div>
       </CardHeader>
-      <CardContent>
+      
+      <CardContent className="flex-grow">
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Preço Venda:</span>
-            <span className="font-semibold text-store-green-600">
+            <span className="text-xs md:text-sm text-muted-foreground">Preço Venda:</span>
+            <span className="font-semibold text-store-green-600 text-sm md:text-base">
               R$ {product.price.toFixed(2)}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Preço Custo:</span>
-            <span className="font-semibold text-gray-600">
+            <span className="text-xs md:text-sm text-muted-foreground">Preço Custo:</span>
+            <span className="font-semibold text-gray-600 text-sm md:text-base">
               R$ {product.costPrice.toFixed(2)}
             </span>
           </div>
           <ProfitMarginDisplay 
             salePrice={product.price} 
             costPrice={product.costPrice}
-            className="border-t pt-2"
+            className="border-t pt-2 text-xs"
           />
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Estoque:</span>
-            <span className={`font-semibold ${
+            <span className="text-xs md:text-sm text-muted-foreground">Estoque:</span>
+            <span className={`font-semibold text-sm md:text-base ${
               product.quantity <= 5 ? 'text-red-600' : 'text-green-600'
             }`}>
               {product.quantity} unidades
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Código:</span>
-            <span className="text-xs font-mono">{product.barcode}</span>
+            <span className="text-xs md:text-sm text-muted-foreground">Código:</span>
+            <span className="text-xs font-mono break-all">{product.barcode}</span>
           </div>
           {product.description && (
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-xs md:text-sm text-muted-foreground mt-2 line-clamp-2">
               {product.description}
             </p>
           )}
