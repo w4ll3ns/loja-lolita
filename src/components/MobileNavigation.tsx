@@ -34,7 +34,6 @@ export function MobileNavigation() {
 
     if (user?.role === 'vendedor') {
       return [
-        ...baseItems,
         { title: "Estoque", url: "/products", icon: Package, emoji: "📦" },
         { title: "Minhas Vendas", url: "/my-sales", icon: FileText, emoji: "💼" },
       ];

@@ -30,7 +30,7 @@ const navigationItems = [
     title: 'Dashboard',
     url: '/dashboard',
     icon: LayoutDashboard,
-    roles: ['admin', 'vendedor', 'caixa', 'consultivo']
+    roles: ['admin', 'caixa', 'consultivo']
   },
   {
     title: 'Produtos',
