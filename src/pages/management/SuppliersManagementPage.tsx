@@ -1,0 +1,219 @@
+
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useStore } from '@/contexts/StoreContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { Search, Plus, Pencil, Trash2 } from 'lucide-react';
+
+const SuppliersManagementPage = () => {
+  const { suppliers, addSupplier } = useStore();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [newSupplierName, setNewSupplierName] = useState('');
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  const filteredSuppliers = suppliers.filter(supplier =>
+    supplier.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAdd = () => {
+    if (!newSupplierName.trim()) {
+      toast({
+        title: "Erro",
+        description: "Nome do fornecedor é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (suppliers.includes(newSupplierName.trim())) {
+      toast({
+        title: "Erro",
+        description: "Este fornecedor já existe",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    addSupplier(newSupplierName.trim());
+    setNewSupplierName('');
+    setIsAddDialogOpen(false);
+    
+    toast({
+      title: "Sucesso",
+      description: "Fornecedor adicionado com sucesso!",
+    });
+  };
+
+  const handleEdit = (index: number) => {
+    setEditingIndex(index);
+    setNewSupplierName(suppliers[index]);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    // TODO: Implementar edição - requer atualização do StoreContext
+    toast({
+      title: "Em desenvolvimento",
+      description: "Funcionalidade de edição será implementada em breve",
+    });
+    setIsEditDialogOpen(false);
+    setEditingIndex(null);
+    setNewSupplierName('');
+  };
+
+  const handleDelete = (index: number) => {
+    // TODO: Implementar exclusão - requer atualização do StoreContext
+    toast({
+      title: "Em desenvolvimento",
+      description: "Funcionalidade de exclusão será implementada em breve",
+    });
+  };
+
+  const canEdit = user?.role === 'admin';
+
+  return (
+    <div className="p-6 space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Fornecedores</h1>
+          <p className="text-gray-600">Gerencie os fornecedores</p>
+        </div>
+        {canEdit && (
+          <Button onClick={() => setIsAddDialogOpen(true)} className="bg-store-blue-600 hover:bg-store-blue-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Fornecedor
+          </Button>
+        )}
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Input
+          placeholder="Buscar fornecedores..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Fornecedores Cadastrados ({filteredSuppliers.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                {canEdit && <TableHead className="w-32">Ações</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredSuppliers.map((supplier, index) => (
+                <TableRow key={supplier}>
+                  <TableCell className="font-medium">{supplier}</TableCell>
+                  {canEdit && (
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(suppliers.indexOf(supplier))}
+                          className="text-gray-500 hover:text-blue-600"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(suppliers.indexOf(supplier))}
+                          className="text-gray-500 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {filteredSuppliers.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-500">
+                {searchTerm ? 'Nenhum fornecedor encontrado' : 'Nenhum fornecedor cadastrado'}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Add Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo Fornecedor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Input
+                placeholder="Nome do fornecedor"
+                value={newSupplierName}
+                onChange={(e) => setNewSupplierName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAdd} className="bg-store-blue-600 hover:bg-store-blue-700">
+                Adicionar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Fornecedor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Input
+                placeholder="Nome do fornecedor"
+                value={newSupplierName}
+                onChange={(e) => setNewSupplierName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit()}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveEdit} className="bg-store-blue-600 hover:bg-store-blue-700">
+                Salvar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default SuppliersManagementPage;

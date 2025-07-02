@@ -1,111 +1,87 @@
+import { BrowserRouter as Router } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/AppSidebar';
+import { MobileNavigation } from '@/components/MobileNavigation';
+import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { StoreProvider } from '@/contexts/StoreContext';
+import LoginPage from '@/components/LoginPage';
+import Index from '@/pages/Index';
+import Dashboard from '@/pages/Dashboard';
+import ProductsPage from '@/pages/ProductsPage';
+import SalesPage from '@/pages/SalesPage';
+import MySalesPage from '@/pages/MySalesPage';
+import CustomersPage from '@/pages/CustomersPage';
+import ManagementIndexPage from '@/pages/management/ManagementIndexPage';
+import CategoriesManagementPage from '@/pages/management/CategoriesManagementPage';
+import ColorsManagementPage from '@/pages/management/ColorsManagementPage';
+import CollectionsManagementPage from '@/pages/management/CollectionsManagementPage';
+import BrandsManagementPage from '@/pages/management/BrandsManagementPage';
+import SuppliersManagementPage from '@/pages/management/SuppliersManagementPage';
+import SettingsPage from '@/pages/SettingsPage';
+import StoreSettingsPage from '@/pages/settings/StoreSettingsPage';
+import UsersSettingsPage from '@/pages/settings/UsersSettingsPage';
+import NotificationsSettingsPage from '@/pages/settings/NotificationsSettingsPage';
+import SecuritySettingsPage from '@/pages/settings/SecuritySettingsPage';
+import NotFound from '@/pages/NotFound';
+import './App.css';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { StoreProvider } from "@/contexts/StoreContext";
-import { LoginPage } from "@/components/LoginPage";
-import { AppSidebar } from "@/components/AppSidebar";
-import { MobileNavigation } from "@/components/MobileNavigation";
-import { Button } from "@/components/ui/button";
-import Dashboard from "./pages/Dashboard";
-import ProductsPage from "./pages/ProductsPage";
-import SalesPage from "./pages/SalesPage";
-import CustomersPage from "./pages/CustomersPage";
-import SettingsPage from "./pages/SettingsPage";
-import StoreSettingsPage from "./pages/settings/StoreSettingsPage";
-import UsersSettingsPage from "./pages/settings/UsersSettingsPage";
-import NotificationsSettingsPage from "./pages/settings/NotificationsSettingsPage";
-import SecuritySettingsPage from "./pages/settings/SecuritySettingsPage";
-import MySalesPage from "./pages/MySalesPage";
-import NotFound from "./pages/NotFound";
+function AppRoutes() {
+  const { isAuthenticated } = useAuth();
 
-const queryClient = new QueryClient();
-
-const AppContent = () => {
-  const { user, logout } = useAuth();
-
-  if (!user) {
+  if (!isAuthenticated) {
     return <LoginPage />;
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        {/* Desktop Sidebar - Hidden on mobile */}
-        <div className="hidden md:block">
-          <AppSidebar />
-        </div>
-        
-        <div className="flex-1 flex flex-col">
-          {/* Header - Adjusted for mobile */}
-          <header className="h-14 border-b bg-white flex items-center justify-between px-4">
-            <div className="flex items-center">
-              {/* Desktop sidebar trigger */}
-              <div className="hidden md:block">
-                <SidebarTrigger />
-              </div>
-              {/* Mobile: Show app name or logo */}
-              <div className="md:hidden">
-                <h1 className="text-lg font-semibold text-store-blue-600">
-                  Sistema de Vendas
-                </h1>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground hidden sm:block">
-                Logado como: <strong>{user.name}</strong>
-              </span>
-              <Button variant="outline" size="sm" onClick={logout}>
-                Sair
-              </Button>
-            </div>
-          </header>
-
-          {/* Main content with mobile padding bottom */}
-          <main className="flex-1 overflow-auto pb-16 md:pb-0">
-            <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/products" element={<ProductsPage />} />
-              <Route path="/sales" element={<SalesPage />} />
-              <Route path="/customers" element={<CustomersPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/settings/store" element={<StoreSettingsPage />} />
-              <Route path="/settings/users" element={<UsersSettingsPage />} />
-              <Route path="/settings/notifications" element={<NotificationsSettingsPage />} />
-              <Route path="/settings/security" element={<SecuritySettingsPage />} />
-              <Route path="/my-sales" element={<MySalesPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-        </div>
-
-        {/* Mobile Navigation - Fixed bottom bar */}
-        <MobileNavigation />
-      </div>
-    </SidebarProvider>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/products" element={<ProductsPage />} />
+      <Route path="/sales" element={<SalesPage />} />
+      <Route path="/my-sales" element={<MySalesPage />} />
+      <Route path="/customers" element={<CustomersPage />} />
+      <Route path="/management" element={<ManagementIndexPage />} />
+      <Route path="/management/categories" element={<CategoriesManagementPage />} />
+      <Route path="/management/colors" element={<ColorsManagementPage />} />
+      <Route path="/management/collections" element={<CollectionsManagementPage />} />
+      <Route path="/management/brands" element={<BrandsManagementPage />} />
+      <Route path="/management/suppliers" element={<SuppliersManagementPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
+      <Route path="/settings/store" element={<StoreSettingsPage />} />
+      <Route path="/settings/users" element={<UsersSettingsPage />} />
+      <Route path="/settings/notifications" element={<NotificationsSettingsPage />} />
+      <Route path="/settings/security" element={<SecuritySettingsPage />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
-};
+}
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <StoreProvider>
-            <AppContent />
-          </StoreProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  const queryClient = new QueryClient();
+
+  return (
+    <AuthProvider>
+      <StoreProvider>
+        <QueryClientProvider client={queryClient}>
+          <Router>
+            <SidebarProvider>
+              <div className="flex h-screen antialiased text-gray-900">
+                <AppSidebar />
+                <MobileNavigation />
+                <main className="flex-1 p-4">
+                  <AppRoutes />
+                </main>
+              </div>
+            </SidebarProvider>
+            <Toaster />
+          </Router>
+        </QueryClientProvider>
+      </StoreProvider>
+    </AuthProvider>
+  );
+}
 
 export default App;
