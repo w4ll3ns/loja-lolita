@@ -82,6 +82,8 @@ interface StoreContextType {
   addBrand: (brand: string) => void;
   addColor: (color: string) => void;
   addSize: (size: string) => void;
+  updateSize: (index: number, newSize: string) => void;
+  removeSize: (index: number) => void;
   getIncompleteProducts: () => Product[];
   duplicateProduct: (product: Product) => Omit<Product, 'id'>;
   isBarcodeTaken: (barcode: string, excludeId?: string) => boolean;
@@ -227,6 +229,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const updateSize = (index: number, newSize: string) => {
+    setSizes(prev => prev.map((size, i) => i === index ? newSize : size));
+  };
+
+  const removeSize = (index: number) => {
+    setSizes(prev => prev.filter((_, i) => i !== index));
+  };
+
   const addCategory = (category: string) => {
     if (!categories.includes(category)) {
       setCategories(prev => [...prev, category]);
@@ -313,6 +323,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addBrand,
       addColor,
       addSize,
+      updateSize,
+      removeSize,
       getIncompleteProducts: () => operations.getIncompleteProducts(products),
       duplicateProduct: operations.duplicateProduct,
       isBarcodeTaken: (barcode, excludeId) => operations.isBarcodeTaken(products, barcode, excludeId),
