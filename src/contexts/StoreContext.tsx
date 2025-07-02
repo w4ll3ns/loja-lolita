@@ -77,10 +77,20 @@ interface StoreContextType {
   searchProducts: (query: string) => Product[];
   createTemporaryProduct: (barcode: string, price?: number) => Product;
   addCategory: (category: string) => void;
+  updateCategory: (index: number, newCategory: string) => void;
+  removeCategory: (index: number) => void;
   addCollection: (collection: string) => void;
+  updateCollection: (index: number, newCollection: string) => void;
+  removeCollection: (index: number) => void;
   addSupplier: (supplier: string) => void;
+  updateSupplier: (index: number, newSupplier: string) => void;
+  removeSupplier: (index: number) => void;
   addBrand: (brand: string) => void;
+  updateBrand: (index: number, newBrand: string) => void;
+  removeBrand: (index: number) => void;
   addColor: (color: string) => void;
+  updateColor: (index: number, newColor: string) => void;
+  removeColor: (index: number) => void;
   addSize: (size: string) => void;
   updateSize: (index: number, newSize: string) => void;
   removeSize: (index: number) => void;
@@ -223,6 +233,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const updateColor = (index: number, newColor: string) => {
+    setColors(prev => prev.map((color, i) => i === index ? newColor : color));
+  };
+
+  const removeColor = (index: number) => {
+    setColors(prev => prev.filter((_, i) => i !== index));
+  };
+
   const addSize = (size: string) => {
     if (!sizes.includes(size)) {
       setSizes(prev => [...prev, size]);
@@ -243,10 +261,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const updateCategory = (index: number, newCategory: string) => {
+    setCategories(prev => prev.map((category, i) => i === index ? newCategory : category));
+  };
+
+  const removeCategory = (index: number) => {
+    setCategories(prev => prev.filter((_, i) => i !== index));
+  };
+
   const addCollection = (collection: string) => {
     if (!collections.includes(collection)) {
       setCollections(prev => [...prev, collection]);
     }
+  };
+
+  const updateCollection = (index: number, newCollection: string) => {
+    setCollections(prev => prev.map((collection, i) => i === index ? newCollection : collection));
+  };
+
+  const removeCollection = (index: number) => {
+    setCollections(prev => prev.filter((_, i) => i !== index));
   };
 
   const addSupplier = (supplier: string) => {
@@ -255,10 +289,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const updateSupplier = (index: number, newSupplier: string) => {
+    setSuppliers(prev => prev.map((supplier, i) => i === index ? newSupplier : supplier));
+  };
+
+  const removeSupplier = (index: number) => {
+    setSuppliers(prev => prev.filter((_, i) => i !== index));
+  };
+
   const addBrand = (brand: string) => {
     if (!brands.includes(brand)) {
       setBrands(prev => [...prev, brand]);
     }
+  };
+
+  const updateBrand = (index: number, newBrand: string) => {
+    setBrands(prev => prev.map((brand, i) => i === index ? newBrand : brand));
+  };
+
+  const removeBrand = (index: number) => {
+    setBrands(prev => prev.filter((_, i) => i !== index));
   };
 
   const updateStoreSettings = (settings: Partial<StoreSettings>) => {
@@ -318,10 +368,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       searchProducts: (query) => operations.searchProducts(products, query),
       createTemporaryProduct,
       addCategory,
+      updateCategory,
+      removeCategory,
       addCollection,
+      updateCollection,
+      removeCollection,
       addSupplier,
+      updateSupplier,
+      removeSupplier,
       addBrand,
+      updateBrand,
+      removeBrand,
       addColor,
+      updateColor,
+      removeColor,
       addSize,
       updateSize,
       removeSize,

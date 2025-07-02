@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Pencil, Trash2 } from 'lucide-react';
 
 const BrandsManagementPage = () => {
-  const { brands, addBrand } = useStore();
+  const { brands, addBrand, updateBrand, removeBrand } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -61,21 +62,44 @@ const BrandsManagementPage = () => {
   };
 
   const handleSaveEdit = () => {
-    // TODO: Implementar edição - requer atualização do StoreContext
-    toast({
-      title: "Em desenvolvimento",
-      description: "Funcionalidade de edição será implementada em breve",
-    });
+    if (!newBrandName.trim()) {
+      toast({
+        title: "Erro",
+        description: "Nome da marca é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const trimmedName = newBrandName.trim();
+    const oldName = brands[editingIndex!];
+
+    if (trimmedName !== oldName && brands.includes(trimmedName)) {
+      toast({
+        title: "Erro",
+        description: "Esta marca já existe",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateBrand(editingIndex!, trimmedName);
     setIsEditDialogOpen(false);
     setEditingIndex(null);
     setNewBrandName('');
+    
+    toast({
+      title: "Sucesso",
+      description: "Marca atualizada com sucesso!",
+    });
   };
 
-  const handleDelete = (index: number) => {
-    // TODO: Implementar exclusão - requer atualização do StoreContext
+  const handleDelete = (index: number, brandName: string) => {
+    removeBrand(index);
+    
     toast({
-      title: "Em desenvolvimento",
-      description: "Funcionalidade de exclusão será implementada em breve",
+      title: "Sucesso",
+      description: `Marca "${brandName}" removida com sucesso!`,
     });
   };
 
@@ -119,33 +143,56 @@ const BrandsManagementPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredBrands.map((brand, index) => (
-                <TableRow key={brand}>
-                  <TableCell className="font-medium">{brand}</TableCell>
-                  {canEdit && (
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(brands.indexOf(brand))}
-                          className="text-gray-500 hover:text-blue-600"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(brands.indexOf(brand))}
-                          className="text-gray-500 hover:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
+              {filteredBrands.map((brand, index) => {
+                const originalIndex = brands.indexOf(brand);
+                return (
+                  <TableRow key={brand}>
+                    <TableCell className="font-medium">{brand}</TableCell>
+                    {canEdit && (
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(originalIndex)}
+                            className="text-gray-500 hover:text-blue-600"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-gray-500 hover:text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir a marca "{brand}"? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(originalIndex, brand)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
 

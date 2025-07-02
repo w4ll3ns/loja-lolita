@@ -28,7 +28,8 @@ const ProductsPage = () => {
     collections, 
     suppliers, 
     brands, 
-    colors, 
+    colors,
+    sizes,
     addCategory, 
     addCollection, 
     addSupplier, 
@@ -86,7 +87,7 @@ const ProductsPage = () => {
     gender: '' as 'Masculino' | 'Feminino' | 'Unissex' | ''
   });
 
-  const sizes = ['PP', 'P', 'M', 'G', 'GG', '34', '36', '38', '40', '42', '44'];
+  // Remove the hardcoded sizes array since we're now using sizes from context
   const genders = ['Masculino', 'Feminino', 'Unissex'];
 
   const filteredProducts = products.filter(product => 

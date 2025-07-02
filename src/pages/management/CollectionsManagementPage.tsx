@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useStore } from '@/contexts/StoreContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Pencil, Trash2 } from 'lucide-react';
 
 const CollectionsManagementPage = () => {
-  const { collections, addCollection } = useStore();
+  const { collections, addCollection, updateCollection, removeCollection } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -61,21 +62,44 @@ const CollectionsManagementPage = () => {
   };
 
   const handleSaveEdit = () => {
-    // TODO: Implementar edição - requer atualização do StoreContext
-    toast({
-      title: "Em desenvolvimento",
-      description: "Funcionalidade de edição será implementada em breve",
-    });
+    if (!newCollectionName.trim()) {
+      toast({
+        title: "Erro",
+        description: "Nome da coleção é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const trimmedName = newCollectionName.trim();
+    const oldName = collections[editingIndex!];
+
+    if (trimmedName !== oldName && collections.includes(trimmedName)) {
+      toast({
+        title: "Erro",
+        description: "Esta coleção já existe",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateCollection(editingIndex!, trimmedName);
     setIsEditDialogOpen(false);
     setEditingIndex(null);
     setNewCollectionName('');
+    
+    toast({
+      title: "Sucesso",
+      description: "Coleção atualizada com sucesso!",
+    });
   };
 
-  const handleDelete = (index: number) => {
-    // TODO: Implementar exclusão - requer atualização do StoreContext
+  const handleDelete = (index: number, collectionName: string) => {
+    removeCollection(index);
+    
     toast({
-      title: "Em desenvolvimento",
-      description: "Funcionalidade de exclusão será implementada em breve",
+      title: "Sucesso",
+      description: `Coleção "${collectionName}" removida com sucesso!`,
     });
   };
 
@@ -119,33 +143,56 @@ const CollectionsManagementPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCollections.map((collection, index) => (
-                <TableRow key={collection}>
-                  <TableCell className="font-medium">{collection}</TableCell>
-                  {canEdit && (
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(collections.indexOf(collection))}
-                          className="text-gray-500 hover:text-blue-600"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(collections.indexOf(collection))}
-                          className="text-gray-500 hover:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
+              {filteredCollections.map((collection, index) => {
+                const originalIndex = collections.indexOf(collection);
+                return (
+                  <TableRow key={collection}>
+                    <TableCell className="font-medium">{collection}</TableCell>
+                    {canEdit && (
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(originalIndex)}
+                            className="text-gray-500 hover:text-blue-600"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-gray-500 hover:text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir a coleção "{collection}"? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(originalIndex, collection)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
 
