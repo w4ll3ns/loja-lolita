@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, FileText, CheckCircle, Edit2, Plus } from 'lucide-react';
+import { Upload, FileText, CheckCircle, Edit2, Plus, Building2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfitMarginDisplay } from '@/components/ProfitMarginDisplay';
 import { useStore } from '@/contexts/StoreContext';
@@ -39,6 +39,15 @@ interface XmlProduct {
   editableColor: string;
 }
 
+interface XmlSupplier {
+  cnpj: string;
+  name: string;
+  fantasia?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+}
+
 interface ImportXmlModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -48,6 +57,8 @@ interface ImportXmlModalProps {
 export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose, onImport }) => {
   const [xmlFile, setXmlFile] = useState<File | null>(null);
   const [extractedProducts, setExtractedProducts] = useState<XmlProduct[]>([]);
+  const [extractedSupplier, setExtractedSupplier] = useState<XmlSupplier | null>(null);
+  const [shouldImportSupplier, setShouldImportSupplier] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'upload' | 'preview' | 'edit'>('upload');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -73,6 +84,36 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
     }
 
     setXmlFile(file);
+  };
+
+  const extractSupplierFromXml = (xmlDoc: Document): XmlSupplier | null => {
+    const emit = xmlDoc.getElementsByTagName('emit')[0];
+    if (!emit) return null;
+
+    const cnpj = emit.getElementsByTagName('CNPJ')[0]?.textContent || '';
+    const name = emit.getElementsByTagName('xNome')[0]?.textContent || '';
+    const fantasia = emit.getElementsByTagName('xFant')[0]?.textContent || '';
+    
+    const enderEmit = emit.getElementsByTagName('enderEmit')[0];
+    let address = '', city = '', state = '';
+    
+    if (enderEmit) {
+      const xLgr = enderEmit.getElementsByTagName('xLgr')[0]?.textContent || '';
+      const nro = enderEmit.getElementsByTagName('nro')[0]?.textContent || '';
+      const xBairro = enderEmit.getElementsByTagName('xBairro')[0]?.textContent || '';
+      address = `${xLgr}, ${nro} - ${xBairro}`.trim();
+      city = enderEmit.getElementsByTagName('xMun')[0]?.textContent || '';
+      state = enderEmit.getElementsByTagName('UF')[0]?.textContent || '';
+    }
+
+    return {
+      cnpj,
+      name: fantasia || name,
+      fantasia,
+      address,
+      city,
+      state
+    };
   };
 
   const inferSizeFromProduct = (productName: string, productCode: string): string => {
@@ -105,6 +146,16 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
         throw new Error('XML inválido');
       }
 
+      // Extrair dados do fornecedor
+      const supplierData = extractSupplierFromXml(xmlDoc);
+      setExtractedSupplier(supplierData);
+
+      // Verificar se o fornecedor já existe
+      const supplierExists = supplierData && suppliers.some(s => 
+        s.toLowerCase().includes(supplierData.name.toLowerCase()) ||
+        supplierData.name.toLowerCase().includes(s.toLowerCase())
+      );
+
       const detElements = xmlDoc.getElementsByTagName('det');
       const products: XmlProduct[] = [];
 
@@ -131,6 +182,14 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
           const size = inferSizeFromProduct(xProd, cProd);
           const gender = inferGenderFromProduct(xProd);
 
+          // Usar o fornecedor extraído ou o padrão
+          const defaultSupplier = supplierExists ? 
+            suppliers.find(s => 
+              s.toLowerCase().includes(supplierData?.name.toLowerCase() || '') ||
+              (supplierData?.name.toLowerCase() || '').includes(s.toLowerCase())
+            ) || 'A definir' 
+            : (supplierData?.name || 'A definir');
+
           products.push({
             cProd,
             cEAN: cEAN === 'SEM GTIN' ? '' : cEAN,
@@ -153,7 +212,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
             editableCategory: 'Importado',
             editableSize: size,
             editableGender: gender,
-            editableSupplier: 'A definir',
+            editableSupplier: defaultSupplier,
             editableBrand: 'A definir',
             editableColor: 'A definir'
           });
@@ -169,8 +228,17 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
       
       toast({
         title: "Sucesso",
-        description: `${products.length} produtos extraídos do XML`,
+        description: `${products.length} produtos extraídos do XML${supplierData ? ` - Fornecedor: ${supplierData.name}` : ''}`,
       });
+
+      // Se o fornecedor não existe, sugerir importação
+      if (supplierData && !supplierExists) {
+        setShouldImportSupplier(true);
+        toast({
+          title: "Novo fornecedor encontrado",
+          description: `Fornecedor "${supplierData.name}" não está cadastrado. Você pode importá-lo junto com os produtos.`,
+        });
+      }
     } catch (error) {
       toast({
         title: "Erro ao processar XML",
@@ -250,6 +318,15 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
       return;
     }
 
+    // Importar fornecedor se necessário
+    if (shouldImportSupplier && extractedSupplier) {
+      addSupplier(extractedSupplier.name);
+      toast({
+        title: "Fornecedor importado",
+        description: `Fornecedor "${extractedSupplier.name}" foi adicionado ao sistema`,
+      });
+    }
+
     const productsToImport = selectedProducts.map(p => ({
       name: p.editableName,
       description: `Importado via NF-e - Código: ${p.cProd}`,
@@ -273,6 +350,8 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
   const handleClose = () => {
     setXmlFile(null);
     setExtractedProducts([]);
+    setExtractedSupplier(null);
+    setShouldImportSupplier(false);
     setStep('upload');
     setEditingIndex(null);
     setShowNewCategoryInput({});
@@ -357,6 +436,51 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
 
         {step === 'preview' && (
           <div className="space-y-4">
+            {/* Informações do fornecedor extraído */}
+            {extractedSupplier && (
+              <Card className="border-blue-200 bg-blue-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-blue-700">
+                    <Building2 className="h-5 w-5" />
+                    Fornecedor Identificado
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <strong>Nome:</strong> {extractedSupplier.name}
+                      {extractedSupplier.fantasia && extractedSupplier.fantasia !== extractedSupplier.name && (
+                        <span className="text-gray-600"> ({extractedSupplier.fantasia})</span>
+                      )}
+                    </div>
+                    <div><strong>CNPJ:</strong> {extractedSupplier.cnpj}</div>
+                    {extractedSupplier.city && (
+                      <div><strong>Cidade:</strong> {extractedSupplier.city}/{extractedSupplier.state}</div>
+                    )}
+                    {extractedSupplier.address && (
+                      <div><strong>Endereço:</strong> {extractedSupplier.address}</div>
+                    )}
+                  </div>
+                  
+                  {!suppliers.some(s => 
+                    s.toLowerCase().includes(extractedSupplier.name.toLowerCase()) ||
+                    extractedSupplier.name.toLowerCase().includes(s.toLowerCase())
+                  ) && (
+                    <div className="mt-4 flex items-center space-x-2">
+                      <Checkbox
+                        id="importSupplier"
+                        checked={shouldImportSupplier}
+                        onCheckedChange={setShouldImportSupplier}
+                      />
+                      <Label htmlFor="importSupplier" className="text-blue-700 font-medium">
+                        Importar este fornecedor para o sistema
+                      </Label>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">
                 Produtos Extraídos ({extractedProducts.filter(p => p.selected).length} de {extractedProducts.length} selecionados)
@@ -564,6 +688,9 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
                 className="bg-store-green-600 hover:bg-store-green-700"
               >
                 Importar Produtos Selecionados ({extractedProducts.filter(p => p.selected).length})
+                {shouldImportSupplier && extractedSupplier && (
+                  <span className="ml-1">+ Fornecedor</span>
+                )}
               </Button>
             </div>
           </div>
