@@ -57,77 +57,77 @@ export const SupplierInfoCard: React.FC<SupplierInfoCardProps> = ({
           <div><strong>CNPJ:</strong> {supplier.cnpj}</div>
         </div>
         
-        {supplierExists && (
+        {supplierExists ? (
           <Alert className="mt-4">
             <CheckCircle className="h-4 w-4" />
             <AlertDescription>
               Este fornecedor já está cadastrado como "{existingSupplierName}". Os produtos serão vinculados automaticamente.
             </AlertDescription>
           </Alert>
-        )}
-
-        {!supplierExists && !canManageSuppliers && (
-          <Alert className="mt-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              <div className="flex items-center gap-2">
-                <UserCheck className="h-4 w-4" />
-                <span>Apenas usuários com permissão podem cadastrar novos fornecedores. Os produtos serão importados com fornecedor "A definir".</span>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {!supplierExists && canManageSuppliers && (
-          <div className="mt-4 space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="importSupplier"
-                checked={shouldImportSupplier}
-                onCheckedChange={(checked) => setShouldImportSupplier(checked === true)}
-              />
-              <Label htmlFor="importSupplier" className="text-blue-700 font-medium">
-                Cadastrar este fornecedor no sistema
-              </Label>
-            </div>
-
-            {shouldImportSupplier && (
-              <Card className="bg-white border-blue-200">
-                <CardHeader>
-                  <CardTitle className="text-base">Dados do Fornecedor</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Nome/Razão Social *</Label>
-                      <Input
-                        value={supplierFormData.name}
-                        onChange={(e) => setSupplierFormData(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Nome do fornecedor"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>CNPJ</Label>
-                      <Input
-                        value={supplierFormData.cnpj}
-                        onChange={(e) => setSupplierFormData(prev => ({ ...prev, cnpj: e.target.value }))}
-                        placeholder="CNPJ"
-                        readOnly
-                        className="bg-gray-50"
-                      />
-                    </div>
+        ) : (
+          <>
+            {!canManageSuppliers ? (
+              <Alert className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <div className="flex items-center gap-2">
+                    <UserCheck className="h-4 w-4" />
+                    <span>Apenas usuários com permissão podem cadastrar novos fornecedores. Os produtos serão importados com fornecedor "A definir".</span>
                   </div>
-                  <Button 
-                    onClick={onRegisterSupplier}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Building2 className="h-4 w-4 mr-2" />
-                    Cadastrar Fornecedor
-                  </Button>
-                </CardContent>
-              </Card>
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div className="mt-4 space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="importSupplier"
+                    checked={shouldImportSupplier}
+                    onCheckedChange={(checked) => setShouldImportSupplier(checked === true)}
+                  />
+                  <Label htmlFor="importSupplier" className="text-blue-700 font-medium">
+                    Cadastrar este fornecedor no sistema
+                  </Label>
+                </div>
+
+                {shouldImportSupplier && (
+                  <Card className="bg-white border-blue-200">
+                    <CardHeader>
+                      <CardTitle className="text-base">Dados do Fornecedor</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Nome/Razão Social *</Label>
+                          <Input
+                            value={supplierFormData.name}
+                            onChange={(e) => setSupplierFormData(prev => ({ ...prev, name: e.target.value }))}
+                            placeholder="Nome do fornecedor"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>CNPJ</Label>
+                          <Input
+                            value={supplierFormData.cnpj}
+                            onChange={(e) => setSupplierFormData(prev => ({ ...prev, cnpj: e.target.value }))}
+                            placeholder="CNPJ"
+                            readOnly
+                            className="bg-gray-50"
+                          />
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={onRegisterSupplier}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Building2 className="h-4 w-4 mr-2" />
+                        Cadastrar Fornecedor
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
       </CardContent>
     </Card>
