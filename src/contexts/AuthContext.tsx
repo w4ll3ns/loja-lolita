@@ -90,21 +90,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.log('Login error:', error.message);
+        setIsLoading(false);
         return { success: false, error: error.message };
       }
 
       if (data.user) {
         console.log('Login successful, user:', data.user);
+        // Don't set loading to false here, let onAuthStateChange handle it
         return { success: true };
       }
 
       console.log('Login failed - no user returned');
+      setIsLoading(false);
       return { success: false, error: 'Login failed' };
     } catch (error) {
       console.error('Erro no login:', error);
-      return { success: false, error: 'Erro interno no login' };
-    } finally {
       setIsLoading(false);
+      return { success: false, error: 'Erro interno no login' };
     }
   };
 

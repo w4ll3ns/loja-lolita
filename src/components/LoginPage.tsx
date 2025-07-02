@@ -13,13 +13,16 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showSignup, setShowSignup] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   const { login, isLoading } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    setLocalLoading(true);
     const { success, error } = await login(email, password);
+    setLocalLoading(false);
     
     if (!success) {
       toast({
@@ -81,9 +84,9 @@ const LoginPage = () => {
             <Button 
               type="submit" 
               className="w-full h-12 bg-store-blue-600 hover:bg-store-blue-700 text-base font-medium transition-colors"
-              disabled={isLoading}
+              disabled={localLoading || isLoading}
             >
-              {isLoading ? "Entrando..." : "Entrar"}
+              {(localLoading || isLoading) ? "Entrando..." : "Entrar"}
             </Button>
           </form>
           
