@@ -70,9 +70,11 @@ const navigationItems = [
 ];
 
 export function AppSidebar() {
-  const { collapsed } = useSidebar();
+  const { state } = useSidebar();
   const location = useLocation();
   const { user } = useAuth();
+  
+  const isCollapsed = state === 'collapsed';
   
   const isActive = (path: string) => {
     if (path === '/management') {
@@ -86,10 +88,10 @@ export function AppSidebar() {
   );
 
   return (
-    <Sidebar className={cn("border-r", collapsed ? "w-14" : "w-60")} collapsible>
+    <Sidebar className={cn("border-r", isCollapsed ? "w-14" : "w-60")} collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className={collapsed ? "sr-only" : ""}>
+          <SidebarGroupLabel className={isCollapsed ? "sr-only" : ""}>
             Navegação Principal
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -107,7 +109,7 @@ export function AppSidebar() {
                       }
                     >
                       <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
