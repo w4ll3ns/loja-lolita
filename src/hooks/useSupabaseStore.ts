@@ -1,34 +1,28 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product, Customer, Sale, User, Seller, StoreSettings, NotificationSettings, SecuritySettings } from '@/types/store';
-import { useToast } from '@/hooks/use-toast';
 
 export const useSupabaseStore = () => {
-  const { toast } = useToast();
-
-  // Products
   const [products, setProducts] = useState<Product[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings | null>(null);
+  const [securitySettings, setSecuritySettings] = useState<SecuritySettings | null>(null);
+  
+  // Dropdown data
   const [categories, setCategories] = useState<string[]>([]);
   const [collections, setCollections] = useState<string[]>([]);
   const [suppliers, setSuppliers] = useState<string[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [colors, setColors] = useState<string[]>([]);
   const [sizes, setSizes] = useState<string[]>([]);
-
-  // Customers & Sales
-  const [customers, setCustomers] = useState<Customer[]>([]);
   const [cities, setCities] = useState<string[]>([]);
-  const [sales, setSales] = useState<Sale[]>([]);
-
-  // Users & Sellers
-  const [users, setUsers] = useState<User[]>([]);
-  const [sellers, setSellers] = useState<Seller[]>([]);
-
-  // Settings
-  const [storeSettings, setStoreSettings] = useState<StoreSettings | null>(null);
-  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings | null>(null);
-  const [securitySettings, setSecuritySettings] = useState<SecuritySettings | null>(null);
+  
+  // XML import tracking
+  const [importedXmlHashes, setImportedXmlHashes] = useState<string[]>([]);
 
   // Load initial data
   useEffect(() => {
@@ -36,24 +30,24 @@ export const useSupabaseStore = () => {
   }, []);
 
   const loadAllData = async () => {
-    try {
-      await Promise.all([
-        loadProducts(),
-        loadCustomers(),
-        loadSales(),
-        loadUsers(),
-        loadSellers(),
-        loadSettings(),
-        loadDropdownData()
-      ]);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar dados do sistema",
-        variant: "destructive"
-      });
-    }
+    await Promise.all([
+      loadProducts(),
+      loadCustomers(),
+      loadSales(),
+      loadUsers(),
+      loadSellers(),
+      loadStoreSettings(),
+      loadNotificationSettings(),
+      loadSecuritySettings(),
+      loadCategories(),
+      loadCollections(),
+      loadSuppliers(),
+      loadBrands(),
+      loadColors(),
+      loadSizes(),
+      loadCities(),
+      loadImportedXmlHashes()
+    ]);
   };
 
   const loadProducts = async () => {
@@ -221,7 +215,7 @@ export const useSupabaseStore = () => {
     setSellers(formattedSellers);
   };
 
-  const loadSettings = async () => {
+  const loadStoreSettings = async () => {
     // Store Settings
     const { data: storeData, error: storeError } = await supabase
       .from('store_settings')
@@ -240,7 +234,9 @@ export const useSupabaseStore = () => {
         logo: storeData.logo || undefined
       });
     }
+  };
 
+  const loadNotificationSettings = async () => {
     // Notification Settings
     const { data: notifData, error: notifError } = await supabase
       .from('notification_settings')
@@ -259,7 +255,9 @@ export const useSupabaseStore = () => {
         alertTime: notifData.alert_time
       });
     }
+  };
 
+  const loadSecuritySettings = async () => {
     // Security Settings
     const { data: secData, error: secError } = await supabase
       .from('security_settings')
@@ -280,26 +278,108 @@ export const useSupabaseStore = () => {
     }
   };
 
-  const loadDropdownData = async () => {
-    const promises = [
-      supabase.from('categories').select('name'),
-      supabase.from('collections').select('name'),
-      supabase.from('suppliers').select('name'),
-      supabase.from('brands').select('name'),
-      supabase.from('colors').select('name'),
-      supabase.from('sizes').select('name'),
-      supabase.from('cities').select('name')
-    ];
+  const loadCategories = async () => {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('name');
 
-    const results = await Promise.all(promises);
-    
-    if (results[0].data) setCategories(results[0].data.map(item => item.name));
-    if (results[1].data) setCollections(results[1].data.map(item => item.name));
-    if (results[2].data) setSuppliers(results[2].data.map(item => item.name));
-    if (results[3].data) setBrands(results[3].data.map(item => item.name));
-    if (results[4].data) setColors(results[4].data.map(item => item.name));
-    if (results[5].data) setSizes(results[5].data.map(item => item.name));
-    if (results[6].data) setCities(results[6].data.map(item => item.name));
+    if (error) {
+      console.error('Error loading categories:', error);
+      return;
+    }
+
+    setCategories(data.map(item => item.name));
+  };
+
+  const loadCollections = async () => {
+    const { data, error } = await supabase
+      .from('collections')
+      .select('name');
+
+    if (error) {
+      console.error('Error loading collections:', error);
+      return;
+    }
+
+    setCollections(data.map(item => item.name));
+  };
+
+  const loadSuppliers = async () => {
+    const { data, error } = await supabase
+      .from('suppliers')
+      .select('name');
+
+    if (error) {
+      console.error('Error loading suppliers:', error);
+      return;
+    }
+
+    setSuppliers(data.map(item => item.name));
+  };
+
+  const loadBrands = async () => {
+    const { data, error } = await supabase
+      .from('brands')
+      .select('name');
+
+    if (error) {
+      console.error('Error loading brands:', error);
+      return;
+    }
+
+    setBrands(data.map(item => item.name));
+  };
+
+  const loadColors = async () => {
+    const { data, error } = await supabase
+      .from('colors')
+      .select('name');
+
+    if (error) {
+      console.error('Error loading colors:', error);
+      return;
+    }
+
+    setColors(data.map(item => item.name));
+  };
+
+  const loadSizes = async () => {
+    const { data, error } = await supabase
+      .from('sizes')
+      .select('name');
+
+    if (error) {
+      console.error('Error loading sizes:', error);
+      return;
+    }
+
+    setSizes(data.map(item => item.name));
+  };
+
+  const loadCities = async () => {
+    const { data, error } = await supabase
+      .from('cities')
+      .select('name');
+
+    if (error) {
+      console.error('Error loading cities:', error);
+      return;
+    }
+
+    setCities(data.map(item => item.name));
+  };
+
+  const loadImportedXmlHashes = async () => {
+    const { data, error } = await supabase
+      .from('imported_xml_hashes')
+      .select('hash');
+
+    if (error) {
+      console.error('Error loading XML hashes:', error);
+      return;
+    }
+
+    setImportedXmlHashes(data.map(item => item.hash));
   };
 
   return {
@@ -312,6 +392,8 @@ export const useSupabaseStore = () => {
     storeSettings,
     notificationSettings,
     securitySettings,
+    
+    // Dropdown data
     categories,
     collections,
     suppliers,
@@ -320,17 +402,10 @@ export const useSupabaseStore = () => {
     sizes,
     cities,
     
-    // Methods
-    loadAllData,
-    loadProducts,
-    loadCustomers,
-    loadSales,
-    loadUsers,
-    loadSellers,
-    loadSettings,
-    loadDropdownData,
+    // XML import tracking
+    importedXmlHashes,
     
-    // State setters for direct updates
+    // Setters
     setProducts,
     setCustomers,
     setSales,
@@ -345,6 +420,13 @@ export const useSupabaseStore = () => {
     setBrands,
     setColors,
     setSizes,
-    setCities
+    setCities,
+    setImportedXmlHashes,
+    
+    // Methods
+    loadAllData,
+    loadProducts,
+    loadCustomers,
+    loadSales
   };
 };

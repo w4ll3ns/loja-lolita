@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Pencil, Trash2 } from 'lucide-react';
 
 const ColorsManagementPage = () => {
-  const { colors, addColor, updateColor, removeColor } = useStore();
+  const { colors, addColor, updateColor, deleteColor } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -94,8 +93,8 @@ const ColorsManagementPage = () => {
     });
   };
 
-  const handleDelete = (index: number, colorName: string) => {
-    removeColor(index);
+  const handleDelete = (colorName: string) => {
+    deleteColor(colorName);
     
     toast({
       title: "Sucesso",
@@ -179,7 +178,7 @@ const ColorsManagementPage = () => {
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                 <AlertDialogAction
-                                  onClick={() => handleDelete(originalIndex, color)}
+                                  onClick={() => handleDelete(color)}
                                   className="bg-red-600 hover:bg-red-700"
                                 >
                                   Excluir

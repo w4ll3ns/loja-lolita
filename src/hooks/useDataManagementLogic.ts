@@ -85,7 +85,7 @@ export const useDataManagementLogic = (
     setters.setSizes(prev => prev.map(item => item === oldName ? newName : item));
   };
 
-  // Delete operations (these will need Supabase implementation later)
+  // Delete operations - Fixed to use name instead of index
   const deleteCategory = (name: string) => {
     setters.setCategories(prev => prev.filter(item => item !== name));
   };

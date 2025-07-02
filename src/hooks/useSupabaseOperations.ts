@@ -223,8 +223,26 @@ export const useSupabaseOperations = () => {
     }
   };
 
-  // Add dropdown data
-  const addDropdownItem = async (table: string, name: string) => {
+  // Add dropdown data - Fixed table name handling
+  const addDropdownItem = async (tableName: string, name: string) => {
+    // Map of valid table names to ensure type safety
+    const validTables = {
+      'categories': 'categories',
+      'collections': 'collections', 
+      'suppliers': 'suppliers',
+      'brands': 'brands',
+      'colors': 'colors',
+      'sizes': 'sizes',
+      'cities': 'cities'
+    } as const;
+
+    const table = validTables[tableName as keyof typeof validTables];
+    
+    if (!table) {
+      console.error('Invalid table name:', tableName);
+      return false;
+    }
+
     const { error } = await supabase
       .from(table)
       .insert({ name });

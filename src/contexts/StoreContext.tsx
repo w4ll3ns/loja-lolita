@@ -10,6 +10,15 @@ import { useDataManagementLogic } from '@/hooks/useDataManagementLogic';
 import { useSettingsLogic } from '@/hooks/useSettingsLogic';
 import { Product, Customer, Sale, User, Seller, DeleteLog, StoreSettings, NotificationSettings, SecuritySettings, RoleSettings } from '@/types/store';
 
+// Export types that are used in other components
+export type { Product, Customer, Sale, User } from '@/types/store';
+
+export interface SaleItem {
+  product: Product;
+  quantity: number;
+  price: number;
+}
+
 interface StoreContextType {
   // Data
   products: Product[];
@@ -38,6 +47,12 @@ interface StoreContextType {
   deleteProduct: (id: string, reason?: string, requirePassword?: boolean) => Promise<void>;
   bulkEditProducts: (ids: string[], updates: Partial<Product>) => Promise<void>;
   importProducts: (products: Omit<Product, 'id'>[]) => Promise<void>;
+  duplicateProduct: (product: Product) => Product;
+  isBarcodeTaken: (barcode: string, excludeId?: string) => boolean;
+  hasProductBeenSold: (productId: string) => boolean;
+  searchProducts: (query: string) => Product[];
+  createTemporaryProduct: (barcode: string, price: number) => Product;
+  getLowStockProducts: () => Product[];
   
   // Customer operations
   addCustomer: (customer: Omit<Customer, 'id'>) => void;
@@ -50,6 +65,7 @@ interface StoreContextType {
   addUser: (user: Omit<User, 'id' | 'createdAt'>) => void;
   updateUser: (id: string, updates: Partial<User>) => void;
   deleteUser: (id: string) => void;
+  resetUserPassword: (userId: string) => void;
   
   // Seller operations
   addSeller: (seller: Omit<Seller, 'id'>) => void;
@@ -81,6 +97,10 @@ interface StoreContextType {
   updateNotificationSettings: (settings: NotificationSettings) => void;
   updateSecuritySettings: (settings: SecuritySettings) => void;
   updateRoleSettings: (settings: RoleSettings) => void;
+  
+  // XML Import operations
+  isXmlAlreadyImported: (hash: string) => boolean;
+  markXmlAsImported: (hash: string) => void;
   
   // Utility operations
   generateUniqueId: () => string;
@@ -166,6 +186,82 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
     supabaseStore.setSecuritySettings
   );
 
+  // Helper functions
+  const duplicateProduct = (product: Product): Product => {
+    return {
+      ...product,
+      id: operations.generateUniqueId(),
+      name: `${product.name} (Cópia)`,
+      barcode: `${product.barcode}_copy_${Date.now()}`,
+      quantity: 0
+    };
+  };
+
+  const isBarcodeTaken = (barcode: string, excludeId?: string): boolean => {
+    return supabaseStore.products.some(p => p.barcode === barcode && p.id !== excludeId);
+  };
+
+  const hasProductBeenSold = (productId: string): boolean => {
+    return supabaseStore.sales.some(sale => 
+      sale.items?.some(item => item.product.id === productId)
+    );
+  };
+
+  const searchProducts = (query: string): Product[] => {
+    if (!query.trim()) return supabaseStore.products;
+    
+    const searchTerm = query.toLowerCase();
+    return supabaseStore.products.filter(product =>
+      product.name.toLowerCase().includes(searchTerm) ||
+      product.barcode.toLowerCase().includes(searchTerm) ||
+      product.category.toLowerCase().includes(searchTerm) ||
+      product.brand.toLowerCase().includes(searchTerm)
+    );
+  };
+
+  const createTemporaryProduct = (barcode: string, price: number): Product => {
+    const tempProduct: Product = {
+      id: operations.generateUniqueId(),
+      name: `Produto Temporário - ${barcode}`,
+      description: 'Produto adicionado durante a venda',
+      price: price,
+      costPrice: 0,
+      category: 'Temporário',
+      collection: 'Temporário',
+      size: 'Único',
+      supplier: 'Temporário',
+      brand: 'Temporário',
+      quantity: 999,
+      image: '',
+      barcode: barcode,
+      color: 'Não especificado',
+      gender: 'Unissex'
+    };
+    
+    // Add to products list temporarily
+    supabaseStore.setProducts(prev => [...prev, tempProduct]);
+    
+    return tempProduct;
+  };
+
+  const getLowStockProducts = (): Product[] => {
+    const lowStockThreshold = supabaseStore.notificationSettings?.lowStockQuantity || 5;
+    return supabaseStore.products.filter(product => product.quantity <= lowStockThreshold);
+  };
+
+  const isXmlAlreadyImported = (hash: string): boolean => {
+    return supabaseStore.importedXmlHashes.includes(hash);
+  };
+
+  const markXmlAsImported = (hash: string): void => {
+    supabaseStore.setImportedXmlHashes(prev => [...prev, hash]);
+  };
+
+  const resetUserPassword = (userId: string): void => {
+    // Implementation would depend on your auth system
+    console.log('Reset password for user:', userId);
+  };
+
   const contextValue: StoreContextType = {
     // Data from Supabase
     products: supabaseStore.products,
@@ -195,6 +291,17 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
     ...usersLogic,
     ...dataManagementLogic,
     ...settingsLogic,
+    
+    // Additional helper functions
+    duplicateProduct,
+    isBarcodeTaken,
+    hasProductBeenSold,
+    searchProducts,
+    createTemporaryProduct,
+    getLowStockProducts,
+    isXmlAlreadyImported,
+    markXmlAsImported,
+    resetUserPassword,
     
     // Seller operations (basic implementation)
     addSeller: (seller) => {

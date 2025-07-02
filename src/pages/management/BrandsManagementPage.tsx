@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Pencil, Trash2 } from 'lucide-react';
 
 const BrandsManagementPage = () => {
-  const { brands, addBrand, updateBrand, removeBrand } = useStore();
+  const { brands, addBrand, updateBrand, deleteBrand } = useStore();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -83,7 +83,7 @@ const BrandsManagementPage = () => {
       return;
     }
 
-    updateBrand(editingIndex!, trimmedName);
+    updateBrand(oldName, trimmedName);
     setIsEditDialogOpen(false);
     setEditingIndex(null);
     setNewBrandName('');
@@ -94,8 +94,8 @@ const BrandsManagementPage = () => {
     });
   };
 
-  const handleDelete = (index: number, brandName: string) => {
-    removeBrand(index);
+  const handleDelete = (brandName: string) => {
+    deleteBrand(brandName);
     
     toast({
       title: "Sucesso",
@@ -179,7 +179,7 @@ const BrandsManagementPage = () => {
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                                 <AlertDialogAction
-                                  onClick={() => handleDelete(originalIndex, brand)}
+                                  onClick={() => handleDelete(brand)}
                                   className="bg-red-600 hover:bg-red-700"
                                 >
                                   Excluir
