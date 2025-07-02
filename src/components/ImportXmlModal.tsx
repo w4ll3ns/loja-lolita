@@ -86,7 +86,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
         throw new Error('XML inválido');
       }
 
-      // Extrair dados do fornecedor (apenas razão social e CNPJ)
+      // Extrair dados do fornecedor
       const supplierData = extractSupplierFromXml(xmlDoc);
       setExtractedSupplier(supplierData);
 
@@ -97,18 +97,11 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
         setSupplierExists(supplierCheck.exists);
         setExistingSupplierName(supplierCheck.existingName || '');
 
-        // Preencher formulário de fornecedor se não existir (simplificado)
+        // Preencher formulário de fornecedor se não existir - SEMPRE usar razaoSocial (xNome)
         if (!supplierCheck.exists) {
-          const displayName = supplierData.nomeFantasia || supplierData.razaoSocial;
           setSupplierFormData({
-            name: displayName,
-            cnpj: supplierData.cnpj,
-            address: '',
-            city: '',
-            state: '',
-            cep: '',
-            phone: '',
-            email: ''
+            name: supplierData.razaoSocial, // SEMPRE usar razão social
+            cnpj: supplierData.cnpj
           });
         }
       }
@@ -119,7 +112,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
         if (supplierCheck.exists) {
           defaultSupplier = supplierCheck.existingName || 'A definir';
         } else {
-          defaultSupplier = supplierData.nomeFantasia || supplierData.razaoSocial;
+          defaultSupplier = supplierData.razaoSocial; // SEMPRE usar razão social
         }
       }
 
@@ -134,7 +127,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
       
       let successMessage = `${products.length} produtos extraídos do XML`;
       if (supplierData) {
-        successMessage += ` - Fornecedor: ${supplierData.nomeFantasia || supplierData.razaoSocial}`;
+        successMessage += ` - Fornecedor: ${supplierData.razaoSocial}`; // SEMPRE usar razão social
         if (supplierCheck.exists) {
           successMessage += ' (já cadastrado)';
         } else {
@@ -152,7 +145,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
         setShouldImportSupplier(true);
         toast({
           title: "Novo fornecedor encontrado",
-          description: `Fornecedor "${supplierData.nomeFantasia || supplierData.razaoSocial}" pode ser cadastrado automaticamente.`,
+          description: `Fornecedor "${supplierData.razaoSocial}" pode ser cadastrado automaticamente.`, // SEMPRE usar razão social
         });
       }
     } catch (error) {
@@ -287,13 +280,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
     setNewCategoryName('');
     setSupplierFormData({
       name: '',
-      cnpj: '',
-      address: '',
-      city: '',
-      state: '',
-      cep: '',
-      phone: '',
-      email: ''
+      cnpj: ''
     });
     onClose();
   };

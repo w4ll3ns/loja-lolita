@@ -25,6 +25,7 @@ export const extractSupplierFromXml = (xmlDoc: Document): XmlSupplier | null => 
   if (!emit) return null;
 
   const cnpj = emit.getElementsByTagName('CNPJ')[0]?.textContent || '';
+  // SEMPRE usar xNome para razão social
   const razaoSocial = emit.getElementsByTagName('xNome')[0]?.textContent || '';
   const nomeFantasia = emit.getElementsByTagName('xFant')[0]?.textContent || '';
 
