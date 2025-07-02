@@ -14,22 +14,33 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [showSignup, setShowSignup] = useState(false);
   const [localLoading, setLocalLoading] = useState(false);
-  const { login, isLoading } = useAuth();
+  const { login } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    setLocalLoading(true);
-    const { success, error } = await login(email, password);
-    setLocalLoading(false);
+    if (localLoading) return; // Prevent double submission
     
-    if (!success) {
+    setLocalLoading(true);
+    try {
+      const { success, error } = await login(email, password);
+      
+      if (!success) {
+        toast({
+          title: "Erro no login",
+          description: error || "Email ou senha incorretos",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
         title: "Erro no login",
-        description: error || "Email ou senha incorretos",
+        description: "Erro interno no login",
         variant: "destructive",
       });
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -84,9 +95,9 @@ const LoginPage = () => {
             <Button 
               type="submit" 
               className="w-full h-12 bg-store-blue-600 hover:bg-store-blue-700 text-base font-medium transition-colors"
-              disabled={localLoading || isLoading}
+              disabled={localLoading}
             >
-              {(localLoading || isLoading) ? "Entrando..." : "Entrar"}
+              {localLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
           
