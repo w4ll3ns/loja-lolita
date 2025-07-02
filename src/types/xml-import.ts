@@ -42,5 +42,5 @@ export interface XmlSupplier {
 
 export interface SupplierCheckResult {
   exists: boolean;
-  existingName?: string;
+  existingName: string | undefined;
 }

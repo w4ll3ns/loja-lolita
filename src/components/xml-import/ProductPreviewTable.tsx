@@ -20,7 +20,7 @@ interface ProductPreviewTableProps {
   onPriceChange: (index: number, field: 'editableCostPrice' | 'editableSalePrice', value: string) => void;
   onAddNewCategory: (index: number) => void;
   showNewCategoryInput: { [key: number]: boolean };
-  setShowNewCategoryInput: (value: { [key: number]: boolean }) => void;
+  setShowNewCategoryInput: React.Dispatch<React.SetStateAction<{ [key: number]: boolean }>>;
   newCategoryName: string;
   setNewCategoryName: (value: string) => void;
 }
