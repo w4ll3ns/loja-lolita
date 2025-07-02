@@ -10,6 +10,7 @@ import { generateNfeHash } from '@/utils/xmlHasher';
 
 export const useXmlImport = () => {
   const [xmlFile, setXmlFile] = useState<File | null>(null);
+  const [xmlHash, setXmlHash] = useState<string>('');
   const [extractedProducts, setExtractedProducts] = useState<XmlProduct[]>([]);
   const [extractedSupplier, setExtractedSupplier] = useState<XmlSupplier | null>(null);
   const [supplierExists, setSupplierExists] = useState<boolean>(false);
@@ -48,9 +49,10 @@ export const useXmlImport = () => {
         throw new Error('XML inválido');
       }
 
-      const xmlHash = generateNfeHash(xmlDoc);
+      const generatedXmlHash = generateNfeHash(xmlDoc);
+      setXmlHash(generatedXmlHash);
       
-      if (isXmlAlreadyImported(xmlHash)) {
+      if (isXmlAlreadyImported(generatedXmlHash)) {
         toast({
           title: "XML já importado",
           description: "Este arquivo XML já foi importado anteriormente. Não é possível importar o mesmo XML novamente para evitar duplicidade de produtos.",
@@ -123,8 +125,6 @@ export const useXmlImport = () => {
           description: `Fornecedor "${supplierData.razaoSocial}" pode ser cadastrado automaticamente.`,
         });
       }
-
-      markXmlAsImported(xmlHash);
       
     } catch (error) {
       toast({
@@ -164,8 +164,15 @@ export const useXmlImport = () => {
     });
   };
 
+  const markAsImported = () => {
+    if (xmlHash) {
+      markXmlAsImported(xmlHash);
+    }
+  };
+
   const resetState = () => {
     setXmlFile(null);
+    setXmlHash('');
     setExtractedProducts([]);
     setExtractedSupplier(null);
     setSupplierExists(false);
@@ -210,6 +217,7 @@ export const useXmlImport = () => {
     processXmlFile,
     handleRegisterSupplier,
     resetState,
-    addCategory
+    addCategory,
+    markAsImported
   };
 };

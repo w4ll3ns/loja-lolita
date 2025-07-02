@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileText } from 'lucide-react';
@@ -41,7 +42,8 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
     processXmlFile,
     handleRegisterSupplier,
     resetState,
-    addCategory
+    addCategory,
+    markAsImported
   } = useXmlImport();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,8 +127,23 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
       gender: p.editableGender
     }));
 
-    onImport(productsToImport);
-    handleClose();
+    // Só marca como importado APÓS importar os produtos com sucesso
+    try {
+      onImport(productsToImport);
+      markAsImported(); // Marca como importado apenas quando a importação é bem-sucedida
+      handleClose();
+      
+      toast({
+        title: "Importação concluída",
+        description: `${selectedProducts.length} produtos foram importados com sucesso`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro na importação",
+        description: "Ocorreu um erro ao importar os produtos",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleClose = () => {
