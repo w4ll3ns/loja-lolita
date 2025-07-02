@@ -30,22 +30,24 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-store-blue-50 to-store-green-50 p-4">
-      <Card className="w-full max-w-md animate-fade-in">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 p-2 bg-store-blue-100 rounded-full w-fit">
+      <Card className="w-full max-w-sm sm:max-w-md animate-fade-in">
+        <CardHeader className="text-center space-y-4">
+          <div className="mx-auto p-3 bg-store-blue-100 rounded-full w-fit">
             <ShoppingCart className="h-8 w-8 text-store-blue-600" />
           </div>
-          <CardTitle className="text-2xl font-bold gradient-bg bg-clip-text text-transparent">
-            Sistema de Vendas
-          </CardTitle>
-          <CardDescription>
-            Faça login para acessar o sistema
-          </CardDescription>
+          <div className="space-y-2">
+            <CardTitle className="text-2xl sm:text-3xl font-bold gradient-bg bg-clip-text text-transparent">
+              Sistema de Vendas
+            </CardTitle>
+            <CardDescription className="text-sm sm:text-base">
+              Faça login para acessar o sistema
+            </CardDescription>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -53,10 +55,11 @@ const LoginPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-11"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
               <Input
                 id="password"
                 type="password"
@@ -64,25 +67,42 @@ const LoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="h-11"
               />
             </div>
             <Button 
               type="submit" 
-              className="w-full bg-store-blue-600 hover:bg-store-blue-700"
+              className="w-full h-11 bg-store-blue-600 hover:bg-store-blue-700 text-base font-medium"
               disabled={isLoading}
             >
               {isLoading ? "Entrando..." : "Entrar"}
             </Button>
           </form>
           
-          <div className="mt-4 p-3 bg-muted rounded-lg text-sm">
-            <p className="font-medium mb-2">Contas de teste:</p>
-            <div className="space-y-1 text-xs">
-              <p><strong>Admin:</strong> admin@loja.com</p>
-              <p><strong>Vendedor:</strong> vendedor@loja.com</p>
-              <p><strong>Caixa:</strong> caixa@loja.com</p>
-              <p><strong>Consultivo:</strong> consulta@loja.com</p>
-              <p className="text-muted-foreground mt-2">Senha para todos: 123456</p>
+          <div className="p-4 bg-muted/50 rounded-lg border">
+            <p className="font-semibold mb-3 text-sm">Contas de teste:</p>
+            <div className="grid grid-cols-1 gap-2 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="font-medium text-muted-foreground">Admin:</span>
+                <span className="font-mono">admin@loja.com</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-medium text-muted-foreground">Vendedor:</span>
+                <span className="font-mono">vendedor@loja.com</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-medium text-muted-foreground">Caixa:</span>
+                <span className="font-mono">caixa@loja.com</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-medium text-muted-foreground">Consultivo:</span>
+                <span className="font-mono">consulta@loja.com</span>
+              </div>
+              <div className="mt-2 pt-2 border-t border-muted-foreground/20">
+                <p className="text-center text-muted-foreground">
+                  <span className="font-medium">Senha para todos:</span> 123456
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>
