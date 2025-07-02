@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Store, Users, Bell, Shield } from 'lucide-react';
+import { Settings, Store, Users, Bell, Shield, UserCog } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const SettingsPage = () => {
@@ -21,6 +21,13 @@ const SettingsPage = () => {
       icon: Users,
       path: '/settings/users',
       content: 'Adicione, edite ou remova usuários do sistema e configure suas permissões.'
+    },
+    {
+      title: 'Perfis e Permissões',
+      description: 'Configurar permissões por perfil',
+      icon: UserCog,
+      path: '/settings/roles',
+      content: 'Defina o que cada perfil de usuário pode fazer no sistema.'
     },
     {
       title: 'Notificações',

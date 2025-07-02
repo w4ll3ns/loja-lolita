@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ProfitMarginDisplay } from '@/components/ProfitMarginDisplay';
 import { Pencil, Copy, Trash2 } from 'lucide-react';
 import { Product } from '@/types/store';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProductTableProps {
   products: Product[];
@@ -28,6 +29,8 @@ export const ProductTable: React.FC<ProductTableProps> = ({
   onSelectProduct,
   onSelectAll
 }) => {
+  const { user } = useAuth();
+  const canDelete = user?.role === 'admin';
   const allSelected = products.length > 0 && selectedProducts.length === products.length;
   const someSelected = selectedProducts.length > 0 && selectedProducts.length < products.length;
 
@@ -128,15 +131,17 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(product)}
-                        className="text-gray-500 hover:text-red-600"
-                        title="Excluir produto"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {canDelete && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDelete(product)}
+                          className="text-gray-500 hover:text-red-600"
+                          title="Excluir produto"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 )}
@@ -252,15 +257,17 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                     <Copy className="h-4 w-4 mr-1" />
                     Duplicar
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onDelete(product)}
-                    className="flex-1 text-red-600 border-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Excluir
-                  </Button>
+                  {canDelete && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onDelete(product)}
+                      className="flex-1 text-red-600 border-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Excluir
+                    </Button>
+                  )}
                 </div>
               )}
             </div>

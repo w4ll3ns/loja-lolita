@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ProfitMarginDisplay } from '@/components/ProfitMarginDisplay';
 import { Pencil, Copy, Trash2 } from 'lucide-react';
 import { Product } from '@/types/store';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProductCardProps {
   product: Product;
@@ -26,6 +27,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   isSelected = false,
   onSelect
 }) => {
+  const { user } = useAuth();
+  const canDelete = user?.role === 'admin';
+
   return (
     <Card className="card-hover relative h-full flex flex-col">
       {canEdit && onSelect && (
@@ -61,15 +65,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 >
                   <Copy className="h-3 w-3 md:h-4 md:w-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDelete(product)}
-                  className="text-gray-500 hover:text-red-600 p-1 h-8 w-8"
-                  title="Excluir produto"
-                >
-                  <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
-                </Button>
+                {canDelete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete(product)}
+                    className="text-gray-500 hover:text-red-600 p-1 h-8 w-8"
+                    title="Excluir produto"
+                  >
+                    <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
+                  </Button>
+                )}
               </>
             )}
           </div>

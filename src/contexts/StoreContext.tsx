@@ -9,7 +9,8 @@ import {
   DeleteLog,
   StoreSettings,
   NotificationSettings,
-  SecuritySettings
+  SecuritySettings,
+  RoleSettings
 } from '@/types/store';
 import {
   initialProducts,
@@ -25,7 +26,8 @@ import {
   initialBrands,
   initialCities,
   initialColors,
-  initialSizes
+  initialSizes,
+  initialRoleSettings
 } from '@/data/initialData';
 import { useStoreOperations } from '@/hooks/useStoreOperations';
 
@@ -40,7 +42,8 @@ export type {
   DeleteLog,
   StoreSettings,
   NotificationSettings,
-  SecuritySettings
+  SecuritySettings,
+  RoleSettings
 } from '@/types/store';
 
 interface StoreContextType {
@@ -61,6 +64,7 @@ interface StoreContextType {
   notificationSettings: NotificationSettings;
   securitySettings: SecuritySettings;
   importedXmlHashes: string[];
+  roleSettings: RoleSettings;
   addProduct: (product: Omit<Product, 'id'>) => void;
   updateProduct: (id: string, product: Partial<Product>) => void;
   deleteProduct: (id: string, userId: string, userName: string, reason?: string) => void;
@@ -101,6 +105,7 @@ interface StoreContextType {
   updateStoreSettings: (settings: Partial<StoreSettings>) => void;
   updateNotificationSettings: (settings: Partial<NotificationSettings>) => void;
   updateSecuritySettings: (settings: Partial<SecuritySettings>) => void;
+  updateRoleSettings: (settings: RoleSettings) => void;
   getLowStockProducts: () => Product[];
   isXmlAlreadyImported: (xmlHash: string) => boolean;
   markXmlAsImported: (xmlHash: string) => void;
@@ -126,6 +131,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(initialNotificationSettings);
   const [securitySettings, setSecuritySettings] = useState<SecuritySettings>(initialSecuritySettings);
   const [importedXmlHashes, setImportedXmlHashes] = useState<string[]>([]);
+  const [roleSettings, setRoleSettings] = useState<RoleSettings>(initialRoleSettings);
 
   const operations = useStoreOperations();
 
@@ -325,6 +331,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     console.log('Configurações de segurança atualizadas:', settings);
   };
 
+  const updateRoleSettings = (settings: RoleSettings) => {
+    setRoleSettings(settings);
+    console.log('Configurações de perfis atualizadas:', settings);
+  };
+
   const isXmlAlreadyImported = (xmlHash: string): boolean => {
     return importedXmlHashes.includes(xmlHash);
   };
@@ -352,6 +363,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       notificationSettings,
       securitySettings,
       importedXmlHashes,
+      roleSettings,
       addProduct,
       updateProduct,
       deleteProduct,
@@ -392,6 +404,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updateStoreSettings,
       updateNotificationSettings,
       updateSecuritySettings,
+      updateRoleSettings,
       getLowStockProducts: () => operations.getLowStockProducts(products, notificationSettings.lowStockQuantity),
       isXmlAlreadyImported,
       markXmlAsImported

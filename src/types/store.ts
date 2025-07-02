@@ -108,3 +108,30 @@ export interface SecuritySettings {
   multipleLogins: boolean;
   maxSessions: number;
 }
+
+export interface RolePermissions {
+  canCreateProducts: boolean;
+  canEditProducts: boolean;
+  canDeleteProducts: boolean;
+  canViewProducts: boolean;
+  canCreateCustomers: boolean;
+  canEditCustomers: boolean;
+  canDeleteCustomers: boolean;
+  canViewCustomers: boolean;
+  canCreateSales: boolean;
+  canEditSales: boolean;
+  canDeleteSales: boolean;
+  canViewSales: boolean;
+  canViewReports: boolean;
+  canManageUsers: boolean;
+  canManageSettings: boolean;
+  canImportProducts: boolean;
+  canExportData: boolean;
+}
+
+export interface RoleSettings {
+  admin: RolePermissions;
+  vendedor: RolePermissions;
+  caixa: RolePermissions;
+  consultivo: RolePermissions;
+}
