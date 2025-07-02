@@ -26,6 +26,7 @@ import SizesManagementPage from '@/pages/management/SizesManagementPage';
 import SettingsPage from '@/pages/SettingsPage';
 import StoreSettingsPage from '@/pages/settings/StoreSettingsPage';
 import UsersSettingsPage from '@/pages/settings/UsersSettingsPage';
+import RolesSettingsPage from '@/pages/settings/RolesSettingsPage';
 import NotificationsSettingsPage from '@/pages/settings/NotificationsSettingsPage';
 import SecuritySettingsPage from '@/pages/settings/SecuritySettingsPage';
 import NotFound from '@/pages/NotFound';
@@ -170,6 +171,14 @@ function AppRoutes() {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <UsersSettingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings/roles" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <RolesSettingsPage />
                 </ProtectedRoute>
               } 
             />

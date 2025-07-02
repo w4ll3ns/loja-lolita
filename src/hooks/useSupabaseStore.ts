@@ -171,7 +171,7 @@ export const useSupabaseStore = () => {
 
   const loadUsers = async () => {
     const { data, error } = await supabase
-      .from('users')
+      .from('profiles')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -180,14 +180,14 @@ export const useSupabaseStore = () => {
       return;
     }
 
-    const formattedUsers: User[] = data.map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role as 'admin' | 'vendedor' | 'caixa' | 'consultivo',
-      active: user.active,
-      createdAt: new Date(user.created_at)
+    const formattedUsers: User[] = data.map(profile => ({
+      id: profile.user_id,
+      name: profile.name,
+      email: '', // Email não está na tabela profiles, seria necessário buscar do auth.users se necessário
+      phone: profile.phone,
+      role: profile.role as 'admin' | 'vendedor' | 'caixa' | 'consultivo',
+      active: profile.active,
+      createdAt: new Date(profile.created_at)
     }));
 
     setUsers(formattedUsers);
