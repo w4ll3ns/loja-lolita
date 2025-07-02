@@ -63,6 +63,7 @@ const ProductsPage = () => {
     
     // Data
     filteredProducts,
+    stockTotals,
     categories,
     collections,
     suppliers,
@@ -231,6 +232,30 @@ const ProductsPage = () => {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
       />
+
+      {/* Stock Totals */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="bg-background border rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Custo em Estoque</p>
+              <p className="text-2xl font-bold text-foreground">
+                R$ {stockTotals.totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-background border rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Valor de Venda em Estoque</p>
+              <p className="text-2xl font-bold text-foreground">
+                R$ {stockTotals.totalSaleValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <ProductsPageContent
         filteredProducts={filteredProducts}

@@ -83,6 +83,15 @@ export const useProductsPage = () => {
     product.barcode.includes(searchTerm)
   );
 
+  // Calculate totals for products in stock
+  const stockTotals = filteredProducts.reduce((acc, product) => {
+    if (product.quantity > 0) {
+      acc.totalCost += product.costPrice * product.quantity;
+      acc.totalSaleValue += product.price * product.quantity;
+    }
+    return acc;
+  }, { totalCost: 0, totalSaleValue: 0 });
+
   // Selection handlers
   const handleSelectProduct = (productId: string, selected: boolean) => {
     setSelectedProducts(prev => 
@@ -415,6 +424,7 @@ export const useProductsPage = () => {
     
     // Data
     filteredProducts,
+    stockTotals,
     categories,
     collections,
     suppliers,
