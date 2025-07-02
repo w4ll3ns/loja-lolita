@@ -17,12 +17,12 @@ const LoginPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const success = await login(email, password);
+    const { success, error } = await login(email, password);
     
     if (!success) {
       toast({
         title: "Erro no login",
-        description: "Email ou senha incorretos",
+        description: error || "Email ou senha incorretos",
         variant: "destructive",
       });
     }

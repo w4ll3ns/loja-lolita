@@ -291,6 +291,39 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          phone: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       role_permissions: {
         Row: {
           can_create_customers: boolean

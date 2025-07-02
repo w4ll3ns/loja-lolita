@@ -1,6 +1,7 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export type UserRole = 'admin' | 'vendedor' | 'caixa' | 'consultivo';
 
@@ -13,77 +14,90 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  session: Session | null;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   isLoading: boolean;
   isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Usuários de exemplo para demonstração (mantidos para compatibilidade)
-const mockUsers: User[] = [
-  { id: '1', name: 'João Admin', email: 'admin@loja.com', role: 'admin' },
-  { id: '2', name: 'Maria Vendedora', email: 'vendedor@loja.com', role: 'vendedor' },
-  { id: '3', name: 'Pedro Caixa', email: 'caixa@loja.com', role: 'caixa' },
-  { id: '4', name: 'Ana Consultiva', email: 'consulta@loja.com', role: 'consultivo' },
-];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
-    
-    try {
-      // Primeiro tenta encontrar o usuário no banco Supabase
-      const { data: supabaseUser, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .eq('active', true)
-        .single();
-
-      if (!error && supabaseUser) {
-        // Para usuários do Supabase, aceita senha padrão "123456" por enquanto
-        if (password === '123456') {
-          setUser({
-            id: supabaseUser.id,
-            name: supabaseUser.name,
-            email: supabaseUser.email,
-            role: supabaseUser.role
-          });
-          setIsLoading(false);
-          return true;
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        
+        if (session?.user) {
+          // Get user profile from profiles table
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single();
+            
+          if (profile) {
+            setUser({
+              id: profile.user_id,
+              name: profile.name,
+              email: session.user.email || '',
+              role: profile.role
+            });
+          }
+        } else {
+          setUser(null);
         }
-      }
-
-      // Fallback para usuários mock (para compatibilidade)
-      const foundUser = mockUsers.find(u => u.email === email);
-      if (foundUser && password === '123456') {
-        setUser(foundUser);
+        
         setIsLoading(false);
-        return true;
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      // onAuthStateChange will handle this
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
       }
 
-      setIsLoading(false);
-      return false;
+      return { success: true };
     } catch (error) {
       console.error('Erro no login:', error);
+      return { success: false, error: 'Erro interno no login' };
+    } finally {
       setIsLoading(false);
-      return false;
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
+    setSession(null);
   };
 
   const isAuthenticated = user !== null;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, session, login, logout, isLoading, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );
