@@ -34,17 +34,17 @@ export const SessionControlSection = ({ settings, onSettingChange }: SessionCont
           </div>
           <Switch 
             id="multipleLogins"
-            checked={settings.multipleLogins}
-            onCheckedChange={(checked) => onSettingChange('multipleLogins', checked)}
+            checked={settings.multiple_logins}
+            onCheckedChange={(checked) => onSettingChange('multiple_logins', checked)}
           />
         </div>
 
-        {settings.multipleLogins && (
+        {settings.multiple_logins && (
           <div className="space-y-2">
             <Label htmlFor="maxSessions">Máximo de sessões simultâneas</Label>
             <Select 
-              value={settings.maxSessions.toString()} 
-              onValueChange={(value) => onSettingChange('maxSessions', value === 'unlimited' ? 999 : parseInt(value))}
+              value={settings.max_sessions.toString()} 
+              onValueChange={(value) => onSettingChange('max_sessions', value === 'unlimited' ? 999 : parseInt(value))}
             >
               <SelectTrigger className="w-32">
                 <SelectValue />

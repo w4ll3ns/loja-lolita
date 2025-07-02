@@ -34,8 +34,8 @@ export const AuthenticationSection = ({ settings, onSettingChange }: Authenticat
           </div>
           <Switch 
             id="twoFactorAuth"
-            checked={settings.twoFactorAuth}
-            onCheckedChange={(checked) => onSettingChange('twoFactorAuth', checked)}
+            checked={settings.two_factor_auth}
+            onCheckedChange={(checked) => onSettingChange('two_factor_auth', checked)}
           />
         </div>
 
@@ -44,8 +44,8 @@ export const AuthenticationSection = ({ settings, onSettingChange }: Authenticat
           <Input
             id="sessionTimeout"
             type="number"
-            value={settings.sessionTimeout}
-            onChange={(e) => onSettingChange('sessionTimeout', parseInt(e.target.value) || 480)}
+            value={settings.session_timeout}
+            onChange={(e) => onSettingChange('session_timeout', parseInt(e.target.value) || 480)}
             min="15"
             max="1440"
             placeholder="480"

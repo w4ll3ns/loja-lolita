@@ -33,8 +33,8 @@ export const NotificationChannelsSection = ({ settings, onSettingChange }: Notif
           </div>
           <Switch 
             id="whatsappNotifications"
-            checked={settings.whatsappNotifications}
-            onCheckedChange={(checked) => onSettingChange('whatsappNotifications', checked)}
+            checked={settings.whatsapp_notifications}
+            onCheckedChange={(checked) => onSettingChange('whatsapp_notifications', checked)}
           />
         </div>
 
@@ -47,8 +47,8 @@ export const NotificationChannelsSection = ({ settings, onSettingChange }: Notif
           </div>
           <Switch 
             id="emailNotifications"
-            checked={settings.emailNotifications}
-            onCheckedChange={(checked) => onSettingChange('emailNotifications', checked)}
+            checked={settings.email_notifications}
+            onCheckedChange={(checked) => onSettingChange('email_notifications', checked)}
           />
         </div>
       </CardContent>

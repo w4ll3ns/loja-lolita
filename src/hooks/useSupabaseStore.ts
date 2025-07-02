@@ -245,14 +245,14 @@ export const useSupabaseStore = () => {
 
     if (!notifError && notifData) {
       setNotificationSettings({
-        lowStockAlert: notifData.low_stock_alert,
-        lowStockQuantity: notifData.low_stock_quantity,
-        thankYouMessage: notifData.thank_you_message,
-        birthdayMessage: notifData.birthday_message,
-        whatsappNotifications: notifData.whatsapp_notifications,
-        emailNotifications: notifData.email_notifications,
-        alertFrequency: notifData.alert_frequency as 'realtime' | 'daily' | 'weekly',
-        alertTime: notifData.alert_time
+        low_stock_alert: notifData.low_stock_alert,
+        low_stock_quantity: notifData.low_stock_quantity,
+        thank_you_message: notifData.thank_you_message,
+        birthday_message: notifData.birthday_message,
+        whatsapp_notifications: notifData.whatsapp_notifications,
+        email_notifications: notifData.email_notifications,
+        alert_frequency: notifData.alert_frequency as 'realtime' | 'daily' | 'weekly',
+        alert_time: notifData.alert_time
       });
     }
   };
@@ -266,14 +266,14 @@ export const useSupabaseStore = () => {
 
     if (!secError && secData) {
       setSecuritySettings({
-        minPasswordLength: secData.min_password_length,
-        passwordExpiration: secData.password_expiration,
-        requireSpecialChars: secData.require_special_chars,
-        requireNumbers: secData.require_numbers,
-        twoFactorAuth: secData.two_factor_auth,
-        sessionTimeout: secData.session_timeout,
-        multipleLogins: secData.multiple_logins,
-        maxSessions: secData.max_sessions
+        min_password_length: secData.min_password_length,
+        password_expiration: secData.password_expiration,
+        require_special_chars: secData.require_special_chars,
+        require_numbers: secData.require_numbers,
+        two_factor_auth: secData.two_factor_auth,
+        session_timeout: secData.session_timeout,
+        multiple_logins: secData.multiple_logins,
+        max_sessions: secData.max_sessions
       });
     }
   };

@@ -31,8 +31,8 @@ export const PasswordPoliciesSection = ({ settings, onSettingChange }: PasswordP
             <Input
               id="minPasswordLength"
               type="number"
-              value={settings.minPasswordLength}
-              onChange={(e) => onSettingChange('minPasswordLength', parseInt(e.target.value) || 6)}
+              value={settings.min_password_length}
+              onChange={(e) => onSettingChange('min_password_length', parseInt(e.target.value) || 6)}
               min="6"
               max="20"
             />
@@ -43,8 +43,8 @@ export const PasswordPoliciesSection = ({ settings, onSettingChange }: PasswordP
             <Input
               id="passwordExpiration"
               type="number"
-              value={settings.passwordExpiration}
-              onChange={(e) => onSettingChange('passwordExpiration', parseInt(e.target.value) || 90)}
+              value={settings.password_expiration}
+              onChange={(e) => onSettingChange('password_expiration', parseInt(e.target.value) || 90)}
               min="30"
               max="365"
               placeholder="90"
@@ -62,8 +62,8 @@ export const PasswordPoliciesSection = ({ settings, onSettingChange }: PasswordP
             </div>
             <Switch 
               id="requireNumbers"
-              checked={settings.requireNumbers}
-              onCheckedChange={(checked) => onSettingChange('requireNumbers', checked)}
+              checked={settings.require_numbers}
+              onCheckedChange={(checked) => onSettingChange('require_numbers', checked)}
             />
           </div>
 
@@ -76,8 +76,8 @@ export const PasswordPoliciesSection = ({ settings, onSettingChange }: PasswordP
             </div>
             <Switch 
               id="requireSpecialChars"
-              checked={settings.requireSpecialChars}
-              onCheckedChange={(checked) => onSettingChange('requireSpecialChars', checked)}
+              checked={settings.require_special_chars}
+              onCheckedChange={(checked) => onSettingChange('require_special_chars', checked)}
             />
           </div>
         </div>

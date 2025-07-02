@@ -225,25 +225,25 @@ export const initialStoreSettings: StoreSettings = {
 };
 
 export const initialNotificationSettings: NotificationSettings = {
-  lowStockAlert: true,
-  lowStockQuantity: 5,
-  thankYouMessage: true,
-  birthdayMessage: false,
-  whatsappNotifications: true,
-  emailNotifications: false,
-  alertFrequency: 'daily',
-  alertTime: '09:00'
+  low_stock_alert: true,
+  low_stock_quantity: 5,
+  thank_you_message: true,
+  birthday_message: false,
+  whatsapp_notifications: true,
+  email_notifications: false,
+  alert_frequency: 'daily',
+  alert_time: '09:00'
 };
 
 export const initialSecuritySettings: SecuritySettings = {
-  minPasswordLength: 6,
-  passwordExpiration: 90,
-  requireSpecialChars: false,
-  requireNumbers: true,
-  twoFactorAuth: false,
-  sessionTimeout: 480,
-  multipleLogins: true,
-  maxSessions: 3
+  min_password_length: 6,
+  password_expiration: 90,
+  require_special_chars: false,
+  require_numbers: true,
+  two_factor_auth: false,
+  session_timeout: 480,
+  multiple_logins: true,
+  max_sessions: 3
 };
 
 export const initialRoleSettings: RoleSettings = {

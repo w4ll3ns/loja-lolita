@@ -23,9 +23,9 @@ export const FrequencyTimingSection = ({ settings, onSettingChange }: FrequencyT
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="alertFrequency">Frequência dos alertas</Label>
-          <Select 
-            value={settings.alertFrequency} 
-            onValueChange={(value: 'realtime' | 'daily' | 'weekly') => onSettingChange('alertFrequency', value)}
+            <Select 
+              value={settings.alert_frequency} 
+              onValueChange={(value: 'realtime' | 'daily' | 'weekly') => onSettingChange('alert_frequency', value)}
           >
             <SelectTrigger>
               <SelectValue />
@@ -38,14 +38,14 @@ export const FrequencyTimingSection = ({ settings, onSettingChange }: FrequencyT
           </Select>
         </div>
 
-        {settings.alertFrequency !== 'realtime' && (
+        {settings.alert_frequency !== 'realtime' && (
           <div className="space-y-2">
             <Label htmlFor="alertTime">Horário dos alertas</Label>
             <Input
               id="alertTime"
               type="time"
-              value={settings.alertTime}
-              onChange={(e) => onSettingChange('alertTime', e.target.value)}
+              value={settings.alert_time}
+              onChange={(e) => onSettingChange('alert_time', e.target.value)}
               className="w-32"
             />
           </div>

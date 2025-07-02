@@ -88,25 +88,25 @@ export interface StoreSettings {
 }
 
 export interface NotificationSettings {
-  lowStockAlert: boolean;
-  lowStockQuantity: number;
-  thankYouMessage: boolean;
-  birthdayMessage: boolean;
-  whatsappNotifications: boolean;
-  emailNotifications: boolean;
-  alertFrequency: 'realtime' | 'daily' | 'weekly';
-  alertTime: string;
+  low_stock_alert: boolean;
+  low_stock_quantity: number;
+  thank_you_message: boolean;
+  birthday_message: boolean;
+  whatsapp_notifications: boolean;
+  email_notifications: boolean;
+  alert_frequency: 'realtime' | 'daily' | 'weekly';
+  alert_time: string;
 }
 
 export interface SecuritySettings {
-  minPasswordLength: number;
-  passwordExpiration: number;
-  requireSpecialChars: boolean;
-  requireNumbers: boolean;
-  twoFactorAuth: boolean;
-  sessionTimeout: number;
-  multipleLogins: boolean;
-  maxSessions: number;
+  min_password_length: number;
+  password_expiration: number;
+  require_special_chars: boolean;
+  require_numbers: boolean;
+  two_factor_auth: boolean;
+  session_timeout: number;
+  multiple_logins: boolean;
+  max_sessions: number;
 }
 
 export interface RolePermissions {

@@ -256,7 +256,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   };
 
   const getLowStockProducts = (): Product[] => {
-    const lowStockThreshold = supabaseStore.notificationSettings?.lowStockQuantity || 5;
+    const lowStockThreshold = supabaseStore.notificationSettings?.low_stock_quantity || 5;
     return supabaseStore.products.filter(product => product.quantity <= lowStockThreshold);
   };
 

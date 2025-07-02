@@ -33,8 +33,8 @@ export const AutomaticMessagesSection = ({ settings, onSettingChange }: Automati
           </div>
           <Switch 
             id="thankYouMessage"
-            checked={settings.thankYouMessage}
-            onCheckedChange={(checked) => onSettingChange('thankYouMessage', checked)}
+            checked={settings.thank_you_message}
+            onCheckedChange={(checked) => onSettingChange('thank_you_message', checked)}
           />
         </div>
 
@@ -47,8 +47,8 @@ export const AutomaticMessagesSection = ({ settings, onSettingChange }: Automati
           </div>
           <Switch 
             id="birthdayMessage"
-            checked={settings.birthdayMessage}
-            onCheckedChange={(checked) => onSettingChange('birthdayMessage', checked)}
+            checked={settings.birthday_message}
+            onCheckedChange={(checked) => onSettingChange('birthday_message', checked)}
           />
         </div>
       </CardContent>

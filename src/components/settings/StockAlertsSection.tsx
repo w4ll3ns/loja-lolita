@@ -34,20 +34,20 @@ export const StockAlertsSection = ({ settings, onSettingChange }: StockAlertsSec
           </div>
           <Switch 
             id="lowStockAlert"
-            checked={settings.lowStockAlert}
-            onCheckedChange={(checked) => onSettingChange('lowStockAlert', checked)}
+            checked={settings.low_stock_alert}
+            onCheckedChange={(checked) => onSettingChange('low_stock_alert', checked)}
           />
         </div>
 
-        {settings.lowStockAlert && (
+        {settings.low_stock_alert && (
           <div className="space-y-2">
             <Label htmlFor="lowStockQuantity">Quantidade mínima para alerta</Label>
             <Input
               id="lowStockQuantity"
               type="number"
               min="0"
-              value={settings.lowStockQuantity}
-              onChange={(e) => onSettingChange('lowStockQuantity', parseInt(e.target.value) || 0)}
+              value={settings.low_stock_quantity}
+              onChange={(e) => onSettingChange('low_stock_quantity', parseInt(e.target.value) || 0)}
               placeholder="5"
               className="w-24"
             />
