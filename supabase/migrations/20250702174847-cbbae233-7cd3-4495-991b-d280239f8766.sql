@@ -1,0 +1,3 @@
+-- Atualizar configurações de auth para não exigir confirmação de email
+-- Nota: Isso seria feito normalmente via dashboard do Supabase
+-- Para desenvolvimento, vamos assumir que os usuários são válidos
