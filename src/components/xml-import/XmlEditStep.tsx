@@ -10,6 +10,7 @@ interface XmlEditStepProps {
   suppliers: string[];
   brands: string[];
   colors: string[];
+  sizes: string[];
   onUpdateField: (field: keyof XmlProduct, value: any) => void;
   onBack: () => void;
   onSave: () => void;
@@ -21,11 +22,11 @@ export const XmlEditStep: React.FC<XmlEditStepProps> = ({
   suppliers,
   brands,
   colors,
+  sizes,
   onUpdateField,
   onBack,
   onSave
 }) => {
-  const sizes = ['PP', 'P', 'M', 'G', 'GG', '34', '36', '38', '40', '42', '44', '46', '48', '50', '52'];
   const genders = ['Masculino', 'Feminino', 'Unissex'];
 
   return (
