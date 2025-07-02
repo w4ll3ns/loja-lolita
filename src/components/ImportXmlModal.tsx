@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -470,7 +471,7 @@ export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose,
                       <Checkbox
                         id="importSupplier"
                         checked={shouldImportSupplier}
-                        onCheckedChange={setShouldImportSupplier}
+                        onCheckedChange={(checked) => setShouldImportSupplier(checked === true)}
                       />
                       <Label htmlFor="importSupplier" className="text-blue-700 font-medium">
                         Importar este fornecedor para o sistema
