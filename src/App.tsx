@@ -33,42 +33,10 @@ import SecuritySettingsPage from '@/pages/settings/SecuritySettingsPage';
 import NotFound from '@/pages/NotFound';
 import './App.css';
 
-// Componente de teste simples
-function TestComponent() {
-  return (
-    <div style={{ 
-      padding: '20px', 
-      backgroundColor: '#f0f0f0', 
-      color: '#333',
-      fontFamily: 'Arial, sans-serif',
-      textAlign: 'center'
-    }}>
-      <h1>🚀 ROUPA CERTA VENDAS PLUS</h1>
-      <p>✅ React está funcionando!</p>
-      <p>✅ GitHub Pages está funcionando!</p>
-      <p>✅ Deploy realizado com sucesso!</p>
-      <div style={{ marginTop: '20px' }}>
-        <button 
-          onClick={() => alert('Funcionando!')}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-            cursor: 'pointer'
-          }}
-        >
-          Testar JavaScript
-        </button>
-      </div>
-    </div>
-  );
-}
+
 
 function AppRoutes() {
-  // Temporariamente removendo a verificação de autenticação para testar
-  const isAuthenticated = true; // Temporário para teste
+  const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
     return <LoginPage />;
@@ -81,7 +49,7 @@ function AppRoutes() {
         <MobileNavigation />
         <main className="flex-1 p-4">
           <Routes>
-            <Route path="/" element={<TestComponent />} />
+            <Route path="/" element={<Index />} />
             
             {/* Dashboard - apenas para admin */}
             <Route 
