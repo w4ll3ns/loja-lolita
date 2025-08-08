@@ -5,7 +5,7 @@
 ✅ **Deploy Configurado e Ativo**
 
 - **URL de Produção:** https://w4ll3ns.github.io/loja-lolita/
-- **Repositório:** https://github.com/w4ll3ns/roupa-certa-vendas-plus
+- **Repositório:** https://github.com/w4ll3ns/loja-lolita
 - **Branch Principal:** `main`
 - **Deploy Automático:** Ativo via GitHub Actions
 
@@ -49,8 +49,8 @@
 ## 📊 Status do Build
 
 Para verificar o status do deploy:
-1. Acesse: https://github.com/w4ll3ns/roupa-certa-vendas-plus/actions
-2. Verifique o workflow "Deploy to GitHub Pages"
+1. Acesse: https://github.com/w4ll3ns/loja-lolita/actions
+2. Verifique os workflows "Deploy to GitHub Pages" ou "Deploy Static Site"
 3. Clique no commit mais recente para ver os logs
 
 ## 🛠️ Comandos Locais
@@ -71,7 +71,7 @@ gh run list --workflow="Deploy to GitHub Pages"
 ## 🔍 Troubleshooting
 
 ### Se o deploy falhar:
-1. Verifique os logs em: https://github.com/w4ll3ns/roupa-certa-vendas-plus/actions
+1. Verifique os logs em: https://github.com/w4ll3ns/loja-lolita/actions
 2. Certifique-se de que os testes passam localmente: `npm test`
 3. Verifique se o build funciona: `npm run build`
 4. Confirme se não há erros de TypeScript: `npm run type-check`
