@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste GitHub Pages</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .success {
+            color: #28a745;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        .info {
+            color: #666;
+            margin: 10px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Teste GitHub Pages</h1>
+        <div class="success">✅ GitHub Pages está funcionando!</div>
+        <div class="info">Se você está vendo esta página, o GitHub Pages está configurado corretamente.</div>
+        
+        <button onclick="testJavaScript()">Testar JavaScript</button>
+        <button onclick="testConsole()">Testar Console</button>
+        
+        <div id="result" style="margin-top: 20px; padding: 10px; background-color: #f8f9fa; border-radius: 5px;"></div>
+        
+        <div style="margin-top: 30px; font-size: 14px; color: #999;">
+            <p>URL: https://w4ll3ns.github.io/loja-lolita/test.html</p>
+            <p>Repositório: https://github.com/w4ll3ns/roupa-certa-vendas-plus</p>
+        </div>
+    </div>
+
+    <script>
+        function testJavaScript() {
+            document.getElementById('result').innerHTML = 
+                '<div style="color: #28a745;">✅ JavaScript está funcionando!</div>';
+        }
+        
+        function testConsole() {
+            console.log('✅ Console está funcionando!');
+            console.log('Data/Hora:', new Date().toLocaleString());
+            alert('Console testado! Verifique o DevTools (F12)');
+        }
+        
+        // Teste automático
+        window.onload = function() {
+            console.log('✅ Página carregada com sucesso!');
+            document.getElementById('result').innerHTML = 
+                '<div style="color: #28a745;">✅ Página carregada automaticamente!</div>';
+        }
+    </script>
+</body>
+</html>
