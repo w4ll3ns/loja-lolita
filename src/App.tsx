@@ -1,7 +1,6 @@
 
-import { BrowserRouter as Router, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { MobileNavigation } from '@/components/MobileNavigation';
@@ -230,17 +229,11 @@ function AppRoutes() {
 }
 
 function App() {
-  const queryClient = new QueryClient();
-
   return (
     <AuthProvider>
       <AppContextProvider>
-        <QueryClientProvider client={queryClient}>
-          <Router>
-            <AppRoutes />
-            <Toaster />
-          </Router>
-        </QueryClientProvider>
+        <AppRoutes />
+        <Toaster />
       </AppContextProvider>
     </AuthProvider>
   );

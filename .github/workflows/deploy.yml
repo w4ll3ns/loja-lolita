@@ -35,4 +35,4 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./dist
-        cname: roupa-certa-vendas-plus.w4ll3ns.dev
+        cname: w4ll3ns.github.io
