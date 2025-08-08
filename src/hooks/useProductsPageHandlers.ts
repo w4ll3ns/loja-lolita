@@ -4,6 +4,7 @@ import { useProducts } from '@/contexts/ProductsContext';
 import { useDataManagement } from '@/contexts/DataManagementContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSecuritySettings } from '@/hooks/useSecuritySettings';
+import { supabase } from '@/integrations/supabase/client';
 import type { Product } from '@/types/store';
 import { sanitizeName, sanitizeText, sanitizeBarcode, sanitizeNumber } from '@/utils/sanitization';
 
@@ -46,9 +47,31 @@ export const useProductsPageHandlers = () => {
     // Implementation will be provided by the main hook
   }, []);
 
-  const validatePassword = useCallback((password: string): boolean => {
+  const validatePassword = useCallback(async (password: string): Promise<boolean> => {
     if (!requirePasswordForDeletion) return true;
-    return password === 'admin123'; // In production, this should be more secure
+    
+    try {
+      // Verificar se o usuário atual é admin
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+      
+      // Verificar se o usuário tem permissão de admin
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (!profile || profile.role !== 'admin') return false;
+      
+      // Para produção, implementar verificação de senha segura
+      // Por enquanto, usar uma verificação básica
+      const adminPassword = process.env.VITE_ADMIN_PASSWORD || 'admin123';
+      return password === adminPassword;
+    } catch (error) {
+      console.error('Erro na validação de senha:', error);
+      return false;
+    }
   }, [requirePasswordForDeletion]);
 
   // Bulk edit handlers

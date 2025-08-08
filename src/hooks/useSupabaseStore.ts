@@ -195,7 +195,7 @@ export const useSupabaseStore = () => {
   };
 
   const loadSellers = async () => {
-    console.log('Loading sellers from profiles table...');
+    // Loading sellers from profiles table...
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -208,7 +208,7 @@ export const useSupabaseStore = () => {
       return;
     }
 
-    console.log('Sellers data from DB:', data);
+            // Sellers data loaded successfully
     const formattedSellers: Seller[] = data.map(seller => ({
       id: seller.id,
       name: seller.name,
@@ -217,7 +217,7 @@ export const useSupabaseStore = () => {
       active: seller.active
     }));
 
-    console.log('Formatted sellers:', formattedSellers);
+            // Formatted sellers successfully
     setSellers(formattedSellers);
   };
 
