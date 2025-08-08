@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { QuickCustomerForm } from '@/components/sales/QuickCustomerForm';
-import { useStore } from '@/contexts/StoreContext';
+import { useCustomers } from '@/contexts/CustomersContext';
 import { useToast } from '@/hooks/use-toast';
 
 const CustomersPage = () => {
-  const { customers } = useStore();
+  const { customers } = useCustomers();
   const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');

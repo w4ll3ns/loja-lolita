@@ -3,7 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useStore } from '@/contexts/StoreContext';
+import { useDataManagement } from '@/contexts/DataManagementContext';
 import { XmlProduct } from '@/types/xml-import';
 import { useXmlImport } from '@/hooks/useXmlImport';
 import { XmlUploadStep } from '@/components/xml-import/XmlUploadStep';
@@ -17,7 +17,7 @@ interface ImportXmlModalProps {
 }
 
 export const ImportXmlModal: React.FC<ImportXmlModalProps> = ({ isOpen, onClose, onImport }) => {
-  const { suppliers, brands, colors, sizes } = useStore();
+  const { suppliers, brands, colors, sizes } = useDataManagement();
   const { toast } = useToast();
   
   const {

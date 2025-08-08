@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ProfitMarginDisplay } from '@/components/ProfitMarginDisplay';
-import { Pencil, Copy, Trash2 } from 'lucide-react';
+import { Pencil, Copy, Trash2, AlertTriangle } from 'lucide-react';
 import { Product } from '@/types/store';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -29,6 +29,39 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const { user } = useAuth();
   const canDelete = user?.role === 'admin';
+
+  // Calcular estoque
+  const stock = product.quantity || 0;
+  const hasNegativeStock = stock < 0;
+  const isLowStock = stock <= 3 && stock > 0;
+  const isOutOfStock = stock <= 0;
+
+  // Função para obter a cor do estoque
+  const getStockColor = () => {
+    if (hasNegativeStock) return 'text-red-600';
+    if (isOutOfStock) return 'text-red-600';
+    if (isLowStock) return 'text-yellow-600';
+    return 'text-green-600';
+  };
+
+  // Função para obter o texto do estoque
+  const getStockText = () => {
+    if (hasNegativeStock) {
+      return `${stock} unidades (negativo)`;
+    }
+    if (isOutOfStock) {
+      return `${stock} unidades`;
+    }
+    return `${stock} unidades`;
+  };
+
+  // Função para obter o ícone do estoque
+  const getStockIcon = () => {
+    if (hasNegativeStock || isOutOfStock) {
+      return <AlertTriangle className="h-3 w-3 md:h-4 md:w-4" />;
+    }
+    return null;
+  };
 
   return (
     <Card className="card-hover relative h-full flex flex-col">
@@ -110,12 +143,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           />
           <div className="flex justify-between items-center">
             <span className="text-xs md:text-sm text-muted-foreground">Estoque:</span>
-            <span className={`font-semibold text-sm md:text-base ${
-              product.quantity <= 5 ? 'text-red-600' : 'text-green-600'
-            }`}>
-              {product.quantity} unidades
-            </span>
+            <div className="flex items-center gap-1">
+              {getStockIcon()}
+              <span className={`font-semibold text-sm md:text-base ${getStockColor()}`}>
+                {getStockText()}
+              </span>
+            </div>
           </div>
+          {hasNegativeStock && (
+            <div className="flex justify-between items-center">
+              <span className="text-xs md:text-sm text-muted-foreground">Estoque Físico:</span>
+              <span className="text-xs font-semibold text-gray-600">
+                {product.quantity} unidades
+              </span>
+            </div>
+          )}
           <div className="flex justify-between items-center">
             <span className="text-xs md:text-sm text-muted-foreground">Código:</span>
             <span className="text-xs font-mono break-all">{product.barcode}</span>

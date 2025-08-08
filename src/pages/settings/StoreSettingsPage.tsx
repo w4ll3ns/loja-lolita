@@ -143,7 +143,6 @@ const StoreSettingsPage = () => {
         description: "As informações da loja foram atualizadas no banco de dados.",
       });
 
-      console.log('Configurações da loja salvas no Supabase:', storeData);
     } catch (error) {
       toast({
         title: "Erro ao salvar",

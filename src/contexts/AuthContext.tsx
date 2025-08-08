@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { useRateLimit } from '@/hooks/useRateLimit';
 
 export type UserRole = 'admin' | 'vendedor' | 'caixa' | 'consultivo';
 
@@ -27,6 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { checkRateLimit, recordAttempt, resetRateLimit } = useRateLimit();
 
   useEffect(() => {
     let mounted = true;
@@ -36,11 +38,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, session) => {
         if (!mounted) return;
         
-        console.log('Auth state change:', event, session);
         setSession(session);
         
         if (session?.user) {
-          console.log('User found in session:', session.user);
           // Get user profile from profiles table
           supabase
             .from('profiles')
@@ -50,8 +50,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .then(({ data: profile, error }) => {
               if (!mounted) return;
               
-              console.log('Profile query result:', { profile, error });
-              
               if (profile) {
                 const userData = {
                   id: profile.user_id,
@@ -59,16 +57,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   email: session.user.email || '',
                   role: profile.role
                 };
-                console.log('Setting user data:', userData);
                 setUser(userData);
               } else {
-                console.log('No profile found for user');
                 setUser(null);
               }
               setIsLoading(false);
             });
         } else {
-          console.log('No user in session');
           setUser(null);
           setIsLoading(false);
         }
@@ -80,7 +75,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!mounted) return;
       // onAuthStateChange will handle this, but trigger it manually for initial load
       if (session) {
-        console.log('Initial session found:', session);
       } else {
         setIsLoading(false);
       }
@@ -94,28 +88,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      console.log('Attempting login with:', email);
+      // Verificar rate limit antes de tentar login
+      const rateLimitCheck = checkRateLimit();
       
+      if (!rateLimitCheck.allowed) {
+        const blockedUntil = new Date(rateLimitCheck.blockedUntil!);
+        return { 
+          success: false, 
+          error: `Muitas tentativas de login. Tente novamente após ${blockedUntil.toLocaleTimeString()}` 
+        };
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      console.log('Login result:', { data, error });
-
       if (error) {
-        console.log('Login error:', error.message);
+        // Registrar tentativa falhada
+        recordAttempt(false);
+        
+        // Verificar se foi bloqueado após a tentativa
+        const newRateLimitCheck = checkRateLimit();
+        if (!newRateLimitCheck.allowed) {
+          const blockedUntil = new Date(newRateLimitCheck.blockedUntil!);
+          return { 
+            success: false, 
+            error: `Muitas tentativas de login. Tente novamente após ${blockedUntil.toLocaleTimeString()}` 
+          };
+        }
+        
         return { success: false, error: error.message };
       }
 
       if (data.user) {
-        console.log('Login successful, user:', data.user);
+        // Registrar tentativa bem-sucedida (reset do rate limit)
+        recordAttempt(true);
         return { success: true };
       }
 
+      // Registrar tentativa falhada
+      recordAttempt(false);
       return { success: false, error: 'Login failed' };
     } catch (error) {
-      console.error('Erro no login:', error);
+      // Registrar tentativa falhada
+      recordAttempt(false);
       return { success: false, error: 'Erro interno no login' };
     }
   };
@@ -124,15 +141,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
+    // Reset do rate limit no logout
+    resetRateLimit();
   };
 
-  const isAuthenticated = user !== null;
+  const value = {
+    user,
+    session,
+    login,
+    logout,
+    isLoading,
+    isAuthenticated: !!user,
+  };
 
-  return (
-    <AuthContext.Provider value={{ user, session, login, logout, isLoading, isAuthenticated }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

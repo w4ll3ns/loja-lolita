@@ -21,7 +21,6 @@ export const SaleConfirmation = ({
   
   const handlePrintReceipt = () => {
     // Implementar impressão do cupom
-    console.log('Imprimindo cupom...');
   };
 
   const handleSendWhatsApp = () => {

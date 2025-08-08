@@ -7,7 +7,7 @@ import { Autocomplete } from '@/components/ui/autocomplete';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useStore } from '@/contexts/StoreContext';
+import { useCustomers } from '@/contexts/CustomersContext';
 import { useToast } from '@/hooks/use-toast';
 import { User, X } from 'lucide-react';
 
@@ -18,7 +18,7 @@ interface QuickCustomerFormProps {
 }
 
 export const QuickCustomerForm = ({ onClose, onCustomerCreated, initialName = '' }: QuickCustomerFormProps) => {
-  const { cities, addCustomer } = useStore();
+  const { addCustomer } = useCustomers();
   const { toast } = useToast();
   
   const [customerData, setCustomerData] = useState({

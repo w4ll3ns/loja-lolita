@@ -100,7 +100,6 @@ export const useStoreOperations = () => {
 
   const resetUserPassword = (id: string): string => {
     const tempPassword = Math.random().toString(36).slice(-8);
-    console.log(`Senha temporária gerada para usuário ${id}:`, tempPassword);
     return tempPassword;
   };
 

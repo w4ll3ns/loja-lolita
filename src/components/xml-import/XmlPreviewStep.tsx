@@ -5,7 +5,7 @@ import { XmlProduct, XmlSupplier } from '@/types/xml-import';
 import { SupplierInfoCard } from '@/components/xml-import/SupplierInfoCard';
 import { ProductPreviewTable } from '@/components/xml-import/ProductPreviewTable';
 import { useToast } from '@/hooks/use-toast';
-import { useStore } from '@/contexts/StoreContext';
+import { useDataManagement } from '@/contexts/DataManagementContext';
 
 interface XmlPreviewStepProps {
   extractedProducts: XmlProduct[];
@@ -51,7 +51,7 @@ export const XmlPreviewStep: React.FC<XmlPreviewStepProps> = ({
   const [showNewCategoryInput, setShowNewCategoryInput] = useState<{ [key: number]: boolean }>({});
   const [newCategoryName, setNewCategoryName] = useState('');
   const { toast } = useToast();
-  const { sizes } = useStore();
+  const { sizes } = useDataManagement();
 
   const genders = ['Masculino', 'Feminino', 'Unissex'];
 

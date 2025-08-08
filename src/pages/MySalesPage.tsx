@@ -1,25 +1,72 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, TrendingUp, Calendar, DollarSign, MessageSquare, Send } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { FileText, TrendingUp, Calendar, DollarSign, MessageSquare, Send, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useStore } from '@/contexts/StoreContext';
+import { useSales } from '@/contexts/SalesContext';
 import { useToast } from '@/hooks/use-toast';
 import { SalesList } from '@/components/sales/SalesList';
+import { supabase } from '@/integrations/supabase/client';
 
 const MySalesPage = () => {
   const { user } = useAuth();
-  const { sales } = useStore();
+  const { sales } = useSales();
   const { toast } = useToast();
   const [selectedSale, setSelectedSale] = useState(null);
   const [thankYouMessage, setThankYouMessage] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [salesWithReturns, setSalesWithReturns] = useState(new Map());
 
   // Filtrar vendas do vendedor logado
   const mySales = sales.filter(sale => sale.seller === user?.name);
+
+  // Verificar quais vendas têm devoluções
+  useEffect(() => {
+    const checkReturnsForSales = async () => {
+      if (mySales.length === 0) return;
+
+      const saleIds = mySales.map(sale => sale.id);
+      
+      try {
+        const { data: returns, error } = await supabase
+          .from('returns')
+          .select(`
+            sale_id, 
+            status, 
+            refund_amount,
+            return_items(
+              quantity,
+              refund_price,
+              product:products(name)
+            )
+          `)
+          .in('sale_id', saleIds);
+
+        if (error) {
+          console.error('Error checking returns:', error);
+          return;
+        }
+
+        // Criar um Map com informações detalhadas das devoluções
+        const salesWithReturnsMap = new Map();
+        returns.forEach((r: any) => {
+          salesWithReturnsMap.set(r.sale_id, {
+            status: r.status,
+            refundAmount: r.refund_amount || 0,
+            items: r.return_items || []
+          });
+        });
+        setSalesWithReturns(salesWithReturnsMap);
+      } catch (error) {
+        console.error('Error checking returns:', error);
+      }
+    };
+
+    checkReturnsForSales();
+  }, [mySales]);
 
   // Calcular estatísticas
   const today = new Date();
@@ -149,6 +196,15 @@ const MySalesPage = () => {
                           {sale.customer.isGeneric && (
                             <span className="text-xs bg-gray-100 px-2 py-1 rounded">Cliente Padrão</span>
                           )}
+                          {salesWithReturns.has(sale.id) && (
+                            <Badge 
+                              variant={salesWithReturns.get(sale.id)?.status === 'completed' ? 'destructive' : 'secondary'} 
+                              className="text-xs flex items-center gap-1"
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                              {salesWithReturns.get(sale.id)?.status === 'completed' ? 'Devolvida' : 'Devolvida Parcialmente'}
+                            </Badge>
+                          )}
                         </CardTitle>
                         <p className="text-sm text-muted-foreground">
                           {sale.date.toLocaleDateString()} - {sale.date.toLocaleTimeString()}
@@ -189,13 +245,46 @@ const MySalesPage = () => {
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Itens:</p>
                         <div className="space-y-1">
-                          {sale.items.map((item, index) => (
-                            <div key={index} className="flex justify-between text-sm">
-                              <span>{item.quantity}x {item.product.name}</span>
-                              <span>R$ {(item.price * item.quantity).toFixed(2)}</span>
-                            </div>
-                          ))}
+                          {sale.items.map((item, index) => {
+                            // Verificar se este item foi devolvido
+                            const returnInfo = salesWithReturns.get(sale.id);
+                            const returnedItem = returnInfo?.items?.find((ri: any) => ri.product?.name === item.product.name);
+                            
+                            return (
+                              <div key={index} className="flex justify-between text-sm">
+                                <div className="flex-1">
+                                  <span>{item.quantity}x {item.product.name}</span>
+                                  {returnedItem && (
+                                    <p className="text-xs text-orange-600 font-medium">
+                                      ⚠️ {returnedItem.quantity} unidade(s) devolvida(s) - R$ {(returnedItem.quantity * returnedItem.refund_price).toFixed(2)}
+                                    </p>
+                                  )}
+                                  {item.product.barcode && (
+                                    <p className="text-xs text-muted-foreground font-mono">
+                                      Código: {item.product.barcode}
+                                    </p>
+                                  )}
+                                </div>
+                                <span className="text-right">R$ {(item.price * item.quantity).toFixed(2)}</span>
+                              </div>
+                            );
+                          })}
                         </div>
+                        
+                        {/* Informações de devolução */}
+                        {salesWithReturns.has(sale.id) && (
+                          <div className="mt-3 p-2 bg-orange-50 border border-orange-200 rounded-md">
+                            <p className="text-xs font-medium text-orange-800 mb-1">
+                              📋 Informações da Devolução:
+                            </p>
+                            <p className="text-xs text-orange-700">
+                              Valor devolvido: R$ {salesWithReturns.get(sale.id)?.refundAmount.toFixed(2)}
+                            </p>
+                            <p className="text-xs text-orange-700">
+                              Status: {salesWithReturns.get(sale.id)?.status === 'completed' ? 'Completa' : 'Parcial'}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>

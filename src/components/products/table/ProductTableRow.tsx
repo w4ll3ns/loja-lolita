@@ -4,7 +4,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ProfitMarginDisplay } from '@/components/ProfitMarginDisplay';
-import { Pencil, Copy, Trash2 } from 'lucide-react';
+import { Pencil, Copy, Trash2, AlertTriangle } from 'lucide-react';
 import { Product } from '@/types/store';
 
 interface ProductTableRowProps {
@@ -28,6 +28,28 @@ export const ProductTableRow: React.FC<ProductTableRowProps> = ({
   isSelected,
   onSelect
 }) => {
+  // Calcular estoque
+  const stock = product.quantity || 0;
+  const hasNegativeStock = stock < 0;
+  const isLowStock = stock <= 3 && stock > 0;
+  const isOutOfStock = stock <= 0;
+
+  // Função para obter a cor do estoque
+  const getStockColor = () => {
+    if (hasNegativeStock) return 'text-red-600';
+    if (isOutOfStock) return 'text-red-600';
+    if (isLowStock) return 'text-yellow-600';
+    return 'text-green-600';
+  };
+
+  // Função para obter o texto do estoque
+  const getStockText = () => {
+    if (hasNegativeStock) {
+      return `${stock} (negativo)`;
+    }
+    return `${stock}`;
+  };
+
   return (
     <TableRow>
       {canEdit && (
@@ -62,11 +84,14 @@ export const ProductTableRow: React.FC<ProductTableRowProps> = ({
         />
       </TableCell>
       <TableCell>
-        <span className={`font-semibold ${
-          product.quantity <= 5 ? 'text-red-600' : 'text-green-600'
-        }`}>
-          {product.quantity}
-        </span>
+        <div className="flex items-center gap-1">
+          {(hasNegativeStock || isOutOfStock) && (
+            <AlertTriangle className="h-3 w-3 text-red-600" />
+          )}
+          <span className={`font-semibold ${getStockColor()}`}>
+            {getStockText()}
+          </span>
+        </div>
       </TableCell>
       <TableCell className="font-mono text-xs">{product.barcode}</TableCell>
       {canEdit && (

@@ -8,6 +8,7 @@ import { BulkEditModal } from '@/components/products/BulkEditModal';
 import { ProductsPageHeader } from '@/components/products/ProductsPageHeader';
 import { ProductsPageFilters } from '@/components/products/ProductsPageFilters';
 import { ProductsPageContent } from '@/components/products/ProductsPageContent';
+import { NegativeStockAlert } from '@/components/products/NegativeStockAlert';
 import { useProductsPage } from '@/hooks/useProductsPage';
 
 const ProductsPage = () => {
@@ -64,6 +65,7 @@ const ProductsPage = () => {
     // Data
     filteredProducts,
     stockTotals,
+    negativeStockProducts,
     categories,
     collections,
     suppliers,
@@ -108,6 +110,13 @@ const ProductsPage = () => {
         setIsAddDialogOpen={setIsAddDialogOpen}
         setIsImportXmlOpen={setIsImportXmlOpen}
         handleBulkEdit={handleBulkEdit}
+      />
+
+      {/* Negative Stock Alert */}
+      <NegativeStockAlert
+        negativeStockProducts={negativeStockProducts}
+        negativeStockCount={stockTotals.negativeStockCount}
+        negativeStockValue={stockTotals.negativeStockValue}
       />
 
       {/* Modals */}

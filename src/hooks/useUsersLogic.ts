@@ -13,17 +13,14 @@ export const useUsersLogic = (
       createdAt: new Date()
     };
     setUsers(prev => [...prev, newUser]);
-    console.log('Usuário criado:', newUser);
   };
 
   const updateUser = (id: string, updates: Partial<User>) => {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
-    console.log('Usuário atualizado:', id, updates);
   };
 
   const deleteUser = (id: string) => {
     setUsers(prev => prev.filter(u => u.id !== id));
-    console.log('Usuário removido:', id);
   };
 
   return {

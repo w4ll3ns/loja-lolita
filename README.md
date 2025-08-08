@@ -1,73 +1,248 @@
-# Welcome to your Lovable project
+# 🛍️ ROUPA CERTA VENDAS PLUS
 
-## Project info
+Sistema completo de gestão de vendas para lojas de roupas, desenvolvido com tecnologias modernas e focado em usabilidade e escalabilidade.
 
-**URL**: https://lovable.dev/projects/48a5e7eb-20ff-4259-86c4-48d71f2d7eee
+## 🚀 Funcionalidades Principais
 
-## How can I edit this code?
+### 📊 Dashboard Administrativo
+- Métricas em tempo real
+- Relatórios de vendas e performance
+- Controle de estoque
+- Ranking de vendedores
 
-There are several ways of editing your application.
+### 🛍️ Sistema de Vendas
+- Processo completo de vendas
+- Múltiplos métodos de pagamento
+- Controle de estoque automático
+- Produtos temporários
+- Sistema de descontos
 
-**Use Lovable**
+### 🔄 Devoluções e Trocas
+- Devoluções parciais
+- Controle automático de estoque
+- Múltiplos tipos de reembolso
+- Rastreamento completo
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/48a5e7eb-20ff-4259-86c4-48d71f2d7eee) and start prompting.
+### 👥 Gestão de Clientes
+- Cadastro completo de clientes
+- Cliente genérico para vendas rápidas
+- Histórico de compras
+- Sistema de agradecimentos
 
-Changes made via Lovable will be committed automatically to this repo.
+### 📦 Gestão de Produtos
+- Cadastro completo de produtos
+- Importação em lote via XML
+- Controle de estoque
+- Edição em massa
 
-**Use your preferred IDE**
+### 🔐 Sistema de Usuários
+- 4 perfis de acesso (Admin, Vendedor, Caixa, Consultivo)
+- Controle granular de permissões
+- Autenticação segura
+- Auditoria de ações
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Tecnologias Utilizadas
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Frontend
+- **React 18** + **TypeScript**
+- **Vite** (Build tool)
+- **shadcn/ui** (Componentes)
+- **Tailwind CSS** (Styling)
+- **React Router** (Navegação)
+- **React Query** (Estado)
 
-Follow these steps:
+### Backend
+- **Supabase** (BaaS)
+- **PostgreSQL** (Banco de dados)
+- **Supabase Auth** (Autenticação)
+- **Supabase Realtime** (Tempo real)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Ferramentas
+- **ESLint** (Linting)
+- **Prettier** (Formatação)
+- **Git** (Versionamento)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 📋 Pré-requisitos
 
-# Step 3: Install the necessary dependencies.
-npm i
+- Node.js 18+
+- npm 8+
+- Conta no Supabase
+- Navegador moderno
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## 🚀 Instalação
+
+1. **Clone o repositório**
+```bash
+git clone https://github.com/seu-usuario/roupa-certa-vendas-plus.git
+cd roupa-certa-vendas-plus
+```
+
+2. **Instale as dependências**
+```bash
+npm install
+```
+
+3. **Configure as variáveis de ambiente**
+```bash
+cp .env.example .env
+```
+
+Edite o arquivo `.env` com suas configurações do Supabase:
+```env
+VITE_SUPABASE_URL=sua-url-do-supabase
+VITE_SUPABASE_ANON_KEY=sua-chave-anonima-do-supabase
+```
+
+4. **Execute as migrações do banco**
+```sql
+-- Execute no SQL Editor do Supabase
+-- Arquivo: supabase/migrations/20250702151431-12c3222c-0c00-4b6b-b35c-8569daf1e9e0.sql
+```
+
+5. **Inicie o servidor de desenvolvimento**
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+6. **Acesse a aplicação**
+```
+http://localhost:8081
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📚 Documentação
 
-**Use GitHub Codespaces**
+- **[Documentação Técnica](DOCUMENTACAO_TECNICA.md)** - Especificações técnicas detalhadas
+- **[Documentação Funcional](DOCUMENTACAO_FUNCIONAL.md)** - Funcionalidades e casos de uso
+- **[Guia de Migração](supabase/migrations/)** - Scripts de banco de dados
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🏗️ Estrutura do Projeto
 
-## What technologies are used for this project?
+```
+roupa-certa-vendas-plus/
+├── src/
+│   ├── components/          # Componentes React
+│   │   ├── ui/             # Componentes base (shadcn/ui)
+│   │   ├── dashboard/      # Componentes do dashboard
+│   │   ├── products/       # Componentes de produtos
+│   │   ├── sales/          # Componentes de vendas
+│   │   ├── returns/        # Componentes de devoluções
+│   │   └── settings/       # Componentes de configurações
+│   ├── contexts/           # Contextos React (Auth, Store)
+│   ├── hooks/              # Hooks customizados
+│   ├── integrations/       # Integrações externas
+│   ├── lib/                # Utilitários e configurações
+│   ├── pages/              # Páginas da aplicação
+│   ├── types/              # Definições TypeScript
+│   └── utils/              # Funções utilitárias
+├── supabase/
+│   ├── migrations/         # Migrações do banco
+│   └── config.toml         # Configuração do Supabase
+├── public/                 # Arquivos estáticos
+└── docs/                   # Documentação adicional
+```
 
-This project is built with:
+## 🔧 Scripts Disponíveis
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+# Desenvolvimento
+npm run dev              # Inicia servidor de desenvolvimento
+npm run build            # Build para produção
+npm run preview          # Preview do build
+npm run lint             # Executa ESLint
+```
 
-## How can I deploy this project?
+## 🗄️ Banco de Dados
 
-Simply open [Lovable](https://lovable.dev/projects/48a5e7eb-20ff-4259-86c4-48d71f2d7eee) and click on Share -> Publish.
+### Tabelas Principais
+- `products` - Produtos com controle de estoque
+- `customers` - Clientes cadastrados
+- `sales` - Vendas realizadas
+- `sale_items` - Itens de cada venda
+- `returns` - Devoluções e trocas
+- `return_items` - Itens devolvidos
+- `users` - Usuários do sistema
+- `sellers` - Vendedores externos
 
-## Can I connect a custom domain to my Lovable project?
+### Funcionalidades Avançadas
+- Triggers para atualização automática de estoque
+- Controle de integridade referencial
+- Logs de auditoria
+- Hash de arquivos XML importados
 
-Yes, you can!
+## 🔐 Autenticação e Autorização
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Perfis de Usuário
+- **Admin:** Acesso total ao sistema
+- **Vendedor:** Vendas e relatórios pessoais
+- **Caixa:** Vendas e devoluções
+- **Consultivo:** Apenas visualização
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Segurança
+- Autenticação via Supabase Auth
+- Controle granular de permissões
+- Middleware de proteção de rotas
+- Políticas de senha configuráveis
+
+## 📱 Responsividade
+
+O sistema é totalmente responsivo e funciona em:
+- 📱 Dispositivos móveis
+- 📱 Tablets
+- 💻 Desktops
+- 🖥️ Telas grandes
+
+## 🚀 Deploy
+
+### Vercel (Recomendado)
+1. Conecte seu repositório ao Vercel
+2. Configure as variáveis de ambiente
+3. Deploy automático a cada push
+
+### Netlify
+1. Conecte seu repositório ao Netlify
+2. Configure as variáveis de ambiente
+3. Build command: `npm run build`
+4. Publish directory: `dist`
+
+### Outros
+O projeto pode ser deployado em qualquer plataforma que suporte aplicações React estáticas.
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 📞 Suporte
+
+- **Email:** suporte@roupacerta.com
+- **Documentação:** [docs.roupacerta.com](https://docs.roupacerta.com)
+- **Issues:** [GitHub Issues](https://github.com/seu-usuario/roupa-certa-vendas-plus/issues)
+
+## 🎯 Roadmap
+
+### Próximas Funcionalidades
+- [ ] App mobile (React Native)
+- [ ] Integração com WhatsApp Business
+- [ ] Sistema de fidelidade
+- [ ] Relatórios avançados
+- [ ] Multi-tenancy
+
+### Melhorias Técnicas
+- [ ] Testes automatizados
+- [ ] CI/CD pipeline
+- [ ] Monitoramento de performance
+- [ ] Backup automático
+
+---
+
+**Desenvolvido com ❤️ pela equipe Roupa Certa**
+
+**Versão:** 1.0.0  
+**Última Atualização:** Janeiro 2025

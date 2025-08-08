@@ -3,12 +3,12 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { useStore } from '@/contexts/StoreContext';
+import { useDataManagement } from '@/contexts/DataManagementContext';
 import { Tag, Palette, Layers, Award, Truck, Ruler } from 'lucide-react';
 
 const ManagementIndexPage = () => {
   const navigate = useNavigate();
-  const { categories, colors, collections, brands, suppliers, sizes } = useStore();
+  const { categories, colors, collections, brands, suppliers, sizes } = useDataManagement();
 
   const managementItems = [
     {

@@ -11,6 +11,9 @@ export interface Product {
   supplier: string;
   brand: string;
   quantity: number;
+  negative_stock?: number; // Estoque negativo (quantidade vendida além do disponível)
+  reserved_stock?: number; // Estoque reservado (em vendas em andamento)
+  available_stock?: number; // Estoque disponível (calculado)
   image?: string;
   barcode: string;
   color: string;
@@ -46,6 +49,7 @@ export interface User {
 }
 
 export interface SaleItem {
+  id: string;
   product: Product;
   quantity: number;
   price: number;

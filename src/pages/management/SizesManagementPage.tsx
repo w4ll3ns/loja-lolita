@@ -6,12 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
-import { useStore } from '@/contexts/StoreContext';
+import { useDataManagement } from '@/contexts/DataManagementContext';
 import { useToast } from '@/hooks/use-toast';
 import { Search, Plus, Ruler, Edit, Trash2 } from 'lucide-react';
 
 const SizesManagementPage = () => {
-  const { sizes, addSize, updateSize, deleteSize } = useStore();
+  const { sizes, addSize, updateSize, deleteSize } = useDataManagement();
   const { toast } = useToast();
   
   const [searchTerm, setSearchTerm] = useState('');

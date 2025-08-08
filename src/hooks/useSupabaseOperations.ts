@@ -363,12 +363,35 @@ export const useSupabaseOperations = () => {
     return true;
   };
 
+  // Load sales method for useSalesLogic
+  const loadSales = async () => {
+    const { data, error } = await supabase
+      .from('sales')
+      .select(`
+        *,
+        customer:customers(*),
+        items:sale_items(
+          *,
+          product:products(*)
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading sales:', error);
+      return;
+    }
+
+    return data;
+  };
+
   return {
     addProduct,
     updateProduct,
     deleteProduct,
     addCustomer,
     addSale,
+    loadSales,
     addDropdownItem,
     updateDropdownItem,
     deleteDropdownItem,

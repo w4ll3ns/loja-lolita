@@ -16,7 +16,14 @@ export const useSalesLogic = (
     }
   };
 
+  const refreshSales = async () => {
+    if (operations.loadSales) {
+      await operations.loadSales();
+    }
+  };
+
   return {
-    addSale
+    addSale,
+    refreshSales
   };
 };

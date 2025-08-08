@@ -136,6 +136,7 @@ export const useSupabaseStore = () => {
         isGeneric: sale.customer.is_generic || undefined
       },
       items: sale.sale_items.map(item => ({
+        id: item.id,
         product: {
           id: item.product.id,
           name: item.product.name,
@@ -194,9 +195,12 @@ export const useSupabaseStore = () => {
   };
 
   const loadSellers = async () => {
+    console.log('Loading sellers from profiles table...');
     const { data, error } = await supabase
-      .from('sellers')
+      .from('profiles')
       .select('*')
+      .eq('role', 'vendedor')
+      .eq('active', true)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -204,6 +208,7 @@ export const useSupabaseStore = () => {
       return;
     }
 
+    console.log('Sellers data from DB:', data);
     const formattedSellers: Seller[] = data.map(seller => ({
       id: seller.id,
       name: seller.name,
@@ -212,6 +217,7 @@ export const useSupabaseStore = () => {
       active: seller.active
     }));
 
+    console.log('Formatted sellers:', formattedSellers);
     setSellers(formattedSellers);
   };
 

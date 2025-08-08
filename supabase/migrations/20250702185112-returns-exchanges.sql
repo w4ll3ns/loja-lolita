@@ -1,0 +1,119 @@
+-- Create return/exchange types
+CREATE TYPE public.return_type AS ENUM ('return', 'exchange');
+CREATE TYPE public.return_reason AS ENUM ('defective', 'wrong_size', 'wrong_color', 'not_liked', 'other');
+CREATE TYPE public.return_status AS ENUM ('pending', 'approved', 'rejected', 'completed');
+CREATE TYPE public.refund_method AS ENUM ('same_payment', 'store_credit', 'exchange');
+
+-- Create Returns table
+CREATE TABLE public.returns (
+    id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    sale_id UUID NOT NULL REFERENCES public.sales(id) ON DELETE RESTRICT,
+    customer_id UUID NOT NULL REFERENCES public.customers(id) ON DELETE RESTRICT,
+    return_type return_type NOT NULL,
+    return_reason return_reason NOT NULL,
+    status return_status NOT NULL DEFAULT 'pending',
+    refund_method refund_method,
+    refund_amount DECIMAL(10,2) CHECK (refund_amount >= 0),
+    store_credit_amount DECIMAL(10,2) DEFAULT 0 CHECK (store_credit_amount >= 0),
+    notes TEXT,
+    processed_by TEXT NOT NULL,
+    processed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Create Return Items table
+CREATE TABLE public.return_items (
+    id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    return_id UUID NOT NULL REFERENCES public.returns(id) ON DELETE CASCADE,
+    sale_item_id UUID NOT NULL REFERENCES public.sale_items(id) ON DELETE RESTRICT,
+    product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE RESTRICT,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    original_price DECIMAL(10,2) NOT NULL CHECK (original_price >= 0),
+    refund_price DECIMAL(10,2) NOT NULL CHECK (refund_price >= 0),
+    condition_description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Create Exchange Items table (for exchanges)
+CREATE TABLE public.exchange_items (
+    id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    return_id UUID NOT NULL REFERENCES public.returns(id) ON DELETE CASCADE,
+    original_product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE RESTRICT,
+    new_product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE RESTRICT,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    price_difference DECIMAL(10,2) DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Create Store Credits table
+CREATE TABLE public.store_credits (
+    id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    customer_id UUID NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,
+    amount DECIMAL(10,2) NOT NULL CHECK (amount > 0),
+    balance DECIMAL(10,2) NOT NULL CHECK (balance >= 0),
+    expires_at DATE,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Create Store Credit Transactions table
+CREATE TABLE public.store_credit_transactions (
+    id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    store_credit_id UUID NOT NULL REFERENCES public.store_credits(id) ON DELETE CASCADE,
+    transaction_type TEXT NOT NULL CHECK (transaction_type IN ('credit', 'debit')),
+    amount DECIMAL(10,2) NOT NULL CHECK (amount > 0),
+    description TEXT NOT NULL,
+    related_sale_id UUID REFERENCES public.sales(id) ON DELETE SET NULL,
+    related_return_id UUID REFERENCES public.returns(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Create indexes
+CREATE INDEX idx_returns_sale_id ON public.returns(sale_id);
+CREATE INDEX idx_returns_customer_id ON public.returns(customer_id);
+CREATE INDEX idx_returns_status ON public.returns(status);
+CREATE INDEX idx_returns_created_at ON public.returns(created_at);
+CREATE INDEX idx_return_items_return_id ON public.return_items(return_id);
+CREATE INDEX idx_return_items_product_id ON public.return_items(product_id);
+CREATE INDEX idx_exchange_items_return_id ON public.exchange_items(return_id);
+CREATE INDEX idx_store_credits_customer_id ON public.store_credits(customer_id);
+CREATE INDEX idx_store_credits_expires_at ON public.store_credits(expires_at);
+CREATE INDEX idx_store_credit_transactions_store_credit_id ON public.store_credit_transactions(store_credit_id);
+
+-- Add triggers for updated_at
+CREATE TRIGGER update_returns_updated_at BEFORE UPDATE ON public.returns FOR EACH ROW EXECUTE PROCEDURE public.update_updated_at_column();
+CREATE TRIGGER update_store_credits_updated_at BEFORE UPDATE ON public.store_credits FOR EACH ROW EXECUTE PROCEDURE public.update_updated_at_column();
+
+-- Add RLS policies
+ALTER TABLE public.returns ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.return_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.exchange_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.store_credits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.store_credit_transactions ENABLE ROW LEVEL SECURITY;
+
+-- Returns policies
+CREATE POLICY "Users can view returns" ON public.returns FOR SELECT USING (true);
+CREATE POLICY "Admin and caixa can insert returns" ON public.returns FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admin and caixa can update returns" ON public.returns FOR UPDATE USING (true);
+
+-- Return items policies
+CREATE POLICY "Users can view return items" ON public.return_items FOR SELECT USING (true);
+CREATE POLICY "Admin and caixa can insert return items" ON public.return_items FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admin and caixa can update return items" ON public.return_items FOR UPDATE USING (true);
+
+-- Exchange items policies
+CREATE POLICY "Users can view exchange items" ON public.exchange_items FOR SELECT USING (true);
+CREATE POLICY "Admin and caixa can insert exchange items" ON public.exchange_items FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admin and caixa can update exchange items" ON public.exchange_items FOR UPDATE USING (true);
+
+-- Store credits policies
+CREATE POLICY "Users can view store credits" ON public.store_credits FOR SELECT USING (true);
+CREATE POLICY "Admin and caixa can insert store credits" ON public.store_credits FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admin and caixa can update store credits" ON public.store_credits FOR UPDATE USING (true);
+
+-- Store credit transactions policies
+CREATE POLICY "Users can view store credit transactions" ON public.store_credit_transactions FOR SELECT USING (true);
+CREATE POLICY "Admin and caixa can insert store credit transactions" ON public.store_credit_transactions FOR INSERT WITH CHECK (true);
+CREATE POLICY "Admin and caixa can update store credit transactions" ON public.store_credit_transactions FOR UPDATE USING (true); 

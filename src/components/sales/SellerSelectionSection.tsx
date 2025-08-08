@@ -2,7 +2,8 @@
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User } from 'lucide-react';
-import { useStore } from '@/contexts/StoreContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSales } from '@/contexts/SalesContext';
 
 interface SellerSelectionSectionProps {
   selectedSeller: string;
@@ -13,19 +14,19 @@ export const SellerSelectionSection = ({
   selectedSeller,
   onSellerChange
 }: SellerSelectionSectionProps) => {
-  const { sellers, users } = useStore();
+  const { user } = useAuth();
+  const { sellers } = useSales();
   
-  // Combinar vendedores da lista de sellers com usuários que são vendedores ou caixa
-  const sellerUsers = users.filter(user => user.role === 'vendedor' || user.role === 'caixa');
-  const allSellers = [
-    ...sellers.filter(s => s.active).map(s => ({ id: s.id, name: s.name })),
-    ...sellerUsers.map(u => ({ id: u.id, name: u.name }))
-  ];
+  // Usar apenas vendedores da tabela users (que agora são carregados como sellers)
+  const uniqueSellers = (sellers || []).filter(s => s.active).map(s => ({ id: s.id, name: s.name }));
 
-  // Remover duplicatas baseado no nome
-  const uniqueSellers = allSellers.filter((seller, index, self) => 
-    index === self.findIndex(s => s.name === seller.name)
-  );
+  // Debug logs
+  console.log('SellerSelectionSection Debug:', {
+    sellers: sellers,
+    sellersLength: sellers?.length,
+    user: user,
+    uniqueSellers: uniqueSellers
+  });
 
   return (
     <div className="space-y-3">

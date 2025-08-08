@@ -88,6 +88,30 @@ export const ProductAutocomplete: React.FC<ProductAutocompleteProps> = ({
 
   const showCreateOption = value.length >= 8 && filteredProducts.length === 0;
 
+  // Função para calcular estoque real
+  const getRealStock = (product: Product) => {
+    const baseStock = product.quantity || 0;
+    const negativeStock = product.negative_stock || 0;
+    return baseStock - negativeStock;
+  };
+
+  // Função para obter a cor do badge de estoque
+  const getStockBadgeVariant = (product: Product) => {
+    const realStock = getRealStock(product);
+    if (realStock < 0) return 'destructive';
+    if (realStock <= 3) return 'secondary';
+    return 'outline';
+  };
+
+  // Função para obter o texto do estoque
+  const getStockText = (product: Product) => {
+    const realStock = getRealStock(product);
+    if (realStock < 0) {
+      return `Estoque: ${realStock} (neg: ${product.negative_stock})`;
+    }
+    return `Estoque: ${realStock}`;
+  };
+
   return (
     <div ref={wrapperRef} className="relative">
       <Input
@@ -113,8 +137,8 @@ export const ProductAutocomplete: React.FC<ProductAutocompleteProps> = ({
                     <Badge variant="outline" className="text-xs">
                       {product.category}
                     </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      Estoque: {product.quantity}
+                    <Badge variant={getStockBadgeVariant(product)} className="text-xs">
+                      {getStockText(product)}
                     </Badge>
                     {product.category === 'Temporário' && (
                       <Badge variant="destructive" className="text-xs">

@@ -638,6 +638,278 @@ export type Database = {
         }
         Relationships: []
       }
+      returns: {
+        Row: {
+          id: string
+          sale_id: string
+          customer_id: string
+          return_type: Database["public"]["Enums"]["return_type"]
+          return_reason: Database["public"]["Enums"]["return_reason"]
+          status: Database["public"]["Enums"]["return_status"]
+          refund_method: Database["public"]["Enums"]["refund_method"] | null
+          refund_amount: number | null
+          store_credit_amount: number
+          notes: string | null
+          processed_by: string
+          processed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          sale_id: string
+          customer_id: string
+          return_type: Database["public"]["Enums"]["return_type"]
+          return_reason: Database["public"]["Enums"]["return_reason"]
+          status?: Database["public"]["Enums"]["return_status"]
+          refund_method?: Database["public"]["Enums"]["refund_method"] | null
+          refund_amount?: number | null
+          store_credit_amount?: number
+          notes?: string | null
+          processed_by: string
+          processed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          sale_id?: string
+          customer_id?: string
+          return_type?: Database["public"]["Enums"]["return_type"]
+          return_reason?: Database["public"]["Enums"]["return_reason"]
+          status?: Database["public"]["Enums"]["return_status"]
+          refund_method?: Database["public"]["Enums"]["refund_method"] | null
+          refund_amount?: number | null
+          store_credit_amount?: number
+          notes?: string | null
+          processed_by?: string
+          processed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "returns_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "returns_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      return_items: {
+        Row: {
+          id: string
+          return_id: string
+          sale_item_id: string
+          product_id: string
+          quantity: number
+          original_price: number
+          refund_price: number
+          condition_description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          return_id: string
+          sale_item_id: string
+          product_id: string
+          quantity: number
+          original_price: number
+          refund_price: number
+          condition_description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          return_id?: string
+          sale_item_id?: string
+          product_id?: string
+          quantity?: number
+          original_price?: number
+          refund_price?: number
+          condition_description?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_items_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_items_sale_item_id_fkey"
+            columns: ["sale_item_id"]
+            isOneToOne: false
+            referencedRelation: "sale_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      exchange_items: {
+        Row: {
+          id: string
+          return_id: string
+          original_product_id: string
+          new_product_id: string
+          quantity: number
+          price_difference: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          return_id: string
+          original_product_id: string
+          new_product_id: string
+          quantity: number
+          price_difference?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          return_id?: string
+          original_product_id?: string
+          new_product_id?: string
+          quantity?: number
+          price_difference?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exchange_items_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "returns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchange_items_original_product_id_fkey"
+            columns: ["original_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exchange_items_new_product_id_fkey"
+            columns: ["new_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      store_credits: {
+        Row: {
+          id: string
+          customer_id: string
+          amount: number
+          balance: number
+          expires_at: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          customer_id: string
+          amount: number
+          balance?: number
+          expires_at?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          customer_id?: string
+          amount?: number
+          balance?: number
+          expires_at?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_credits_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      store_credit_transactions: {
+        Row: {
+          id: string
+          store_credit_id: string
+          transaction_type: string
+          amount: number
+          description: string
+          related_sale_id: string | null
+          related_return_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          store_credit_id: string
+          transaction_type: string
+          amount: number
+          description: string
+          related_sale_id?: string | null
+          related_return_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          store_credit_id?: string
+          transaction_type?: string
+          amount?: number
+          description?: string
+          related_sale_id?: string | null
+          related_return_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_credit_transactions_store_credit_id_fkey"
+            columns: ["store_credit_id"]
+            isOneToOne: false
+            referencedRelation: "store_credits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_credit_transactions_related_sale_id_fkey"
+            columns: ["related_sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_credit_transactions_related_return_id_fkey"
+            columns: ["related_return_id"]
+            isOneToOne: false
+            referencedRelation: "returns"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -652,6 +924,10 @@ export type Database = {
       payment_method: "pix" | "debito" | "credito"
       product_gender: "Masculino" | "Feminino" | "Unissex"
       user_role: "admin" | "vendedor" | "caixa" | "consultivo"
+      return_type: "return" | "exchange" | "partial_return"
+      return_reason: "defective" | "wrong_size" | "wrong_color" | "not_as_described" | "customer_change_mind" | "other"
+      return_status: "pending" | "approved" | "rejected" | "completed"
+      refund_method: "cash" | "card" | "pix" | "store_credit"
     }
     CompositeTypes: {
       [_ in never]: never

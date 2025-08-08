@@ -38,10 +38,11 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (user_id, name, role)
+  INSERT INTO public.profiles (user_id, name, phone, role)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'name', 'Usuário'),
+    COALESCE(NEW.raw_user_meta_data->>'phone', ''),
     COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'vendedor')
   );
   RETURN NEW;

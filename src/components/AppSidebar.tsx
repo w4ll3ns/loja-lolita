@@ -21,7 +21,9 @@ import {
   BarChart3, 
   Settings,
   Database,
-  LogOut
+  LogOut,
+  Trophy,
+  ArrowLeftRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,6 +52,18 @@ const navigationItems = [
     url: '/my-sales',
     icon: BarChart3,
     roles: ['vendedor', 'caixa']
+  },
+  {
+    title: 'Relatórios de Vendedores',
+    url: '/sellers-reports',
+    icon: Trophy,
+    roles: ['admin']
+  },
+  {
+    title: 'Devoluções',
+    url: '/returns',
+    icon: ArrowLeftRight,
+    roles: ['admin', 'caixa']
   },
   {
     title: 'Clientes',

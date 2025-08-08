@@ -27,17 +27,14 @@ export const useSettingsLogic = (state: {
 
   const updateNotificationSettings = (settings: Partial<NotificationSettings>) => {
     setNotificationSettings(prev => ({ ...prev, ...settings }));
-    console.log('Configurações de notificações atualizadas:', settings);
   };
 
   const updateSecuritySettings = (settings: Partial<SecuritySettings>) => {
     setSecuritySettings(prev => ({ ...prev, ...settings }));
-    console.log('Configurações de segurança atualizadas:', settings);
   };
 
   const updateRoleSettings = (settings: RoleSettings) => {
     setRoleSettings(() => settings);
-    console.log('Configurações de perfis atualizadas:', settings);
   };
 
   const isXmlAlreadyImported = (xmlHash: string): boolean => {

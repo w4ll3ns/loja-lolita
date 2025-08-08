@@ -14,6 +14,7 @@ import { Product, Customer, Sale, User, Seller, DeleteLog, StoreSettings, Notifi
 export type { Product, Customer, Sale, User } from '@/types/store';
 
 export interface SaleItem {
+  id: string;
   product: Product;
   quantity: number;
   price: number;
@@ -112,6 +113,7 @@ interface StoreContextType {
   // Utility operations
   generateUniqueId: () => string;
   refreshData: () => Promise<void>;
+  refreshSales: () => Promise<void>;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -154,7 +156,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   const salesLogic = useSalesLogic(
     supabaseStore.sales,
     supabaseStore.setSales,
-    operations,
+    { ...operations, loadSales: supabaseStore.loadSales },
     productsLogic.updateProduct
   );
 
@@ -382,7 +384,8 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
     
     // Utility operations
     generateUniqueId: operations.generateUniqueId,
-    refreshData: supabaseStore.loadAllData
+    refreshData: supabaseStore.loadAllData,
+    refreshSales: supabaseStore.loadSales
   };
 
   return (

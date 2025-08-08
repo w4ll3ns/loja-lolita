@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { XmlProduct, XmlSupplier } from '@/types/xml-import';
 import { useToast } from '@/hooks/use-toast';
-import { useStore } from '@/contexts/StoreContext';
+import { useDataManagement } from '@/contexts/DataManagementContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { extractSupplierFromXml, extractProductsFromXml } from '@/utils/xmlParser';
 import { checkSupplierExists } from '@/utils/supplierUtils';
@@ -30,7 +30,7 @@ export const useXmlImport = () => {
     email: ''
   });
 
-  const { categories, suppliers, addCategory, addSupplier, isXmlAlreadyImported, markXmlAsImported } = useStore();
+  const { categories, suppliers, addCategory, addSupplier } = useDataManagement();
   const { user } = useAuth();
   const { toast } = useToast();
 

@@ -8,13 +8,15 @@ import { MobileNavigation } from '@/components/MobileNavigation';
 import { Toaster } from '@/components/ui/toaster';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { StoreProvider } from '@/contexts/StoreContext';
+import { AppContextProvider } from '@/contexts/AppContext';
 import LoginPage from '@/components/LoginPage';
 import Index from '@/pages/Index';
 import Dashboard from '@/pages/Dashboard';
 import ProductsPage from '@/pages/ProductsPage';
 import SalesPage from '@/pages/SalesPage';
 import MySalesPage from '@/pages/MySalesPage';
+import SellersReportsPage from '@/pages/SellersReportsPage';
+import ReturnsPage from '@/pages/ReturnsPage';
 import CustomersPage from '@/pages/CustomersPage';
 import ManagementIndexPage from '@/pages/management/ManagementIndexPage';
 import CategoriesManagementPage from '@/pages/management/CategoriesManagementPage';
@@ -77,6 +79,26 @@ function AppRoutes() {
               element={
                 <ProtectedRoute allowedRoles={['vendedor', 'caixa']}>
                   <MySalesPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Relatórios de Vendedores - apenas admin */}
+            <Route 
+              path="/sellers-reports" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <SellersReportsPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Devoluções - admin e caixa */}
+            <Route 
+              path="/returns" 
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'caixa']}>
+                  <ReturnsPage />
                 </ProtectedRoute>
               } 
             />
@@ -212,14 +234,14 @@ function App() {
 
   return (
     <AuthProvider>
-      <StoreProvider>
+      <AppContextProvider>
         <QueryClientProvider client={queryClient}>
           <Router>
             <AppRoutes />
             <Toaster />
           </Router>
         </QueryClientProvider>
-      </StoreProvider>
+      </AppContextProvider>
     </AuthProvider>
   );
 }

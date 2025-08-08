@@ -1,9 +1,12 @@
 
-import { useState } from 'react';
-import { useStore } from '@/contexts/StoreContext';
+import { useState, useEffect } from 'react';
+import { useProducts } from '@/contexts/ProductsContext';
+import { useDataManagement } from '@/contexts/DataManagementContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/types/store';
+import { useSecuritySettings } from '@/hooks/useSecuritySettings';
+import { sanitizeName, sanitizeText, sanitizeBarcode, sanitizeNumber } from '@/utils/sanitization';
 
 export const useProductsPage = () => {
   const { 
@@ -12,6 +15,12 @@ export const useProductsPage = () => {
     updateProduct, 
     deleteProduct,
     bulkUpdateProducts,
+    duplicateProduct, 
+    isBarcodeTaken,
+    hasProductBeenSold
+  } = useProducts();
+  
+  const { 
     categories, 
     collections, 
     suppliers, 
@@ -22,11 +31,8 @@ export const useProductsPage = () => {
     addCollection, 
     addSupplier, 
     addBrand, 
-    addColor, 
-    duplicateProduct, 
-    isBarcodeTaken,
-    hasProductBeenSold
-  } = useStore();
+    addColor
+  } = useDataManagement();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -83,14 +89,25 @@ export const useProductsPage = () => {
     product.barcode.includes(searchTerm)
   );
 
-  // Calculate totals for products in stock
+  // Calculate totals for products in stock and negative stock
   const stockTotals = filteredProducts.reduce((acc, product) => {
     if (product.quantity > 0) {
       acc.totalCost += product.costPrice * product.quantity;
       acc.totalSaleValue += product.price * product.quantity;
+    } else if (product.quantity < 0) {
+      acc.negativeStockCount += 1;
+      acc.negativeStockValue += Math.abs(product.quantity);
     }
     return acc;
-  }, { totalCost: 0, totalSaleValue: 0 });
+  }, { 
+    totalCost: 0, 
+    totalSaleValue: 0, 
+    negativeStockCount: 0, 
+    negativeStockValue: 0 
+  });
+
+  // Get products with negative stock
+  const negativeStockProducts = filteredProducts.filter(product => product.quantity < 0);
 
   // Selection handlers
   const handleSelectProduct = (productId: string, selected: boolean) => {
@@ -126,7 +143,31 @@ export const useProductsPage = () => {
   };
 
   const validatePassword = (password: string): boolean => {
-    return password === '123456';
+    // Verificar se o usuário tem permissão de admin
+    if (user?.role === 'admin') {
+      return true;
+    }
+    
+    // Para outros roles, verificar se a senha é válida
+    // Implementar verificação segura baseada em configurações
+    const { settings } = useSecuritySettings();
+    
+    // Verificar se a senha atende aos critérios mínimos
+    if (password.length < (settings?.min_password_length || 6)) {
+      return false;
+    }
+    
+    // Verificar se contém pelo menos um número
+    if (settings?.require_numbers && !/\d/.test(password)) {
+      return false;
+    }
+    
+    // Verificar se contém pelo menos um caractere especial
+    if (settings?.require_special_chars && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return false;
+    }
+    
+    return true;
   };
 
   // Bulk edit handlers
@@ -188,14 +229,25 @@ export const useProductsPage = () => {
       return;
     }
 
-    updateProduct(editingProduct.id, {
+    // Sanitizar dados antes de atualizar
+    const sanitizedProduct = {
       ...newProduct,
-      price: parseFloat(newProduct.price),
-      costPrice: parseFloat(newProduct.costPrice),
-      quantity: parseInt(newProduct.quantity) || 0,
-      barcode: newProduct.barcode || editingProduct.barcode,
+      name: sanitizeName(newProduct.name),
+      description: sanitizeText(newProduct.description || ''),
+      barcode: sanitizeBarcode(newProduct.barcode || ''),
+      category: sanitizeName(newProduct.category),
+      collection: sanitizeName(newProduct.collection || ''),
+      supplier: sanitizeName(newProduct.supplier || ''),
+      brand: sanitizeName(newProduct.brand || ''),
+      color: sanitizeName(newProduct.color || ''),
+      size: sanitizeName(newProduct.size || ''),
+      price: sanitizeNumber(newProduct.price),
+      costPrice: sanitizeNumber(newProduct.costPrice),
+      quantity: sanitizeNumber(newProduct.quantity) || 0,
       gender: newProduct.gender as 'Masculino' | 'Feminino' | 'Unissex'
-    });
+    };
+
+    updateProduct(editingProduct.id, sanitizedProduct);
 
     toast({
       title: "Sucesso",
@@ -225,14 +277,25 @@ export const useProductsPage = () => {
       return;
     }
 
-    addProduct({
+    // Sanitizar dados antes de adicionar
+    const sanitizedProduct = {
       ...newProduct,
-      price: parseFloat(newProduct.price),
-      costPrice: parseFloat(newProduct.costPrice),
-      quantity: parseInt(newProduct.quantity) || 0,
-      barcode: newProduct.barcode || Date.now().toString(),
+      name: sanitizeName(newProduct.name),
+      description: sanitizeText(newProduct.description || ''),
+      barcode: sanitizeBarcode(newProduct.barcode || ''),
+      category: sanitizeName(newProduct.category),
+      collection: sanitizeName(newProduct.collection || ''),
+      supplier: sanitizeName(newProduct.supplier || ''),
+      brand: sanitizeName(newProduct.brand || ''),
+      color: sanitizeName(newProduct.color || ''),
+      size: sanitizeName(newProduct.size || ''),
+      price: sanitizeNumber(newProduct.price),
+      costPrice: sanitizeNumber(newProduct.costPrice),
+      quantity: sanitizeNumber(newProduct.quantity) || 0,
       gender: newProduct.gender as 'Masculino' | 'Feminino' | 'Unissex'
-    });
+    };
+
+    addProduct(sanitizedProduct);
 
     toast({
       title: "Sucesso",
@@ -272,8 +335,9 @@ export const useProductsPage = () => {
   const handleAddCategory = () => {
     if (!newCategoryName.trim()) return;
     
-    addCategory(newCategoryName.trim());
-    setNewProduct({ ...newProduct, category: newCategoryName.trim() });
+    const sanitizedCategory = sanitizeName(newCategoryName.trim());
+    addCategory(sanitizedCategory);
+    setNewProduct({ ...newProduct, category: sanitizedCategory });
     setNewCategoryName('');
     setIsAddCategoryOpen(false);
     
@@ -286,8 +350,9 @@ export const useProductsPage = () => {
   const handleAddCollection = () => {
     if (!newCollectionName.trim()) return;
     
-    addCollection(newCollectionName.trim());
-    setNewProduct({ ...newProduct, collection: newCollectionName.trim() });
+    const sanitizedCollection = sanitizeName(newCollectionName.trim());
+    addCollection(sanitizedCollection);
+    setNewProduct({ ...newProduct, collection: sanitizedCollection });
     setNewCollectionName('');
     setIsAddCollectionOpen(false);
     
@@ -300,8 +365,9 @@ export const useProductsPage = () => {
   const handleAddBrand = () => {
     if (!newBrandName.trim()) return;
     
-    addBrand(newBrandName.trim());
-    setNewProduct({ ...newProduct, brand: newBrandName.trim() });
+    const sanitizedBrand = sanitizeName(newBrandName.trim());
+    addBrand(sanitizedBrand);
+    setNewProduct({ ...newProduct, brand: sanitizedBrand });
     setNewBrandName('');
     setIsAddBrandOpen(false);
     
@@ -314,8 +380,9 @@ export const useProductsPage = () => {
   const handleAddSupplier = () => {
     if (!newSupplierName.trim()) return;
     
-    addSupplier(newSupplierName.trim());
-    setNewProduct({ ...newProduct, supplier: newSupplierName.trim() });
+    const sanitizedSupplier = sanitizeName(newSupplierName.trim());
+    addSupplier(sanitizedSupplier);
+    setNewProduct({ ...newProduct, supplier: sanitizedSupplier });
     setNewSupplierName('');
     setIsAddSupplierOpen(false);
     
@@ -328,8 +395,9 @@ export const useProductsPage = () => {
   const handleAddColor = () => {
     if (!newColorName.trim()) return;
     
-    addColor(newColorName.trim());
-    setNewProduct({ ...newProduct, color: newColorName.trim() });
+    const sanitizedColor = sanitizeName(newColorName.trim());
+    addColor(sanitizedColor);
+    setNewProduct({ ...newProduct, color: sanitizedColor });
     setNewColorName('');
     setIsAddColorOpen(false);
     
@@ -425,6 +493,7 @@ export const useProductsPage = () => {
     // Data
     filteredProducts,
     stockTotals,
+    negativeStockProducts,
     categories,
     collections,
     suppliers,

@@ -1,6 +1,8 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useStore } from '@/contexts/StoreContext';
+import { useProducts } from '@/contexts/ProductsContext';
+import { useSales } from '@/contexts/SalesContext';
+import { useCustomers } from '@/contexts/CustomersContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePeriodFilter } from '@/hooks/usePeriodFilter';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +11,9 @@ import PeriodFilter from '@/components/dashboard/PeriodFilter';
 import SellersRanking from '@/components/dashboard/SellersRanking';
 
 const Dashboard = () => {
-  const { products, customers, sales } = useStore();
+  const { products } = useProducts();
+  const { sales } = useSales();
+  const { customers } = useCustomers();
   const { user } = useAuth();
   const navigate = useNavigate();
   const {
@@ -145,7 +149,7 @@ const Dashboard = () => {
         </Card>
 
         {/* Vendas recentes */}
-        <Card>
+        <Card className="cursor-pointer card-hover" onClick={() => navigate('/sales')}>
           <CardHeader>
             <CardTitle>Vendas Recentes</CardTitle>
             <CardDescription>
@@ -179,7 +183,7 @@ const Dashboard = () => {
         {/* Ranking de Vendedores */}
         <SellersRanking 
           sales={filteredSales} 
-          onClick={() => navigate('/my-sales')} 
+          onClick={() => navigate('/sellers-reports')} 
         />
       </div>
     </div>
