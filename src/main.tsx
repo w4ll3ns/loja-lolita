@@ -6,10 +6,11 @@ import './index.css'
 
 const queryClient = new QueryClient()
 
-createRoot(document.getElementById("root")!).render(
+const root = createRoot(document.getElementById("root")!)
+root.render(
   <QueryClientProvider client={queryClient}>
     <HashRouter>
       <App />
     </HashRouter>
   </QueryClientProvider>
-);
+)
