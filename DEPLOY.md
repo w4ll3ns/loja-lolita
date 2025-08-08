@@ -4,7 +4,7 @@
 
 ✅ **Deploy Configurado e Ativo**
 
-- **URL de Produção:** https://roupa-certa-vendas-plus.w4ll3ns.dev
+- **URL de Produção:** https://w4ll3ns.github.io/loja-lolita/
 - **Repositório:** https://github.com/w4ll3ns/roupa-certa-vendas-plus
 - **Branch Principal:** `main`
 - **Deploy Automático:** Ativo via GitHub Actions
@@ -22,8 +22,9 @@
   - ✅ Build do projeto
   - ✅ Deploy no GitHub Pages
 
-### 2. Domínio Personalizado
-- **CNAME:** `roupa-certa-vendas-plus.w4ll3ns.dev`
+### 2. GitHub Pages
+- **URL:** `https://w4ll3ns.github.io/loja-lolita/`
+- **CNAME:** `w4ll3ns.github.io`
 - **Arquivo:** `public/CNAME`
 
 ### 3. Configurações do Projeto
@@ -37,7 +38,13 @@
 1. **Push para main** → Trigger automático do workflow
 2. **GitHub Actions** → Executa build e testes
 3. **Deploy** → Publica na branch `gh-pages`
-4. **GitHub Pages** → Serve o site no domínio configurado
+4. **GitHub Pages** → Serve o site em https://w4ll3ns.github.io/loja-lolita/
+
+### ⚠️ Correções Implementadas para GitHub Pages:
+- ✅ **HashRouter** em vez de BrowserRouter
+- ✅ **Base path** configurado para `/loja-lolita/`
+- ✅ **404.html** para SPA routing
+- ✅ **Caminhos relativos** para assets
 
 ## 📊 Status do Build
 
